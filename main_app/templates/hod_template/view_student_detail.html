@@ -1,0 +1,127 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}Student Details{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Profile Image -->
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            {% if student.admin.profile_pic %}
+                            <img class="profile-user-img img-fluid img-circle" src="{{ student.admin.profile_pic.url }}"
+                                onerror="this.onerror=null; this.src='{% static 'dist/img/default-avatar.png' %}'"
+                                alt="User profile picture">
+                            {% else %}
+                            <img class="profile-user-img img-fluid img-circle"
+                                src="{% static 'dist/img/default-avatar.png' %}" alt="User profile picture">
+                            {% endif %}
+                        </div>
+
+                        <h3 class="profile-username text-center">
+                            {{ student.admin.first_name }} {{ student.admin.last_name }}
+                        </h3>
+
+                        <p class="text-muted text-center">{{ student.course.name }} ({{ student.academic_year }})</p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Roll Number</b> <a class="float-right">{{ student.roll_number }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Section</b> <a class="float-right">{{ student.get_section_display }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Semester</b> <a class="float-right">{{ student.get_semester_display }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Regulation</b> <a class="float-right">{{ student.regulation.name|default:"N/A" }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Admission No</b> <a class="float-right">{{ student.admission_number }}</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+
+            <div class="col-md-8">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">About Student</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <strong><i class="fas fa-envelope mr-1"></i> Email</strong>
+                        <p class="text-muted">{{ student.admin.email }}</p>
+                        <hr>
+
+                        <strong><i class="fas fa-venus-mars mr-1"></i> Gender</strong>
+                        <p class="text-muted">{{ student.admin.gender }}</p>
+                        <hr>
+
+                        <strong><i class="fas fa-map-marker-alt mr-1"></i> Address</strong>
+                        <p class="text-muted">{{ student.admin.address }}</p>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-user-friends mr-1"></i> Father's Name</strong>
+                                <p class="text-muted">{{ student.father_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-phone mr-1"></i> Parent Mobile</strong>
+                                <p class="text-muted">{{ student.parent_mobile_number }}</p>
+                            </div>
+                        </div>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-user-friends mr-1"></i> Mother's Name</strong>
+                                <p class="text-muted">{{ student.mother_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-phone mr-1"></i> Student Mobile</strong>
+                                <p class="text-muted">{{ student.mobile_number }}</p>
+                            </div>
+                        </div>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong><i class="fas fa-id-card mr-1"></i> Aadhar</strong>
+                                <p class="text-muted">{{ student.aadhar_number }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <strong><i class="fas fa-users mr-1"></i> Caste</strong>
+                                <p class="text-muted">{{ student.caste }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <strong><i class="fas fa-tint mr-1"></i> Blood Group</strong>
+                                <p class="text-muted">{{ student.blood_group }}</p>
+                            </div>
+                        </div>
+                        <hr>
+
+                        {% if student.apaar_id %}
+                        <strong><i class="fas fa-id-badge mr-1"></i> APAAR ID</strong>
+                        <p class="text-muted">{{ student.apaar_id }}</p>
+                        <hr>
+                        {% endif %}
+
+                        <a href="{% url 'edit_student' student.id %}" class="btn btn-info">Edit Profile</a>
+                        <a href="{% url 'manage_student' %}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

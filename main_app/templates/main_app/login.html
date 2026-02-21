@@ -1,0 +1,328 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - SVREC ERP</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #080710;
+            background-image: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Abstract Background Shapes */
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .shape {
+            height: 300px;
+            width: 300px;
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+
+        .shape:first-child {
+            background: linear-gradient(#1845ad, #23a2f6);
+            /* Blue/Cyan */
+            left: -100px;
+            top: -100px;
+            filter: blur(80px);
+            animation: float1 8s infinite alternate;
+        }
+
+        .shape:last-child {
+            background: linear-gradient(to right, #ff512f, #f09819);
+            /* Orange/Red */
+            right: -50px;
+            bottom: -80px;
+            filter: blur(80px);
+            animation: float2 10s infinite alternate;
+        }
+
+        .shape:nth-child(2) {
+            background: linear-gradient(#9d4edd, #ff006e);
+            /* Purple/Pink */
+            left: 30%;
+            top: 40%;
+            height: 150px;
+            width: 150px;
+            filter: blur(60px);
+            animation: float3 12s infinite alternate;
+        }
+
+        @keyframes float1 {
+            from {
+                transform: translate(0, 0);
+            }
+
+            to {
+                transform: translate(40px, 40px);
+            }
+        }
+
+        @keyframes float2 {
+            from {
+                transform: translate(0, 0);
+            }
+
+            to {
+                transform: translate(-40px, -40px);
+            }
+        }
+
+        @keyframes float3 {
+            from {
+                transform: translate(0, 0);
+            }
+
+            to {
+                transform: translate(20px, -60px);
+            }
+        }
+
+        /* Glass Form */
+        form {
+            height: auto;
+            width: 420px;
+            background-color: rgba(255, 255, 255, 0.05);
+            /* Semi-transparent white */
+            position: relative;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            padding: 50px 40px;
+            z-index: 1;
+        }
+
+        form * {
+            outline: none;
+            border: none;
+        }
+
+        form h3 {
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 42px;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        form p.subtitle {
+            text-align: center;
+            color: #e5e5e5;
+            font-size: 14px;
+            margin-bottom: 35px;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
+        }
+
+        /* Inputs */
+        label {
+            display: block;
+            margin-top: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 8px;
+            margin-left: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        input {
+            display: block;
+            height: 50px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.07);
+            border-radius: 25px;
+            padding: 0 20px 0 45px;
+            /* adjust for icon */
+            font-size: 14px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        input:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            margin-top: 40px;
+            width: 100%;
+            background-color: #ffffff;
+            color: #080710;
+            padding: 15px 0;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background-color: #f8f9fa;
+        }
+
+        /* Checkbox & Links */
+        .form-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .checkbox-container input {
+            width: auto;
+            height: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #fff;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .forgot-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .alert {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #ffcccc;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 13px;
+            backdrop-filter: blur(5px);
+        }
+
+        .footer-credit {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <form action="{% url 'user_login' %}" method="post">
+        {% csrf_token %}
+        <h3>Welcome Back</h3>
+        <p class="subtitle">SVR Engineering College - ERP</p>
+
+        {% if messages %}
+        {% for message in messages %}
+        {% if message.tags == 'error' %}
+        <div class="alert">
+            <i class="fas fa-exclamation-circle mr-1"></i> {{ message }}
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        <label for="email">Email Address</label>
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" placeholder="Enter your email" id="email" name="email" required>
+        </div>
+
+        <label for="password">Password</label>
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" placeholder="Enter your password" id="password" name="password" required>
+        </div>
+
+        <div class="form-footer">
+            <label class="checkbox-container">
+                <input type="checkbox" name="remember"> Remember me
+            </label>
+            <a href="{% url 'password_reset' %}" class="forgot-link">Forgot Password?</a>
+        </div>
+
+        <button type="submit">Sign In</button>
+    </form>
+
+    <div class="footer-credit">SVREC(AUTONOMOUS) NANDYAL Department of CSE-(AI)</div>
+
+</body>
+
+</html>

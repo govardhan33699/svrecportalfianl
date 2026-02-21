@@ -1,0 +1,849 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    /* ── Filter Bar ─────────────────────────────── */
+    .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: flex-end;
+        padding: 20px 24px;
+        background: rgba(255, 255, 255, 0.35);
+        backdrop-filter: blur(40px) saturate(1.6);
+        -webkit-backdrop-filter: blur(40px) saturate(1.6);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        margin-bottom: 20px;
+    }
+
+    .dark-mode .filter-bar {
+        background: rgba(20, 20, 35, 0.5);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .filter-item label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .filter-item select,
+    .filter-item input {
+        width: 100%;
+        padding: 9px 12px;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary, #1e293b);
+        transition: all 0.2s;
+        outline: none;
+    }
+
+    .filter-item select:focus,
+    .filter-item input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .dark-mode .filter-item select,
+    .dark-mode .filter-item input {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #f1f5f9;
+    }
+
+    /* ── Period Grid ────────────────────────────── */
+    .grid-panel {
+        background: rgba(255, 255, 255, 0.35);
+        backdrop-filter: blur(40px) saturate(1.6);
+        -webkit-backdrop-filter: blur(40px) saturate(1.6);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+    }
+
+    .dark-mode .grid-panel {
+        background: rgba(20, 20, 35, 0.5);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .grid-panel-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .grid-panel-title i {
+        color: #6366f1;
+    }
+
+    .period-grid {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .period-card {
+        flex: 0 0 130px;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 16px;
+        padding: 14px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .period-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .period-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .period-card.selected {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 12px 32px rgba(99, 102, 241, 0.15);
+        transform: translateY(-4px) scale(1.03);
+    }
+
+    .dark-mode .period-card {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Status colors */
+    .period-card.status-pending::before {
+        background: #f97316;
+    }
+
+    .period-card.status-completed::before {
+        background: #22c55e;
+    }
+
+    .period-card.status-no-class::before {
+        background: #e2e8f0;
+    }
+
+    .period-card.status-no-class {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    .period-card.status-no-class:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .period-num {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 6px;
+    }
+
+    .period-subject {
+        font-size: 13px;
+        font-weight: 650;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .period-time {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .period-status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        margin-top: 6px;
+        border-radius: 100px;
+        font-size: 10px;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pending .period-status-badge {
+        background: rgba(249, 115, 22, 0.12);
+        color: #ea580c;
+    }
+
+    .status-completed .period-status-badge {
+        background: rgba(34, 197, 94, 0.12);
+        color: #16a34a;
+    }
+
+    /* ── Legend ──────────────────────────────────── */
+    .legend-bar {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        padding: 12px 0;
+    }
+
+    .legend-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 550;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    /* ── Student List ───────────────────────────── */
+    .student-panel {
+        background: rgba(255, 255, 255, 0.35);
+        backdrop-filter: blur(40px) saturate(1.6);
+        -webkit-backdrop-filter: blur(40px) saturate(1.6);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        padding: 24px;
+        animation: slideUpIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .dark-mode .student-panel {
+        background: rgba(20, 20, 35, 0.5);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    @keyframes slideUpIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .student-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .student-panel-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary, #1e293b);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .student-panel-title i {
+        color: #6366f1;
+    }
+
+    .bulk-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .bulk-btn {
+        padding: 6px 14px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.4);
+        color: var(--text-primary, #1e293b);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .bulk-btn:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.3);
+        color: #6366f1;
+    }
+
+    .student-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px;
+    }
+
+    .student-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 14px;
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        cursor: pointer;
+    }
+
+    .student-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .student-card.absent {
+        opacity: 0.55;
+        border-color: rgba(248, 113, 113, 0.3);
+    }
+
+    .dark-mode .student-card {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .student-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #a78bfa);
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .student-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .student-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .student-roll {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-secondary, #64748b);
+    }
+
+    /* iOS toggle switch */
+    .ios-toggle {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .ios-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .ios-toggle .slider {
+        position: absolute;
+        inset: 0;
+        background: #e2e8f0;
+        border-radius: 24px;
+        transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        cursor: pointer;
+    }
+
+    .ios-toggle .slider::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        bottom: 2px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 50%;
+        transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .ios-toggle input:checked+.slider {
+        background: #22c55e;
+    }
+
+    .ios-toggle input:checked+.slider::before {
+        transform: translateX(20px);
+    }
+
+    /* Save button area */
+    .save-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .dark-mode .save-bar {
+        border-top-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .attendance-count {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+    }
+
+    .attendance-count span {
+        color: #22c55e;
+        font-weight: 700;
+    }
+
+    .btn-save-attendance {
+        padding: 12px 32px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+        border: none;
+        font-size: 14px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-save-attendance:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 28px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-save-attendance:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Show Students button */
+    .btn-show-students {
+        padding: 10px 24px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        border: none;
+        font-size: 13px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-show-students:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filter-bar {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .filter-item {
+            min-width: 100%;
+        }
+
+        .period-grid {
+            gap: 8px;
+        }
+
+        .period-card {
+            flex: 0 0 110px;
+            padding: 10px 8px;
+        }
+
+        .student-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Hidden fields for JS -->
+        <select id="session" style="display:none;">
+            {% for session in sessions %}
+            <option value="{{session.id}}">{{session}}</option>
+            {% endfor %}
+        </select>
+        <select id="course" style="display:none;">
+            {% for course in courses %}
+            <option value="{{course.id}}">{{course.name}}</option>
+            {% endfor %}
+        </select>
+        <select id="semester" style="display:none;">
+            {% for sem_val, sem_label in semesters %}
+            <option value="{{sem_val}}">{{sem_label}}</option>
+            {% endfor %}
+        </select>
+        <select id="section" style="display:none;">
+            {% for sec_val, sec_label in sections %}
+            <option value="{{sec_val}}">{{sec_label}}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Period Grid Panel -->
+        <div class="grid-panel">
+            <div class="grid-panel-title">
+                <i class="fas fa-th"></i>
+                <span>Today's Schedule</span>
+                <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                    <input type="date" id="attendance_date" value="{% now 'Y-m-d' %}"
+                        style="padding:5px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.5); background:rgba(255,255,255,0.4); font-size:12px; font-weight:600; outline:none;">
+                    <span id="day_badge"
+                        style="background:rgba(99,102,241,0.1); color:#6366f1; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:700;"></span>
+                </div>
+            </div>
+
+            <div class="period-grid" id="period_grid">
+                <!-- Populated by JS -->
+                <div
+                    style="padding:20px; text-align:center; width:100%; color:var(--text-secondary,#64748b); font-size:13px;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading schedule...
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend-bar">
+                <div class="legend-chip">
+                    <span class="legend-dot" style="background:#f97316;"></span> Pending
+                </div>
+                <div class="legend-chip">
+                    <span class="legend-dot" style="background:#22c55e;"></span> Completed
+                </div>
+                <div class="legend-chip">
+                    <span class="legend-dot" style="background:#e2e8f0; border:1px solid #cbd5e1;"></span> No Class
+                </div>
+            </div>
+
+            <div style="text-align:right; padding-top:4px;">
+                <button type="button" id="show_students_btn" class="btn-show-students">
+                    <i class="fas fa-users"></i> Show Students
+                </button>
+            </div>
+        </div>
+
+        <!-- Student List Panel (Hidden by default) -->
+        <div id="student_list_container" style="display:none;">
+            <div class="student-panel">
+                <div class="student-panel-header">
+                    <div class="student-panel-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span id="student_list_title">Mark Attendance</span>
+                    </div>
+                    <div class="bulk-actions">
+                        <button class="bulk-btn" onclick="selectAll()"><i class="fas fa-check-double"></i> All
+                            Present</button>
+                        <button class="bulk-btn" onclick="deselectAll()"><i class="fas fa-times"></i> All
+                            Absent</button>
+                    </div>
+                </div>
+
+                <div class="student-grid" id="student_list_data">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="save-bar">
+                    <div class="attendance-count">
+                        <span id="present_count">0</span> / <span id="total_count">0</span> Present
+                    </div>
+                    <button type="button" id="save_attendance_btn" class="btn-save-attendance">
+                        <i class="fas fa-save"></i> Save Attendance
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        var selected_period = null;
+        var selected_subject = null;
+        var selected_section = null;
+
+        function loadGrid() {
+            var date = $("#attendance_date").val();
+            if (!date) return;
+
+            $.ajax({
+                url: "{% url 'get_faculty_attendance_grid' %}",
+                type: 'POST',
+                data: { date: date }
+            }).done(function (response) {
+                var grid = JSON.parse(response);
+                var gridHtml = "";
+
+                if (grid.length === 0) {
+                    gridHtml = '<div style="padding:24px; text-align:center; width:100%; color:var(--text-secondary,#64748b);"><i class="fas fa-calendar-times" style="font-size:24px; margin-bottom:8px; display:block;"></i>No periods configured</div>';
+                } else {
+                    grid.forEach(function (item, index) {
+                        var statusClass = "status-" + item.status;
+                        var content = "";
+                        var badgeText = "";
+
+                        if (item.status === 'no_class') {
+                            content = '<div class="period-subject" style="color:#94a3b8;">—</div>';
+                            badgeText = '';
+                        } else if (item.status === 'completed') {
+                            content = '<div class="period-subject">' + item.subject_name + '</div>';
+                            badgeText = '<span class="period-status-badge">✓ Done</span>';
+                        } else {
+                            content = '<div class="period-subject">' + item.subject_name + '</div>';
+                            badgeText = '<span class="period-status-badge">Pending</span>';
+                        }
+
+                        gridHtml += '<div class="period-card ' + statusClass + '" ' +
+                            'data-period="' + item.period_id + '" ' +
+                            'data-subject="' + item.subject_id + '" ' +
+                            'data-course="' + item.course_name + '" ' +
+                            'data-section="' + item.section + '" ' +
+                            'data-name="' + item.subject_name + '" ' +
+                            'style="animation-delay:' + (index * 0.06) + 's; animation: cardUp 0.5s cubic-bezier(0.25,0.1,0.25,1) ' + (index * 0.06) + 's backwards;">' +
+                            '<div class="period-num">Period ' + item.period_number + '</div>' +
+                            content +
+                            '<div class="period-time">' + item.start_time + ' – ' + item.end_time + '</div>' +
+                            badgeText +
+                            '</div>';
+                    });
+                }
+
+                $("#period_grid").html(gridHtml);
+
+                // Update day badge
+                var d = new Date(date);
+                var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                $("#day_badge").text(days[d.getDay()]);
+
+            }).fail(function () {
+                $("#period_grid").html('<div style="padding:24px; text-align:center; width:100%; color:#f87171;"><i class="fas fa-exclamation-triangle"></i> Error loading schedule</div>');
+            });
+        }
+
+        loadGrid();
+
+        $("#attendance_date").change(function () {
+            loadGrid();
+            $("#student_list_container").hide();
+            selected_period = null;
+            selected_subject = null;
+        });
+
+        // Cell Selection — auto-load students on click
+        $(document).on('click', '.period-card', function () {
+            if ($(this).hasClass('status-no-class')) return;
+
+            $(".period-card").removeClass('selected');
+            $(this).addClass('selected');
+
+            selected_period = $(this).data('period');
+            selected_subject = $(this).data('subject');
+            selected_section = $(this).data('section');
+
+            // Auto-fetch students
+            loadStudents();
+        });
+
+        // Show Students (also works via button)
+        $("#show_students_btn").click(function () {
+            if (!selected_period || !selected_subject) {
+                alert("Please select a class period from the grid above.");
+                return;
+            }
+            loadStudents();
+        });
+
+        function loadStudents() {
+
+            var session = $("#session").val();
+
+            $.ajax({
+                url: "{% url 'get_students' %}",
+                type: 'POST',
+                data: {
+                    subject: selected_subject,
+                    session: session,
+                    section: selected_section
+                }
+            }).done(function (response) {
+                var students = JSON.parse(response);
+                if (students.length < 1) {
+                    alert("No students found for this selection.");
+                    return;
+                }
+
+                var title = $(".selected").data('name') + " — Period " + $(".selected").data('period');
+                $("#student_list_title").text(title);
+
+                var listHtml = "";
+                students.forEach(function (s, i) {
+                    var initials = s.name.substring(0, 2).toUpperCase();
+                    var roll = s.roll_number || 'N/A';
+                    listHtml += '<div class="student-card" style="animation: cardUp 0.4s cubic-bezier(0.25,0.1,0.25,1) ' + (i * 0.03) + 's backwards;" onclick="toggleStudent(this)">' +
+                        '<div class="student-avatar">' + initials + '</div>' +
+                        '<div class="student-info">' +
+                        '<div class="student-name">' + s.name + '</div>' +
+                        '<div class="student-roll">' + roll + '</div>' +
+                        '</div>' +
+                        '<label class="ios-toggle" onclick="event.stopPropagation()">' +
+                        '<input type="checkbox" class="student-chk" value="' + s.id + '" checked onchange="updateCount(); toggleCardState(this)">' +
+                        '<span class="slider"></span>' +
+                        '</label>' +
+                        '</div>';
+                });
+
+                $("#student_list_data").html(listHtml);
+                $("#student_list_container").show();
+                updateCount();
+
+                // Scroll to list
+                $('html, body').animate({
+                    scrollTop: $("#student_list_container").offset().top - 80
+                }, 400);
+
+            }).fail(function () {
+                alert("Error fetching students.");
+            });
+        }
+
+        // Save Attendance
+        $("#save_attendance_btn").click(function () {
+            var btn = $(this);
+            btn.attr("disabled", "disabled").html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+            var student_data = [];
+            $(".student-chk").each(function () {
+                student_data.push({
+                    'id': $(this).val(),
+                    'status': $(this).is(":checked") ? 1 : 0
+                });
+            });
+
+            $.ajax({
+                url: "{% url 'save_attendance' %}",
+                type: 'POST',
+                data: {
+                    date: $("#attendance_date").val(),
+                    student_ids: JSON.stringify(student_data),
+                    subject: selected_subject,
+                    session: $("#session").val(),
+                    period: selected_period
+                }
+            }).done(function (response) {
+                if (response === 'OK') {
+                    alert("Attendance saved successfully!");
+                    loadGrid();
+                    $("#student_list_container").hide();
+                    selected_period = null;
+                    selected_subject = null;
+                } else {
+                    alert("Error: " + response);
+                }
+                btn.removeAttr("disabled").html('<i class="fas fa-save"></i> Save Attendance');
+            }).fail(function () {
+                alert("Error saving attendance.");
+                btn.removeAttr("disabled").html('<i class="fas fa-save"></i> Save Attendance');
+            });
+        });
+    });
+
+    function toggleStudent(card) {
+        var chk = $(card).find('.student-chk');
+        chk.prop('checked', !chk.prop('checked'));
+        toggleCardState(chk[0]);
+        updateCount();
+    }
+
+    function toggleCardState(chk) {
+        var card = $(chk).closest('.student-card');
+        if ($(chk).is(':checked')) {
+            card.removeClass('absent');
+        } else {
+            card.addClass('absent');
+        }
+    }
+
+    function updateCount() {
+        var total = $(".student-chk").length;
+        var present = $(".student-chk:checked").length;
+        $("#present_count").text(present);
+        $("#total_count").text(total);
+    }
+
+    function selectAll() {
+        $(".student-chk").prop('checked', true);
+        $(".student-card").removeClass('absent');
+        updateCount();
+    }
+
+    function deselectAll() {
+        $(".student-chk").prop('checked', false);
+        $(".student-card").addClass('absent');
+        updateCount();
+    }
+</script>
+{% endblock custom_js %}

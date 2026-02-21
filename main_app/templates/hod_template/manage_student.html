@@ -1,0 +1,148 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                        <div class="row w-100">
+                            <div class="col-md-12">
+                                <form method="GET" action="{% url 'manage_student' %}" class="row align-items-end">
+                                    <div class="col-md-2">
+                                        <div class="form-group mb-0">
+                                            <label class="small">ROLL Number</label>
+                                            <input type="text" name="enrollment_number"
+                                                class="form-control form-control-sm"
+                                                placeholder="Enter enrollment number"
+                                                value="{{ request.GET.enrollment_number }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group mb-0">
+                                            <label class="small">Name</label>
+                                            <input type="text" name="name" class="form-control form-control-sm"
+                                                placeholder="Enter student name" value="{{ request.GET.name }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group mb-0">
+                                            <label class="small">Semester</label>
+                                            <select name="semester" class="form-control form-control-sm shadow-none">
+                                                <option value="">Select Semester</option>
+                                                {% for sem_val, sem_name in semesters %}
+                                                <option value="{{ sem_val }}" {% if request.GET.semester == sem_val %}
+                                                    selected {% endif %}>
+                                                    {{ sem_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group mb-0">
+                                            <label class="small">Branch</label>
+                                            <select name="course" class="form-control form-control-sm shadow-none">
+                                                <option value="">Select Branch</option>
+                                                {% for course in courses %}
+                                                <option value="{{ course.id|stringformat:'s' }}" {% if
+                                                    request.GET.course == course.id|stringformat:'s' %} selected {% endif
+                                                    %}>
+                                                    {{ course.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group mb-0">
+                                            <label class="small">Regulation</label>
+                                            <select name="regulation" class="form-control form-control-sm shadow-none">
+                                                <option value="">Select Regulation</option>
+                                                {% for reg in regulations %}
+                                                <option value="{{ reg.id|stringformat:'s' }}" {% if
+                                                    request.GET.regulation==reg.id|stringformat:'s' %} selected {% endif
+                                                    %}>
+                                                    {{ reg.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn btn-primary btn-sm px-3">Search</button>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <a href="{% url 'manage_student' %}" class="btn btn-secondary btn-sm">Clear</a>
+                                    </div>
+                                    <div class="col-md-2 text-right">
+                                        <a href="{% url 'import_student' %}" class="btn btn-primary btn-sm"><i
+                                                class="fas fa-file-import"></i> Import Students</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body" style="overflow-x: auto; overflow-y: auto; max-height: 600px;">
+                        <table id="example2" class="table table-bordered table-hover" style="min-width: 800px;">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Roll Number</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Course</th>
+                                    <th>Regulation</th>
+                                    <th>Section</th>
+                                    <th>Avatar</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ student.student.roll_number }}</td>
+                                    <td>{{student.first_name}} {{student.last_name}}</td>
+                                    <td>{{student.email}}</td>
+                                    <td>{{student.gender}}</td>
+                                    <td>{{student.student.course.name}}</td>
+                                    <td>{{student.student.regulation.name|default:"N/A"}}</td>
+                                    <td>{{student.student.get_section_display}}</td>
+                                    <td>
+                                        {% if student.profile_pic %}
+                                        <img class="img img-fluid mb-2" height="56" width="56"
+                                            src="{{student.profile_pic.url}}" alt=""
+                                            onerror="this.onerror=null; this.src='{% static 'dist/img/default-avatar.png' %}';">
+                                        {% else %}
+                                        <img class="img img-fluid mb-2" height="56" width="56"
+                                            src="{% static 'dist/img/default-avatar.png' %}" alt="">
+                                        {% endif %}
+                                    </td>
+
+                                    <td><a href="{% url 'view_student_detail' student.student.id %}"
+                                            class="btn btn-primary">View</a> -
+                                        <a href="{% url 'edit_student' student.student.id %}"
+                                            class="btn btn-info">Edit</a> -
+                                        <a href="{% url 'delete_student' student.student.id %}" class="btn btn-danger"
+                                            onclick="return confirm('Are you sure about this ?')">Delete</a>
+
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

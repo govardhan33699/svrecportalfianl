@@ -1,0 +1,70 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+
+                    <form action="{% url 'import_student' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="excel_file">Select Excel File (.xlsx)</label>
+                                <input type="file" name="excel_file" class="form-control" id="excel_file"
+                                    accept=".xlsx, .xls" required>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <h5><i class="icon fas fa-info"></i> Expected Columns:</h5>
+                                <p><strong>Download Sample:</strong> <a href="/media/sample_students.xlsx"
+                                        class="text-white" style="text-decoration: underline;" download>Click here to
+                                        download a sample Excel file</a></p>
+                                <ul>
+                                    <li>Roll Number</li>
+                                    <li>First Name</li>
+                                    <li>Last Name</li>
+                                    <li>Email</li>
+                                    <li>Password</li>
+                                    <li>Gender (Male/Female)</li>
+                                    <li>Address</li>
+                                    <li>Course (Must match existing Course Name)</li>
+                                    <li>Session Start Year (e.g. 2021)</li>
+                                    <li>Session End Year (e.g. 2025)</li>
+                                </ul>
+                                <hr>
+                                <h6><strong>Available System Data (Must match exactly):</strong></h6>
+                                <p><strong>Courses:</strong>
+                                    {% for course in courses %}
+                                    <span class="badge badge-warning">{{ course.name }}</span>
+                                    {% endfor %}
+                                </p>
+                                <p><strong>Session Years:</strong>
+                                    {% for session in sessions %}
+                                    <span class="badge badge-warning">{{ session.start_year|date:"Y" }}</span>
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Import Students</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

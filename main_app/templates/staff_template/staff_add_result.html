@@ -1,0 +1,227 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    .marks-card {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: #fff;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #444;
+        margin-bottom: 5px;
+    }
+
+    .form-control:focus {
+        border-color: #5e64ff;
+        box-shadow: 0 0 0 0.2rem rgba(94, 100, 255, 0.25);
+    }
+
+    .btn-fetch {
+        background-color: #5e64ff;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-fetch:hover {
+        background-color: #4a50e6;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .student-list-container {
+        margin-top: 25px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="marks-card">
+                    <h5 class="mb-4 text-primary"><i class="fas fa-edit me-2"></i>Marks Entry Portal</h5>
+
+                    <form method="POST" id="marks_entry_form">
+                        {% csrf_token %}
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">AcademicYear:*</label>
+                                    <select name="session" id="session" class="form-control" required>
+                                        <option value="">Select Session</option>
+                                        {% for session in sessions %}
+                                        <option value="{{session.id}}">{{session}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Program:</label>
+                                    <select name="course" id="course" class="form-control">
+                                        <option value="">Select Program</option>
+                                        {% for course in courses %}
+                                        <option value="{{course.id}}">{{course.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Sem:*</label>
+                                    <select name="semester" id="semester" class="form-control" required>
+                                        <option value="">Select Semester</option>
+                                        {% for sem_val, sem_name in semesters %}
+                                        <option value="{{sem_val}}">{{sem_name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Batch:</label>
+                                    <select name="batch" id="batch" class="form-control">
+                                        <option value="">Select Batch</option>
+                                        {% for session in sessions %}
+                                        <option value="{{session.id}}">{{session}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Branch:</label>
+                                    <select name="branch" id="branch" class="form-control">
+                                        <option value="">Select Branch</option>
+                                        {% for course in courses %}
+                                        <option value="{{course.id}}">{{course.name}} (Branch)</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Section:*</label>
+                                    <select name="section" id="section" class="form-control" required>
+                                        <option value="">Select Section</option>
+                                        {% for sec_val, sec_name in sections %}
+                                        <option value="{{sec_val}}">{{sec_name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Internal Exam Name:*</label>
+                                    <select name="exam_name" id="exam_name" class="form-control" required>
+                                        <option value="">Select Exam</option>
+                                        {% for choice in exam_choices %}
+                                        <option value="{{choice}}">{{choice}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Subjects:</label>
+                                    <select name="subject" id="subject" class="form-control" required>
+                                        <option value="">Select Subject</option>
+                                        {% for subject in subjects %}
+                                        <option value="{{subject.id}}">{{subject.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 text-end">
+                            <button type="button" id="fetch_student" class="btn btn-fetch btn-lg px-5">
+                                <i class="fas fa-search me-2"></i>Fetch Students
+                            </button>
+                        </div>
+
+                        <div id="student_data" class="student-list-container">
+                            <!-- Student table injection -->
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        $("#fetch_student").click(function () {
+            var subject = $("#subject").val();
+            var session = $("#session").val();
+            var section = $("#section").val();
+            var semester = $("#semester").val();
+
+            $("#student_data").html("<div class='text-center'><div class='spinner-border text-primary' role='status'></div><p>Fetching students...</p></div>");
+
+            if (subject.length == 0 || session.length == 0 || section.length == 0 || semester.length == 0) {
+                alert("Please select all mandatory fields (*)");
+                $("#student_data").html("");
+                return false;
+            }
+
+            $.ajax({
+                url: "{% url 'get_students' %}",
+                type: 'POST',
+                data: {
+                    subject: subject,
+                    session: session,
+                    section: section,
+                    semester: semester
+                }
+            }).done(function (response) {
+                var json_data = JSON.parse(response);
+                if (json_data.length < 1) {
+                    $("#student_data").html("<div class='alert alert-info'>No students found for given criteria.</div>");
+                } else {
+                    var div_data = "<div class='table-responsive'><table class='table table-hover align-middle'><thead><tr><th>Student Name</th><th>Roll Number</th><th>Test Score (40)</th><th>Exam Score (60)</th></tr></thead><tbody>";
+
+                    for (key in json_data) {
+                        div_data += "<tr>";
+                        div_data += "<td>" + json_data[key]['name'] + "</td>";
+                        div_data += "<td>" + (json_data[key]['roll_number'] || 'N/A') + "</td>";
+                        div_data += "<td><input type='number' class='form-control' name='test_" + json_data[key]['id'] + "' value='0' min='0' max='40'></td>";
+                        div_data += "<td><input type='number' class='form-control' name='exam_" + json_data[key]['id'] + "' value='0' min='0' max='60'></td>";
+                        div_data += "<input type='hidden' name='student_ids[]' value='" + json_data[key]['id'] + "'>";
+                        div_data += "</tr>";
+                    }
+
+                    div_data += "</tbody></table></div>";
+                    div_data += "<div class='mt-4'><button class='btn btn-success btn-lg w-100' type='submit'>Save Marks</button></div>";
+                    $("#student_data").html(div_data);
+                }
+            }).fail(function (response) {
+                alert("Error in fetching students");
+                $("#student_data").html("");
+            });
+        });
+
+        // Add client-side validation for marks
+        $(document).on('change', 'input[type="number"]', function () {
+            var val = parseFloat($(this).val());
+            var max = parseFloat($(this).attr('max'));
+            if (val > max) {
+                alert("Value cannot exceed " + max);
+                $(this).val(max);
+            }
+            if (val < 0) $(this).val(0);
+        });
+    });
+</script>
+{% endblock custom_js %}

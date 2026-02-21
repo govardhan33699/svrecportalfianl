@@ -1,0 +1,100 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Filter Bar -->
+        <div class="card card-outline card-primary mb-3">
+            <div class="card-body py-2">
+                <form method="GET" class="form-inline">
+                    <label class="mr-2 font-weight-bold">Branch:</label>
+                    <select name="course" class="form-control form-control-sm mr-3" onchange="this.form.submit()">
+                        <option value="">Select Branch</option>
+                        {% for c in courses %}
+                        <option value="{{ c.id }}" {% if c.selected %}selected{% endif %}>{{
+                            c.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <a href="{% url 'add_timetable' %}" class="btn btn-primary btn-sm ml-2">
+                        <i class="fas fa-plus"></i> Add Entry
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_course_id %}
+        {% if staff_timetable_list %}
+        {% for item in staff_timetable_list %}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h3 class="card-title">
+                    <i class="fas fa-user-tie mr-2"></i>
+                    {{ item.staff.admin.first_name }} {{ item.staff.admin.last_name }}
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm text-center mb-0" style="font-size:0.85rem;">
+                        <thead class="text-white"
+                            style="background: linear-gradient(to right, #d5d0d3 0%, #c49960 100%);">
+                            <tr>
+                                <th
+                                    style="min-width:100px; vertical-align:middle; text-transform:uppercase; letter-spacing:1px; font-weight:600;">
+                                    Day</th>
+                                {% for period in periods %}
+                                <th style="min-width:140px; vertical-align:middle;">
+                                    <div
+                                        style="font-size:0.9rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
+                                        Period {{ period.number }}</div>
+                                    <div style="font-size:0.75rem; font-weight:400; opacity:0.9; margin-top:2px;">
+                                        {{ period.start_time|time:"h:i A" }} – {{ period.end_time|time:"h:i A" }}
+                                    </div>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in item.grid_rows %}
+                            <tr>
+                                <td class="font-weight-bold bg-light align-middle">{{ row.day }}</td>
+                                {% for entry in row.cells %}
+                                <td class="align-middle p-1" style="background:{% cycle '#f8f9fa' '#ffffff' %};">
+                                    {% if entry %}
+                                    <div class="font-weight-bold text-primary"
+                                        style="font-size:0.82rem; line-height:1.2;">{{ entry.subject.name }}</div>
+                                    <div class="text-muted" style="font-size:0.72rem;">
+                                        Section {{ entry.section }} ({{ entry.course.name }})
+                                    </div>
+                                    <div class="mt-1">
+                                        <a href="{% url 'edit_timetable' entry.id %}"
+                                            class="btn btn-info btn-sm py-0 px-1" style="font-size:0.7rem;">Edit</a>
+                                        <a href="{% url 'delete_timetable' entry.id %}"
+                                            onclick="return confirm('Delete this entry?')"
+                                            class="btn btn-danger btn-sm py-0 px-1" style="font-size:0.7rem;">Del</a>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted" style="font-size:0.75rem;">—</span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="alert alert-info">No staff found for this branch or no timetables assigned.</div>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info">Please select a Branch to view timetables.</div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock content %}

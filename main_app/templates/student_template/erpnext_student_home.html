@@ -1,0 +1,276 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+<div class="page-container">
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon bg-blue">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{total_attendance}}</div>
+        <div class="stat-label">Total Attendance</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon bg-green">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{percent_present}}<span class="stat-unit">%</span></div>
+        <div class="stat-label">Percentage Present</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon bg-red">
+        <i class="fas fa-calendar-minus"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{percent_absent}}<span class="stat-unit">%</span></div>
+        <div class="stat-label">Percentage Absent</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon bg-purple">
+        <i class="fas fa-book"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{total_subject}}</div>
+        <div class="stat-label">Total Subjects</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="row mt-4">
+    <div class="col-lg-6">
+      <div class="erpnext-card">
+        <div class="card-header">
+          <h5 class="card-title">Attendance Overview</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="attendanceData" style="height: 300px; max-width: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="erpnext-card">
+        <div class="card-header">
+          <h5 class="card-title">Subject-wise Attendance</h5>
+        </div>
+        <div class="card-body" style="padding: 0; overflow-x: auto;">
+          <table id="subjectAttendanceTable" style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+              <tr style="background:rgba(99,102,241,0.08); border-bottom:2px solid rgba(99,102,241,0.15);">
+                <th
+                  style="padding:12px 14px; text-align:left; font-weight:700; color:var(--text-primary,#1e293b); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+                  Subject</th>
+                <th
+                  style="padding:12px 14px; text-align:center; font-weight:700; color:#22c55e; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+                  Present</th>
+                <th
+                  style="padding:12px 14px; text-align:center; font-weight:700; color:#ef4444; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+                  Absent</th>
+                <th
+                  style="padding:12px 14px; text-align:center; font-weight:700; color:var(--text-secondary,#64748b); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+                  Total</th>
+                <th
+                  style="padding:12px 14px; text-align:center; font-weight:700; color:var(--text-primary,#1e293b); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+                  %</th>
+              </tr>
+            </thead>
+            <tbody id="subjectAttendanceBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+  $(document).ready(function () {
+    // Initialize chart instances array
+    window.chartInstances = window.chartInstances || [];
+
+    // Set initial colors based on current theme
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const textColor = isDarkMode ? '#e0e0e0' : '#262626';
+
+    // ERPNext Theme Colors
+    var colors = {
+      primary: '#5e64ff',
+      success: '#28a745',
+      danger: '#dc3545',
+      warning: '#ffc107',
+      info: '#17a2b8',
+      light: '#f8f9fa',
+      dark: '#343a40',
+      purple: '#6f42c1'
+    };
+
+    //Dataset
+    var subjects = {{ data_name| safe
+  }}
+    var data_present = {{ data_present }}
+  var data_absent = {{ data_absent }}
+
+  //-------------
+  //- DONUT CHART -
+  var attendanceDataCanvas = $('#attendanceData').get(0).getContext('2d')
+  var donutData = {
+    labels: [
+      'Present', 'Absent'
+    ],
+    datasets: [
+      {
+        data: [{{ percent_present }}, {{ percent_absent }}],
+    backgroundColor: [colors.success, colors.danger],
+    borderColor: [colors.success, colors.danger],
+    borderWidth: 2
+        }
+      ]
+    }
+  var donutOptions = {
+    maintainAspectRatio: false,
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          color: textColor,
+          font: {
+            size: 12
+          }
+        }
+      }
+    }
+  }
+  var attendanceData = new Chart(attendanceDataCanvas, {
+    type: 'doughnut',
+    data: donutData,
+    options: donutOptions
+  });
+  window.chartInstances.push(attendanceData);
+
+  // Subject-wise Attendance Table
+  var tableBody = $('#subjectAttendanceBody');
+  for (var i = 0; i < subjects.length; i++) {
+    var present = data_present[i] || 0;
+    var absent = data_absent[i] || 0;
+    var total = present + absent;
+    var percent = total > 0 ? Math.round((present / total) * 100) : 0;
+    var percentColor = percent >= 75 ? '#22c55e' : (percent >= 50 ? '#f59e0b' : '#ef4444');
+    var percentBg = percent >= 75 ? 'rgba(34,197,94,0.1)' : (percent >= 50 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)');
+    var rowBg = i % 2 === 0 ? 'transparent' : 'rgba(99,102,241,0.03)';
+    tableBody.append(
+      '<tr style="border-bottom:1px solid rgba(0,0,0,0.06); background:' + rowBg + '; transition:background 0.2s;" onmouseenter="this.style.background=\'rgba(99,102,241,0.06)\'" onmouseleave="this.style.background=\'' + rowBg + '\'">' +
+      '<td style="padding:10px 14px; font-weight:500; color:var(--text-primary,#1e293b);">' + subjects[i] + '</td>' +
+      '<td style="padding:10px 14px; text-align:center; font-weight:600; color:#22c55e;">' + present + '</td>' +
+      '<td style="padding:10px 14px; text-align:center; font-weight:600; color:#ef4444;">' + absent + '</td>' +
+      '<td style="padding:10px 14px; text-align:center; font-weight:500; color:var(--text-secondary,#64748b);">' + total + '</td>' +
+      '<td style="padding:10px 14px; text-align:center;"><span style="padding:3px 10px; border-radius:100px; font-size:11px; font-weight:700; background:' + percentBg + '; color:' + percentColor + ';">' + percent + '%</span></td>' +
+      '</tr>'
+    );
+  }
+})
+</script>
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-analytics.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.22.1/firebase-messaging.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyBarDWWHTfTMSrtc5Lj3Cdw5dEvjAkFwtM",
+    authDomain: "sms-with-django.firebaseapp.com",
+    databaseURL: "https://sms-with-django.firebaseio.com",
+    projectId: "sms-with-django",
+    storageBucket: "sms-with-django.appspot.com",
+    messagingSenderId: "945324593139",
+    appId: "1:945324593139:web:03fa99a8854bbd38420c86",
+    measurementId: "G-2F2RXTL9GT"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig)
+  const messaging = firebase.messaging();
+  function InitializeFireBaseMessaging() {
+    messaging
+      .requestPermission()
+      .then(function () {
+        console.log("Notification Permission");
+        return messaging.getToken();
+      })
+      .then(function (token) {
+        console.log("Token : " + token);
+        sendToServer(token);
+      })
+      .catch(function (reason) {
+        console.log(reason)
+      })
+  }
+  messaging.onMessage(function (payload) {
+    const notificationOption = {
+      body: payload.notification.body,
+      icon: payload.notification.icon,
+
+    }
+    if (Notification.permission == 'granted') {
+      var notification = new Notification(payload.notification.title, notificationOption);
+      notification.onclick = function (event) {
+        event.preventDefault();
+        window.open(payload.notification.click_action, "_blank");
+        notification.close();
+      }
+    }
+    console.log(payload);
+  });
+  messaging.onTokenRefresh(function () {
+    messaging.getToken()
+      .then(function (newToken) {
+        console.log("New Token : " + newToken);
+        sendToServer(newToken);
+
+      })
+      .catch(function (reason) {
+        console.log(reason)
+      })
+  })
+
+  function sendToServer(token) {
+    $.ajax({
+      url: "{% url 'student_fcmtoken' %}",
+      type: 'POST',
+      data: {
+        token: token,
+      }
+    }).done(function (response) {
+
+
+
+    }).fail(function (response) {
+    })
+
+  }
+
+  InitializeFireBaseMessaging();
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,418 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block custom_css %}
+<style>
+    .filter-card {
+        margin-bottom: 25px;
+    }
+
+    .filter-card .card-header i {
+        color: var(--primary);
+    }
+
+    .filter-card label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .filter-card .form-control {
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        font-size: 13px;
+        padding: 8px 12px;
+        height: auto;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .dark-mode .filter-card .form-control {
+        background: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .summary-badge {
+        padding: 5px 12px;
+        border-radius: var(--radius-pill);
+        font-weight: 700;
+        font-size: 12px;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .attendance-container {
+        border-radius: var(--radius-lg);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .table-responsive-custom {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+        position: relative;
+    }
+
+    .table-responsive-custom::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .table-responsive-custom::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-responsive-custom::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.3);
+        border-radius: 10px;
+    }
+
+    .attendance-table {
+        margin-bottom: 0;
+        font-size: 11px;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        min-width: 1200px;
+    }
+
+    .attendance-table thead th {
+        background: #1a3c5e !important;
+        color: #fff !important;
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+    }
+
+    .attendance-table thead tr:nth-child(2) th {
+        top: 37px;
+        z-index: 1;
+        font-size: 10px;
+    }
+
+    .attendance-table tbody td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 6px 4px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        background: transparent;
+        color: var(--text-primary);
+    }
+
+    .attendance-table tbody tr:hover td {
+        background: rgba(99, 102, 241, 0.05) !important;
+    }
+
+    .pct-indicator {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: var(--radius-pill);
+        font-weight: 700;
+        font-size: 10px;
+        min-width: 40px;
+    }
+
+    .pct-crit {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .pct-warn {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .pct-good {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .btn-action {
+        border-radius: var(--radius-pill);
+        padding: 10px 24px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+
+        <form method="GET" action="{% url 'admin_view_attendance' %}" class="no-print" id="filterForm">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card erpnext-card filter-card">
+                        <div class="card-header">
+                            <h5 class="card-title text-primary"><i class="fas fa-filter"></i> Select Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+
+                                <div class="col-md-6 mb-3">
+                                    <label>Branch</label>
+                                    <select name="course" class="form-control"
+                                        data-value="{{ request.GET.course|default:'' }}">
+                                        <option value="">Select Branch</option>
+                                        {% for c in courses %}
+                                        <option value="{{ c.id }}">{{ c.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label>Session</label>
+                                    <select name="session" class="form-control"
+                                        data-value="{{ request.GET.session|default:'' }}">
+                                        <option value="">Select Session</option>
+                                        {% for s in sessions %}
+                                        <option value="{{ s.id }}">{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label>Semester</label>
+                                    <select name="semester" class="form-control"
+                                        data-value="{{ request.GET.semester|default:'' }}">
+                                        <option value="">All</option>
+                                        {% for v, n in semesters %}
+                                        <option value="{{ v }}">{{ n }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label>Section</label>
+                                    <select name="section" class="form-control"
+                                        data-value="{{ request.GET.section|default:'' }}">
+                                        <option value="">All</option>
+                                        {% for v, n in sections %}
+                                        <option value="{{ v }}">{{ n }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label>Regulation</label>
+                                    <select name="regulation" class="form-control"
+                                        data-value="{{ request.GET.regulation|default:'' }}">
+                                        <option value="">All</option>
+                                        {% for r in regulations %}
+                                        <option value="{{ r.id }}">{{ r.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label>From Date</label>
+                                    <input type="date" name="from_date" class="form-control"
+                                        value="{{ request.GET.from_date|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label>To Date</label>
+                                    <input type="date" name="to_date" class="form-control"
+                                        value="{{ request.GET.to_date|default:'' }}">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card erpnext-card filter-card">
+                        <div class="card-header">
+                            <h5 class="card-title text-success"><i class="fas fa-play-circle"></i> Actions</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column gap-3 py-4">
+                            <button type="submit" class="btn btn-primary btn-action w-100">Show Data</button>
+                            <button type="button" class="btn btn-danger btn-action w-100" onclick="window.print()">PDF
+                                Report</button>
+                            <a href="{% url 'admin_view_attendance' %}"
+                                class="btn btn-light btn-action w-100 border">Reset</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card erpnext-card filter-card">
+                        <div class="card-header">
+                            <h5 class="card-title text-secondary"><i class="fas fa-chart-pie"></i> Distribution</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table mb-0" style="font-size: 12px;">
+                                <tr class="border-bottom">
+                                    <td class="py-3 px-3">Critically Low (&lt;60%)</td>
+                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-danger js-val"
+                                            data-v="{{ summary.below_60|default:0 }}"></span></td>
+                                </tr>
+                                <tr class="border-bottom">
+                                    <td class="py-3 px-3">Low (60-65%)</td>
+                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-warning js-val"
+                                            data-v="{{ summary.between_60_65|default:0 }}"></span></td>
+                                </tr>
+                                <tr class="border-bottom">
+                                    <td class="py-3 px-3">Average (65-75%)</td>
+                                    <td class="text-right py-3 px-3"><span class="summary-badge js-val"
+                                            style="background:#6366f1;"
+                                            data-v="{{ summary.between_65_75|default:0 }}"></span></td>
+                                </tr>
+                                <tr class="border-bottom">
+                                    <td class="py-3 px-3">Excellent (&gt;75%)</td>
+                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-success js-val"
+                                            data-v="{{ summary.above_75|default:0 }}"></span></td>
+                                </tr>
+                                <tr class="bg-light font-weight-bold">
+                                    <td class="py-3 px-3">Total Students</td>
+                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-dark js-val"
+                                            data-v="{{ total_students|default:0 }}"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+        {% if filters_applied %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="attendance-container">
+                    <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
+                        <h5 class="card-title m-0"><i class="fas fa-table text-primary"></i> Cumulative Attendance
+                            Details</h5>
+                        <span class="badge bg-primary rounded-pill px-3 py-2 js-val" style="font-size: 11px;"
+                            data-v="{{ total_students }} Students Enrolled"></span>
+                    </div>
+                    <div class="table-responsive-custom">
+                        <table class="table attendance-table" id="attendanceTable">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="width:50px;">SNo</th>
+                                    <th rowspan="2" style="width:130px;">Roll Number</th>
+                                    <th rowspan="2" style="width:220px;">Student Name</th>
+                                    {% for subject in subjects %}
+                                    <th colspan="2">{{ subject.name }}</th>
+                                    {% endfor %}
+                                    <th rowspan="2" style="width:60px;">TC</th>
+                                    <th rowspan="2" style="width:60px;">TA</th>
+                                    <th rowspan="2" style="width:70px;">%</th>
+                                </tr>
+                                <tr class="bg-dark">
+                                    {% for subject in subjects %}
+                                    <th>Total</th>
+                                    <th>Pres.</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students_data %}
+                                <tr>
+                                    <td class="font-weight-bold">{{ forloop.counter }}</td>
+                                    <td style="text-align:left; font-weight:600;">{{ student.roll_number }}</td>
+                                    <td style="text-align:left;">{{ student.name }}</td>
+                                    {% for sd in student.subjects %}
+                                    <td class="js-val" data-v="{{ sd.total }}"></td>
+                                    <td class="font-weight-600 js-present {% if sd.present > 0 %}text-success{% endif %}"
+                                        data-v="{{ sd.present }}"></td>
+                                    {% endfor %}
+                                    <td class="bg-light js-val" data-v="{{ student.total_classes }}"></td>
+                                    <td class="bg-light js-val" data-v="{{ student.total_attended }}"></td>
+                                    <td><span class="pct-indicator pct-logic"
+                                            data-pct="{{ student.percentage }}"></span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="100" class="py-5 text-center">
+                                        <div class="opacity-50">
+                                            <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+                                            <h5 class="text-muted">No attendance data found for the selected criteria.
+                                            </h5>
+                                            <p class="small">Try adjusting your filters or date range.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card erpnext-card">
+                    <div class="card-body text-center py-5">
+                        <div class="opacity-75">
+                            <i class="fas fa-calendar-check fa-4x text-primary mb-4 opacity-50"></i>
+                            <h4 class="font-weight-bold">Ready to View Attendance?</h4>
+                            <p class="text-muted max-width-500 mx-auto">Select a Branch and Session from the filters
+                                above to load the cumulative attendance record.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Restore select values
+        document.querySelectorAll('select.form-control').forEach(sel => {
+            const val = sel.getAttribute('data-value');
+            if (val) sel.value = val;
+        });
+
+        // Restore all simple values
+        document.querySelectorAll('.js-val, .js-present').forEach(el => {
+            const val = el.getAttribute('data-v');
+            if (val !== null) el.textContent = val;
+        });
+
+        // Color and populate percentage indicators
+        document.querySelectorAll('.pct-logic').forEach(ind => {
+            const pctVal = ind.getAttribute('data-pct');
+            if (pctVal) {
+                const pct = parseFloat(pctVal);
+                ind.textContent = pct + '%';
+                if (pct < 60) ind.classList.add('pct-crit');
+                else if (pct < 65) ind.classList.add('pct-warn');
+                else if (pct < 75) {
+                    ind.style.background = 'rgba(99,102,241,0.1)';
+                    ind.style.color = '#6366f1';
+                } else ind.classList.add('pct-good');
+            }
+        });
+    });
+</script>
+{% endblock content %}
