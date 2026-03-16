@@ -331,8 +331,14 @@
     }
 
     .student-card.absent {
-        opacity: 0.55;
-        border-color: rgba(248, 113, 113, 0.3);
+        background: rgba(237, 36, 36, 0.945);
+        border-color: rgba(239, 68, 68, 0.4);
+        opacity: 0.95;
+    }
+
+    .dark-mode .student-card.absent {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.5);
     }
 
     .dark-mode .student-card {
@@ -520,7 +526,6 @@
 {% block content %}
 <section class="content">
     <div class="container-fluid">
-
         <!-- Hidden fields for JS -->
         <select id="session" style="display:none;">
             {% for session in sessions %}
@@ -635,7 +640,7 @@
                 type: 'POST',
                 data: { date: date }
             }).done(function (response) {
-                var grid = JSON.parse(response);
+                var grid = (typeof response === 'string') ? JSON.parse(response) : response;
                 var gridHtml = "";
 
                 if (grid.length === 0) {
@@ -718,7 +723,7 @@
         });
 
         function loadStudents() {
-
+            var date = $("#attendance_date").val();
             var session = $("#session").val();
 
             $.ajax({
@@ -727,30 +732,38 @@
                 data: {
                     subject: selected_subject,
                     session: session,
-                    section: selected_section
+                    section: selected_section,
+                    date: date,
+                    period: selected_period
                 }
             }).done(function (response) {
-                var students = JSON.parse(response);
+                var students = (typeof response === 'string') ? JSON.parse(response) : response;
                 if (students.length < 1) {
                     alert("No students found for this selection.");
                     return;
                 }
 
                 var title = $(".selected").data('name') + " — Period " + $(".selected").data('period');
-                $("#student_list_title").text(title);
-
                 var listHtml = "";
+
                 students.forEach(function (s, i) {
                     var initials = s.name.substring(0, 2).toUpperCase();
                     var roll = s.roll_number || 'N/A';
-                    listHtml += '<div class="student-card" style="animation: cardUp 0.4s cubic-bezier(0.25,0.1,0.25,1) ' + (i * 0.03) + 's backwards;" onclick="toggleStudent(this)">' +
-                        '<div class="student-avatar">' + initials + '</div>' +
+                    var isChecked = s.attendance_status ? 'checked' : '';
+                    var absentClass = s.attendance_status ? '' : 'absent';
+
+                    var avatarContent = s.profile_pic
+                        ? '<img src="' + s.profile_pic + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Pic">'
+                        : initials;
+
+                    listHtml += '<div class="student-card ' + absentClass + '" style="animation: cardUp 0.4s cubic-bezier(0.25,0.1,0.25,1) ' + (i * 0.03) + 's backwards;" onclick="toggleStudent(this)">' +
+                        '<div class="student-avatar">' + avatarContent + '</div>' +
                         '<div class="student-info">' +
                         '<div class="student-name">' + s.name + '</div>' +
                         '<div class="student-roll">' + roll + '</div>' +
                         '</div>' +
                         '<label class="ios-toggle" onclick="event.stopPropagation()">' +
-                        '<input type="checkbox" class="student-chk" value="' + s.id + '" checked onchange="updateCount(); toggleCardState(this)">' +
+                        '<input type="checkbox" class="student-chk" value="' + s.id + '" ' + isChecked + ' onchange="updateCount(); toggleCardState(this)">' +
                         '<span class="slider"></span>' +
                         '</label>' +
                         '</div>';
@@ -759,6 +772,22 @@
                 $("#student_list_data").html(listHtml);
                 $("#student_list_container").show();
                 updateCount();
+
+                // LOCK MECHANISM: If period is already marked as DONE, hide save button and disable inputs
+                if ($(".selected").hasClass('status-completed')) {
+                    $("#student_list_title").html(title + " <span class='badge bg-success ms-2'><i class='fas fa-lock me-1'></i> LOCKED</span>");
+                    $(".save-bar").hide();
+                    $(".bulk-actions").hide();
+                    $(".student-chk").attr('disabled', 'disabled');
+                    $(".student-card").css('cursor', 'default').removeAttr('onclick');
+                } else {
+                    $("#student_list_title").text(title);
+                    $(".save-bar").show();
+                    $(".bulk-actions").show();
+                    $(".student-chk").removeAttr('disabled');
+                    // Ensure onclick is restored if it was removed
+                    $(".student-card").css('cursor', 'pointer').attr('onclick', 'toggleStudent(this)');
+                }
 
                 // Scroll to list
                 $('html, body').animate({
@@ -800,6 +829,10 @@
                     $("#student_list_container").hide();
                     selected_period = null;
                     selected_subject = null;
+                } else if (response === 'ALREADY_TAKEN') {
+                    alert("Attendance has already been taken for this period. The page will refresh to reflect the latest status.");
+                    loadGrid();
+                    $("#student_list_container").hide();
                 } else {
                     alert("Error: " + response);
                 }

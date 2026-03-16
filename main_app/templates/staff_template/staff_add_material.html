@@ -1,0 +1,141 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    <div class="row g-4 align-items-stretch" style="margin-top: 50px;">
+        <!-- Left Column: Upload Form -->
+        <div class="col-lg-5">
+            <div class="card h-100 shadow-lg border-0"
+                style="background: white !important; border-radius: var(--radius-lg);">
+                <div class="card-header py-3"
+                    style="background: white !important; border-bottom: 2px solid #f1f3f4 !important; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 class="card-title mb-0" style="color: #1e293b !important; font-weight: 780 !important;">
+                        <i class="fas fa-plus-circle me-2 text-primary"></i>Upload New Material
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="title" class="form-label font-weight-bold ml-1">Material Title</label>
+                            <input type="text" class="form-control form-control-lg bg-light" name="title" id="title"
+                                placeholder="e.g. Unit 1 - Introduction to Python" required
+                                style="border-radius: var(--radius-md); border: 2px solid transparent;">
+                        </div>
+                        <div class="mb-4">
+                            <label for="subject" class="form-label font-weight-bold ml-1">Subject</label>
+                            <select name="subject" id="subject" class="form-control form-control-lg bg-light" required
+                                style="border-radius: var(--radius-md); border: 2px solid transparent;">
+                                <option value="">Choose a subject...</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="file" class="form-label font-weight-bold ml-1">Upload File (PDF, DOCX,
+                                ZIP)</label>
+                            <input type="file" class="form-control form-control-lg bg-light" name="file" id="file"
+                                required style="border-radius: var(--radius-md); border: 2px solid transparent;">
+                        </div>
+                        <div class="mb-4">
+                            <label for="description" class="form-label font-weight-bold ml-1">Brief Description</label>
+                            <textarea name="description" id="description" class="form-control bg-light" rows="4"
+                                placeholder="Add some context about the material..."
+                                style="border-radius: var(--radius-md); border: 2px solid transparent;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 mt-2 shadow"
+                            style="border-radius: var(--radius-md);">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Confirm & Upload
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Materials List -->
+        <div class="col-lg-7">
+            <div class="card h-100 shadow-lg border-0"
+                style="background: white !important; border-radius: var(--radius-lg);">
+                <div class="card-header py-3"
+                    style="background: white !important; border-bottom: 2px solid #f1f3f4 !important; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <h3 class="card-title mb-0" style="color: #1e293b !important; font-weight: 780 !important;">
+                        <i class="fas fa-history me-2 text-primary"></i>Recent Uploads
+                    </h3>
+                </div>
+                <div class="card-body p-0 d-flex flex-column">
+                    <div class="table-responsive flex-grow-1"
+                        style="min-height: 400px; display: flex; flex-direction: column;">
+                        <table class="table table-hover align-middle mb-0"
+                            style="flex-grow: 1; display: flex; flex-direction: column;">
+                            <thead class="bg-light sticky-top"
+                                style="width: 100%; display: table; table-layout: fixed;">
+                                <tr>
+                                    <th class="ps-4 py-3">Title & Info</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th class="text-center pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody
+                                style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; width: 100%;">
+                                {% for material in materials %}
+                                <tr style="display: table; table-layout: fixed; width: 100%;">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="icon-box me-3 bg-primary-light p-2 rounded text-primary">
+                                                <i class="fas fa-file-alt"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-dark">{{ material.title }}</div>
+                                                <small class="text-muted text-truncate d-block"
+                                                    style="max-width: 250px;">
+                                                    {{ material.description|default:"No description" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-soft-info p-2 px-3 text-primary"
+                                            style="background: rgba(59, 130, 246, 0.1);">{{ material.subject.name
+                                            }}</span></td>
+                                    <td class="text-muted">{{ material.created_at|date:"d M Y" }}</td>
+                                    <td class="text-center pe-4">
+                                        <a href="{{ material.file.url }}"
+                                            class="btn btn-sm btn-icon btn-outline-primary rounded-circle"
+                                            target="_blank" title="View/Download">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr
+                                    style="flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
+                                    <td colspan="4" class="text-center border-0">
+                                        <div class="empty-state py-5">
+                                            <div class="mb-4">
+                                                <i class="fas fa-cloud-moon fa-4x text-muted opacity-25"></i>
+                                            </div>
+                                            <h5 class="text-muted font-weight-bold">No materials found</h5>
+                                            <p class="text-muted">Uploaded files will appear here for management.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    // Filename display is handled automatically by Bootstrap 5 form-control for files
+</script>
+{% endblock custom_js %}

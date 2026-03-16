@@ -1,22 +1,449 @@
 {% extends 'main_app/base.html' %}
 {% load static %}
-{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    .profile-card {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 40px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        font-family: 'Arial', sans-serif;
+    }
+
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+    }
+
+    .profile-info {
+        flex: 1;
+    }
+
+    .profile-name {
+        color: #0000FF;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .profile-title {
+        color: #8D4004;
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .profile-dept {
+        color: #8D4004;
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 25px;
+    }
+
+    .profile-picture-container {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f9f9f9;
+        margin-left: 20px;
+    }
+
+    .profile-picture {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+        font-size: 15px;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        border: 1px solid #e2e8f0;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background-color: #f8fafc;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .detail-label {
+        color: #64748b;
+        margin-right: 8px;
+        font-weight: 600;
+        min-width: 130px;
+    }
+
+    .detail-value {
+        color: #1e293b;
+        font-weight: 500;
+        word-break: break-word;
+    }
+
+    /* Removed specific email colors so they match the rest */
+
+    .divider {
+        border-top: 2px solid #333;
+        margin: 20px 0;
+    }
+
+    .qualifications-section h4 {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #000;
+    }
+
+    .qual-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    .qual-table th,
+    .qual-table td {
+        border: 1px solid #333;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .qual-table th {
+        background-color: #f9f9f9;
+        font-weight: bold;
+    }
+
+    /* Form editing styles */
+    .edit-mode input,
+    .edit-mode select,
+    .edit-mode textarea {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-top: 5px;
+    }
+
+    .form-group-inline {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .form-group-inline input {
+        flex: 1;
+        border: none;
+        border-bottom: 1px dashed #ccc;
+        border-radius: 0;
+        padding: 2px 5px;
+        background: transparent;
+    }
+
+    .form-group-inline input:focus {
+        outline: none;
+        border-bottom-color: #0000FF;
+    }
+</style>
+{% endblock custom_css %}
 
 {% block content %}
-
 <section class="content">
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
-                <!-- general form elements -->
-                <div class="card card-dark">
-                    <div class="card-header">
-                        <h3 class="card-title">{{page_title}}</h3>
-                    </div>
 
-                    {% include "main_app/form_template.html" with messages=messages  form=form button_text="Update Profile"%}
-                </div>
-                <!-- /.card -->
+                <form role="form" method="POST" enctype="multipart/form-data" action="{% url 'staff_view_profile' %}"
+                    id="profileForm">
+                    {% csrf_token %}
+
+                    <div class="profile-card">
+
+                        <div class="d-flex justify-content-end mb-3">
+                            {% if request.user.user_type == '1' %}
+                            <button type="button" class="btn btn-warning mr-2" id="editBtn"
+                                onclick="toggleEditMode()"><i class="fas fa-edit"></i> Edit Profile</button>
+                            <button type="submit" class="btn btn-success d-none" id="saveBtn"><i
+                                    class="fas fa-save"></i> Save Changes</button>
+                            <button type="button" class="btn btn-secondary d-none ml-2" id="cancelBtn"
+                                onclick="toggleEditMode()"><i class="fas fa-times"></i> Cancel</button>
+                            {% endif %}
+                        </div>
+
+                        <!-- View Mode Header -->
+                        <div class="profile-header">
+                            <div class="profile-info">
+                                <div class="profile-name">
+                                    <span class="view-only text-uppercase">
+                                        DR. {{ form.instance.admin.first_name }} {{ form.instance.admin.last_name }}
+                                    </span>
+                                    <div class="edit-only d-none d-flex gap-2">
+                                        {{ form.first_name }}
+                                        {{ form.last_name }}
+                                        <div class="small text-muted w-100">Name Updates</div>
+                                    </div>
+                                </div>
+                                <div class="profile-title">
+                                    <span class="view-only">
+                                        {% if form.instance.designation %}
+                                        {{ form.instance.designation }}
+                                        {% else %}
+                                        Professor
+                                        {% endif %},
+                                    </span>
+                                    <div class="edit-only d-none mb-2">
+                                        <label class="small text-muted"> Designation</label>
+                                        {{ form.designation }}
+                                    </div>
+                                </div>
+                                <div class="profile-dept">
+                                    <span class="view-only">
+                                        {% if form.instance.course %}
+                                        {{ form.instance.course.name }}
+                                        {% else %}
+                                        Department
+                                        {% endif %}
+                                    </span>
+                                    <div class="edit-only d-none">
+                                        <label class="small text-muted">Department/Course</label>
+                                        {{ form.course }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="profile-picture-container">
+                                {% if form.instance.admin.profile_pic %}
+                                <img src="{{ form.instance.admin.profile_pic.url }}" class="profile-picture"
+                                    alt="User Image"
+                                    onerror="this.onerror=null; this.src='/static/dist/img/default-avatar.png';">
+                                {% else %}
+                                <i class="fas fa-user text-muted" style="font-size: 60px;"></i>
+                                {% endif %}
+                                <div class="edit-only d-none position-absolute"
+                                    style="margin-top: 100px; background: rgba(255,255,255,0.8); padding: 5px;">
+                                    {{ form.profile_pic }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details Grid -->
+                        <div class="profile-details-grid">
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-birthday-cake mr-1"></i> Date of
+                                    Birth:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.date_of_birth %}
+                                    {{ form.instance.date_of_birth|date:"d/m/Y" }}
+                                    {% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.date_of_birth }}</div>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-calendar-check mr-1"></i> Date of
+                                    Joining:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.date_of_joining %}
+                                    {{ form.instance.date_of_joining|date:"d.m.Y" }}
+                                    {% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.date_of_joining }}</div>
+                            </div>
+
+                            <div class="detail-item" style="grid-column: 1 / -1;">
+                                <span class="detail-label"><i class="fas fa-briefcase mr-1"></i> Experience:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.experience %}
+                                    {{ form.instance.experience }}
+                                    {% endif %}
+                                </span>
+                                <div class="edit-only d-none w-50">{{ form.experience }}</div>
+                            </div>
+
+                            <div class="detail-item mt-3">
+                                <span class="detail-label"><i class="fas fa-envelope mr-1"></i> Email:</span>
+                                <a href="mailto:{{ form.instance.admin.email }}"
+                                    class="detail-value view-only text-dark" style="text-decoration: none;">
+                                    {{ form.instance.admin.email }}
+                                </a>
+                                <div class="edit-only d-none w-100">{{ form.email }}</div>
+                            </div>
+
+                            <div class="detail-item mt-3">
+                                <span class="detail-label"><i class="fas fa-phone mr-1"></i> Phone Number:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.mobile_number %}
+                                    +91 {{ form.instance.mobile_number }}
+                                    {% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100 d-flex align-items-center">
+                                    <span class="mr-2">+91</span>{{ form.mobile_number }}
+                                </div>
+                            </div>
+
+                            <!-- Additional Details directly in grid -->
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-user-tie mr-1"></i> Father's Name:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.father_name %}{{ form.instance.father_name }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.father_name }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-female mr-1"></i> Mother's Name:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.mother_name %}{{ form.instance.mother_name }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.mother_name }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-user-friends mr-1"></i> Spouse's
+                                    Name:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.spouse_name %}{{ form.instance.spouse_name }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.spouse_name }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-venus-mars mr-1"></i> Gender:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.admin.gender %}{{ form.instance.admin.gender }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.gender }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-tint mr-1"></i> Blood Group:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.blood_group %}{{ form.instance.blood_group }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.blood_group }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-chalkboard-teacher mr-1"></i> Faculty
+                                    Role:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.faculty_role %}{{ form.instance.faculty_role }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.faculty_role }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-id-card mr-1"></i> Aadhaar Number:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.aadhaar_number %}{{ form.instance.aadhaar_number }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.aadhaar_number }}</div>
+                            </div>
+                            <div class="detail-item mt-2">
+                                <span class="detail-label"><i class="fas fa-credit-card mr-1"></i> PAN Number:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.pan_number %}{{ form.instance.pan_number }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.pan_number }}</div>
+                            </div>
+                            <div class="detail-item mt-2" style="grid-column: 1 / -1;">
+                                <span class="detail-label"><i class="fas fa-map-marker-alt mr-1"></i>
+                                    Address:</span>
+                                <span class="detail-value view-only">
+                                    {% if form.instance.admin.address %}{{ form.instance.admin.address }}{% endif %}
+                                </span>
+                                <div class="edit-only d-none w-100">{{ form.address }}</div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Qualifications Section -->
+                        <div class="qualifications-section">
+                            <h4 class="text-center">Qualifications: (Start with highest degree)</h4>
+
+
+
+                            {{ formset.management_form }}
+
+                            <table class="qual-table" id="qualTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 30%">Examination passed</th>
+                                        <th style="width: 15%">Class</th>
+                                        <th style="width: 15%">% of marks</th>
+                                        <th style="width: 10%">Year</th>
+                                        <th style="width: 30%">University/Institution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for qual_form in formset %}
+                                    <tr class="qual-row">
+                                        <td
+                                            class="view-only text-center {% if not qual_form.instance.pk %}d-none{% endif %}">
+                                            {{ qual_form.instance.examination_passed }}
+                                        </td>
+                                        <td
+                                            class="view-only text-center {% if not qual_form.instance.pk %}d-none{% endif %}">
+                                            {{ qual_form.instance.classification|default:"" }}
+                                        </td>
+                                        <td
+                                            class="view-only text-center {% if not qual_form.instance.pk %}d-none{% endif %}">
+                                            {{ qual_form.instance.percentage_of_marks|default:"" }}
+                                        </td>
+                                        <td
+                                            class="view-only text-center {% if not qual_form.instance.pk %}d-none{% endif %}">
+                                            {{ qual_form.instance.year|default:"" }}
+                                        </td>
+                                        <td
+                                            class="view-only text-center {% if not qual_form.instance.pk %}d-none{% endif %}">
+                                            {{ qual_form.instance.university_institution|default:"" }}
+                                        </td>
+
+                                        <!-- Edit Mode Cells -->
+                                        <td class="edit-only d-none p-1">
+                                            {{ qual_form.id }}
+                                            {{ qual_form.examination_passed }}
+                                        </td>
+                                        <td class="edit-only d-none p-1">{{ qual_form.classification }}</td>
+                                        <td class="edit-only d-none p-1">{{ qual_form.percentage_of_marks }}</td>
+                                        <td class="edit-only d-none p-1">{{ qual_form.year }}</td>
+                                        <td class="edit-only d-none p-1 position-relative">
+                                            {{ qual_form.university_institution }}
+                                            <div class="d-none">{{ qual_form.DELETE }}</div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-only d-none"
+                                id="addQualBtn">
+                                <i class="fas fa-plus"></i> Add Qualification Row
+                            </button>
+                        </div>
+
+                        <!-- Password Hidden in View Mode -->
+                        <div class="edit-only d-none mt-4 card p-3 bg-light">
+                            <h5 class="border-bottom pb-2 mb-3">Security Settings</h5>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="text-danger">Change Password (Leave blank to keep current)</label>
+                                    {{ form.password }}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
 
             </div>
         </div>
@@ -25,15 +452,47 @@
 {% endblock content %}
 
 {% block custom_js %}
-  <script>
-      $(document).ready(function(){
-            var ifNotfied = false;
-          $("#id_password").on("change", function(){
-              if (!ifNotfied){
+<script>
+    let isEditing = false;
+    function toggleEditMode() {
+        isEditing = !isEditing;
+        if (isEditing) {
+            $('.view-only').addClass('d-none');
+            $('.edit-only').removeClass('d-none');
+            $('#editBtn').addClass('d-none');
+            $('#saveBtn').removeClass('d-none');
+            $('#cancelBtn').removeClass('d-none');
+            $('.qual-row').each(function () {
+                $(this).find('.edit-only').removeClass('d-none');
+            });
+            $('.edit-only input:not([type="checkbox"]):not([type="file"]), .edit-only select, .edit-only textarea').addClass('form-control');
+        } else {
+            window.location.reload();
+        }
+    }
+    $(document).ready(function () {
+        let formCount = parseInt($('#id_qualifications-TOTAL_FORMS').val());
+        $('#addQualBtn').click(function () {
+            let row = $('.qual-row:first').clone(true);
+            row.find(':input').each(function () {
+                let name = $(this).attr('name').replace('-0-', '-' + formCount + '-');
+                let id = 'id_' + name;
+                $(this).attr({ 'name': name, 'id': id }).val('').removeAttr('checked');
+            });
+            row.find('label').attr('for', function (i, val) {
+                if (val) return val.replace('-0-', '-' + formCount + '-');
+            });
+            $('#qualTable tbody').append(row);
+            $('#id_qualifications-TOTAL_FORMS').val(formCount + 1);
+            formCount++;
+        });
+        var ifNotfied = false;
+        $("#id_password").on("change", function () {
+            if (!ifNotfied) {
                 ifNotfied = true;
-                alert("After a successful profile update:\n\nYour session would be terminated\nYou would be required to login again")
-              }
-          })
-      })
-  </script>
+                alert("After a successful profile update:\n\nYour session would be terminated\nYou would be required to login again");
+            }
+        });
+    });
+</script>
 {% endblock custom_js %}

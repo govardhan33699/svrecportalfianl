@@ -1,10 +1,12 @@
-{% extends 'main_app/base.html' %}
+{% extends 'main_app/erpnext_base.html' %}
 {% load static %}
 {% block page_title %}{{page_title}}{% endblock page_title %}
+
 {% block custom_css %}
 <style>
     .filter-card {
-        margin-bottom: 25px;
+        height: 100%;
+        margin-bottom: 0px;
     }
 
     .filter-card .card-header i {
@@ -43,6 +45,9 @@
         font-size: 12px;
         color: #fff;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: inline-block;
+        min-width: 35px;
+        text-align: center;
     }
 
     .attendance-container {
@@ -51,13 +56,13 @@
         border: 1px solid var(--glass-border);
         box-shadow: var(--glass-shadow);
         overflow: hidden;
-        margin-top: 20px;
+        margin-top: 25px;
     }
 
     .table-responsive-custom {
         overflow-x: auto;
-        overflow-y: auto;
-        max-height: 600px;
+        overflow-y: visible;
+        max-height: none;
         position: relative;
     }
 
@@ -150,12 +155,29 @@
         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
     }
 
     .btn-action:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Fix spacing between cards */
+    .filter-row {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .filter-row>[class*='col-'] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .distribution-table td {
+        padding: 12px 15px !important;
+        vertical-align: middle;
     }
 </style>
 {% endblock custom_css %}
@@ -165,7 +187,8 @@
     <div class="container-fluid">
 
         <form method="GET" action="{% url 'admin_view_attendance' %}" class="no-print" id="filterForm">
-            <div class="row">
+            <div class="row g-4 filter-row">
+                <!-- Select Details Column -->
                 <div class="col-md-5">
                     <div class="card erpnext-card filter-card">
                         <div class="card-header">
@@ -173,7 +196,6 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-
                                 <div class="col-md-6 mb-3">
                                     <label>Branch</label>
                                     <select name="course" class="form-control"
@@ -184,7 +206,6 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-
                                 <div class="col-md-6 mb-3">
                                     <label>Session</label>
                                     <select name="session" class="form-control"
@@ -195,7 +216,6 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-
                                 <div class="col-md-4 mb-3">
                                     <label>Semester</label>
                                     <select name="semester" class="form-control"
@@ -206,7 +226,6 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-
                                 <div class="col-md-4 mb-3">
                                     <label>Section</label>
                                     <select name="section" class="form-control"
@@ -217,7 +236,6 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-
                                 <div class="col-md-4 mb-3">
                                     <label>Regulation</label>
                                     <select name="regulation" class="form-control"
@@ -228,7 +246,6 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-
                                 <div class="col-md-6">
                                     <label>From Date</label>
                                     <input type="date" name="from_date" class="form-control"
@@ -239,18 +256,18 @@
                                     <input type="date" name="to_date" class="form-control"
                                         value="{{ request.GET.to_date|default:'' }}">
                                 </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-4">
+                <!-- Actions Column -->
+                <div class="col-md-3">
                     <div class="card erpnext-card filter-card">
                         <div class="card-header">
                             <h5 class="card-title text-success"><i class="fas fa-play-circle"></i> Actions</h5>
                         </div>
-                        <div class="card-body d-flex flex-column gap-3 py-4">
+                        <div class="card-body d-flex flex-column justify-content-center gap-3">
                             <button type="submit" class="btn btn-primary btn-action w-100">Show Data</button>
                             <button type="button" class="btn btn-danger btn-action w-100" onclick="window.print()">PDF
                                 Report</button>
@@ -260,56 +277,56 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <!-- Distribution Column -->
+                <div class="col-md-4">
                     <div class="card erpnext-card filter-card">
                         <div class="card-header">
                             <h5 class="card-title text-secondary"><i class="fas fa-chart-pie"></i> Distribution</h5>
                         </div>
-                        <div class="card-body p-0">
-                            <table class="table mb-0" style="font-size: 12px;">
+                        <div class="card-body p-0 d-flex flex-column justify-content-center">
+                            <table class="table mb-0 distribution-table" style="font-size: 12px; height: 100%;">
                                 <tr class="border-bottom">
-                                    <td class="py-3 px-3">Critically Low (&lt;60%)</td>
-                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-danger js-val"
-                                            data-v="{{ summary.below_60|default:0 }}"></span></td>
+                                    <td>Critically Low (&lt;60%)</td>
+                                    <td class="text-right"><span
+                                            class="summary-badge bg-danger">{{summary.below_60}}</span></td>
                                 </tr>
                                 <tr class="border-bottom">
-                                    <td class="py-3 px-3">Low (60-65%)</td>
-                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-warning js-val"
-                                            data-v="{{ summary.between_60_65|default:0 }}"></span></td>
+                                    <td>Low (60-65%)</td>
+                                    <td class="text-right"><span
+                                            class="summary-badge bg-warning">{{summary.between_60_65}}</span></td>
                                 </tr>
                                 <tr class="border-bottom">
-                                    <td class="py-3 px-3">Average (65-75%)</td>
-                                    <td class="text-right py-3 px-3"><span class="summary-badge js-val"
-                                            style="background:#6366f1;"
-                                            data-v="{{ summary.between_65_75|default:0 }}"></span></td>
+                                    <td>Average (65-75%)</td>
+                                    <td class="text-right"><span class="summary-badge"
+                                            style="background:#6366f1;">{{summary.avg}}</span></td>
                                 </tr>
                                 <tr class="border-bottom">
-                                    <td class="py-3 px-3">Excellent (&gt;75%)</td>
-                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-success js-val"
-                                            data-v="{{ summary.above_75|default:0 }}"></span></td>
+                                    <td>Excellent (&gt;75%)</td>
+                                    <td class="text-right"><span
+                                            class="summary-badge bg-success">{{summary.above_75}}</span></td>
                                 </tr>
                                 <tr class="bg-light font-weight-bold">
-                                    <td class="py-3 px-3">Total Students</td>
-                                    <td class="text-right py-3 px-3"><span class="summary-badge bg-dark js-val"
-                                            data-v="{{ total_students|default:0 }}"></span></td>
+                                    <td>Total Students</td>
+                                    <td class="text-right"><span class="summary-badge bg-dark">{{total_students}}</span>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
                     </div>
                 </div>
-
             </div>
         </form>
 
         {% if filters_applied %}
-        <div class="row">
+        <div class="row mt-2">
             <div class="col-md-12">
                 <div class="attendance-container">
                     <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
                         <h5 class="card-title m-0"><i class="fas fa-table text-primary"></i> Cumulative Attendance
                             Details</h5>
-                        <span class="badge bg-primary rounded-pill px-3 py-2 js-val" style="font-size: 11px;"
-                            data-v="{{ total_students }} Students Enrolled"></span>
+                        <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size: 11px;">
+                            {{ total_students }} Students Enrolled
+                        </span>
                     </div>
                     <div class="table-responsive-custom">
                         <table class="table attendance-table" id="attendanceTable">
@@ -337,16 +354,22 @@
                                 <tr>
                                     <td class="font-weight-bold">{{ forloop.counter }}</td>
                                     <td style="text-align:left; font-weight:600;">{{ student.roll_number }}</td>
-                                    <td style="text-align:left;">{{ student.name }}</td>
+                                    <td style="text-align:left;">{{ student.name|default:"N/A" }}</td>
+
                                     {% for sd in student.subjects %}
-                                    <td class="js-val" data-v="{{ sd.total }}"></td>
-                                    <td class="font-weight-600 js-present {% if sd.present > 0 %}text-success{% endif %}"
-                                        data-v="{{ sd.present }}"></td>
+                                    <td>{{ sd.total }}</td>
+                                    <td class="font-weight-600 {% if sd.present > 0 %}text-success{% endif %}">
+                                        {{ sd.present }}
+                                    </td>
                                     {% endfor %}
-                                    <td class="bg-light js-val" data-v="{{ student.total_classes }}"></td>
-                                    <td class="bg-light js-val" data-v="{{ student.total_attended }}"></td>
-                                    <td><span class="pct-indicator pct-logic"
-                                            data-pct="{{ student.percentage }}"></span></td>
+
+                                    <td class="bg-light">{{ student.total_classes }}</td>
+                                    <td class="bg-light">{{ student.total_attended }}</td>
+                                    <td>
+                                        <span class="pct-indicator pct-logic" data-pct="{{ student.percentage }}">
+                                            {{ student.percentage }}%
+                                        </span>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -367,7 +390,7 @@
             </div>
         </div>
         {% else %}
-        <div class="row">
+        <div class="row mt-4">
             <div class="col-md-12">
                 <div class="card erpnext-card">
                     <div class="card-body text-center py-5">
@@ -393,18 +416,11 @@
             if (val) sel.value = val;
         });
 
-        // Restore all simple values
-        document.querySelectorAll('.js-val, .js-present').forEach(el => {
-            const val = el.getAttribute('data-v');
-            if (val !== null) el.textContent = val;
-        });
-
-        // Color and populate percentage indicators
+        // Color percentage indicators
         document.querySelectorAll('.pct-logic').forEach(ind => {
             const pctVal = ind.getAttribute('data-pct');
             if (pctVal) {
                 const pct = parseFloat(pctVal);
-                ind.textContent = pct + '%';
                 if (pct < 60) ind.classList.add('pct-crit');
                 else if (pct < 65) ind.classList.add('pct-warn');
                 else if (pct < 75) {

@@ -1,5 +1,4 @@
-{% extends 'main_app/base.html' %}
-{% load static %}
+{% extends 'main_app/base.html' %} {% load static %}
 
 {% block page_title %}Staff Dashboard{% endblock page_title %}
 
@@ -8,69 +7,74 @@
 {% endblock breadcrumb %}
 
 {% block content %}
-<!-- Stats Cards -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon primary">
-            <i class="fas fa-user-graduate"></i>
+<!-- Stats Grid -->
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-number" style="color: var(--primary-color);">{{ total_students }}</div>
+            <p class="stat-label">Students Managed</p>
         </div>
-        <div class="stat-number" style="color: var(--primary-color);">{{ total_students }}</div>
-        <p class="stat-label">Total Students</p>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon success">
-            <i class="fas fa-calendar-check"></i>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon danger">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-number" style="color: var(--danger-color);">{{ total_subject }}</div>
+            <p class="stat-label">Subjects Teaching</p>
         </div>
-        <div class="stat-number" style="color: var(--success-color);">{{ total_attendance }}</div>
-        <p class="stat-label">Total Attendance Taken</p>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon warning">
-            <i class="fas fa-calendar-times"></i>
-        </div>
-        <div class="stat-number" style="color: var(--warning-color);">{{ total_leave }}</div>
-        <p class="stat-label">Total Leave Applied</p>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon danger">
-            <i class="fas fa-book"></i>
-        </div>
-        <div class="stat-number" style="color: var(--danger-color);">{{ total_subject }}</div>
-        <p class="stat-label">Total Subjects</p>
     </div>
 </div>
 
-<!-- Charts Section -->
-<div class="row">
-    <!-- Attendance vs Leave Chart -->
-    <div class="col-lg-6">
-        <div class="erpnext-card">
+<!-- Today's Timetable -->
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="erpnext-card h-100">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-chart-pie me-2"></i>
-                    Attendance vs Leave Overview
+                    <i class="fas fa-calendar-day me-2"></i>
+                    Today's Timetable
+                    <span class="badge bg-primary ms-2" style="font-size: 0.7rem;">{{ today_name }}</span>
                 </h3>
             </div>
             <div class="card-body">
-                <canvas id="pieChart" style="height: 300px;"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Subject-wise Attendance Chart -->
-    <div class="col-lg-6">
-        <div class="erpnext-card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Subject-wise Attendance
-                </h3>
-            </div>
-            <div class="card-body">
-                <canvas id="barChart" style="height: 300px;"></canvas>
+                {% if timetable_today %}
+                <div class="staff-tt-wrapper">
+                    <table class="staff-tt-table">
+                        <thead>
+                            <tr>
+                                {% for slot in timetable_today %}
+                                <th>
+                                    <div class="staff-th-period">P{{ slot.period.number }}</div>
+                                    <div class="staff-th-time">
+                                        {{ slot.period.start_time|time:"g:i" }} - {{ slot.period.end_time|time:"g:i" }}
+                                    </div>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                {% for slot in timetable_today %}
+                                <td>
+                                    <div class="staff-td-subject">{{ slot.subject.name }}</div>
+                                    <div class="staff-td-course">{{ slot.course.name }}</div>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4" style="color: #94a3b8;">
+                    <i class="fas fa-mug-hot fa-2x mb-2"></i>
+                    <p class="mb-0">No classes scheduled for today. Enjoy your day!</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -78,8 +82,8 @@
 
 <!-- Quick Actions -->
 <div class="row">
-    <div class="col-12">
-        <div class="erpnext-card">
+    <div class="col-lg-12 mb-4">
+        <div class="erpnext-card h-100">
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-bolt me-2"></i>
@@ -87,82 +91,31 @@
                 </h3>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'staff_take_attendance' %}" class="btn btn-primary btn-sm mt-2 w-100">
-                            <i class="fas fa-check-circle mb-2"></i><br>
-                            Take Attendance
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'staff_add_result' %}" class="btn btn-success btn-sm mt-2 w-100">
-                            <i class="fas fa-plus-circle mb-2"></i><br>
-                            Add Marks
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'staff_apply_leave' %}" class="btn btn-warning btn-sm mt-2 w-100">
-                            <i class="fas fa-calendar-plus mb-2"></i><br>
-                            Apply for Leave
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'add_book' %}" class="btn btn-secondary btn-sm mt-2 w-100">
-                            <i class="fas fa-book-open mb-2"></i><br>
-                            Add Books
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activities -->
-<div class="row">
-    <div class="col-12">
-        <div class="erpnext-card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-clock me-2"></i>
-                    Recent Activities
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="stat-icon success me-3">
-                                <i class="fas fa-calendar-check"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Attendance Records</h6>
-                                <small class="text-muted">{{ total_attendance }} records taken</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="stat-icon warning me-3">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Students Managed</h6>
-                                <small class="text-muted">{{ total_students }} students in classes</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="stat-icon primary me-3">
-                                <i class="fas fa-book"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Subjects Teaching</h6>
-                                <small class="text-muted">{{ total_subject }} subjects assigned</small>
-                            </div>
-                        </div>
-                    </div>
+                <div class="d-flex flex-row flex-wrap gap-3">
+                    <a href="{% url 'staff_take_attendance' %}"
+                        class="btn btn-primary text-start d-flex align-items-center justify-content-between p-3 flex-fill"
+                        style="background: rgba(23, 162, 184, 0.1); color: #779107; border-color: rgba(23, 162, 184, 0.2);">
+                        <span><i class="fas fa-check-circle me-2"></i> Take Attendance</span>
+                        <i class="fas fa-plus-circle small"></i>
+                    </a>
+                    <a href="{% url 'staff_add_result' %}"
+                        class="btn btn-primary text-start d-flex align-items-center justify-content-between p-3 flex-fill"
+                        style="background: rgba(40, 167, 69, 0.1); color: #28a745; border-color: rgba(40, 167, 69, 0.2);">
+                        <span><i class="fas fa-plus-circle me-2"></i> Add Marks</span>
+                        <i class="fas fa-plus-circle small"></i>
+                    </a>
+                    <a href="{% url 'staff_apply_leave' %}"
+                        class="btn btn-primary text-start d-flex align-items-center justify-content-between p-3 flex-fill"
+                        style="background: rgba(255, 193, 7, 0.1); color: #ffc107; border-color: rgba(255, 193, 7, 0.2);">
+                        <span><i class="fas fa-calendar-plus me-2"></i> Apply for Leave</span>
+                        <i class="fas fa-plus-circle small"></i>
+                    </a>
+                    <a href="{% url 'staff_add_material' %}"
+                        class="btn btn-primary text-start d-flex align-items-center justify-content-between p-3 flex-fill"
+                        style="background: rgba(23, 162, 184, 0.1); color: #17a2b8; border-color: rgba(23, 162, 184, 0.2);">
+                        <span><i class="fas fa-file-upload me-2"></i> Add Materials</span>
+                        <i class="fas fa-plus-circle small"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -170,209 +123,251 @@
 </div>
 {% endblock content %}
 
+{% block custom_css %}
+<style>
+    :root {
+        --primary-color: #5e64ff;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+    }
+
+    /* Glassmorphism Stat Cards */
+    .stat-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 25px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    .stat-icon.primary {
+        background: rgba(94, 100, 255, 0.1);
+        color: var(--primary-color);
+    }
+
+    .stat-icon.success {
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--success-color);
+    }
+
+    .stat-icon.warning {
+        background: rgba(255, 193, 7, 0.1);
+        color: var(--warning-color);
+    }
+
+    .stat-icon.danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: var(--danger-color);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Staff Timetable Table */
+    .staff-tt-wrapper {
+        width: 100%;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+        overflow-x: auto;
+    }
+
+    .staff-tt-table {
+        width: 100%;
+        min-width: 400px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .staff-tt-table th,
+    .staff-tt-table td {
+        padding: 8px 4px;
+        text-align: center;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        word-wrap: break-word;
+        font-size: 0.75rem;
+    }
+
+    .staff-tt-table thead th {
+        background: rgba(226, 232, 240, 0.8);
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    .staff-th-period {
+        color: #312e81;
+        font-weight: 800;
+        margin-bottom: 2px;
+    }
+
+    .staff-th-time {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #64748b;
+    }
+
+    .staff-td-subject {
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+
+    .staff-td-course {
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    /* Dark Mode Support */
+    .dark-mode .stat-card {
+        background: rgba(30, 30, 30, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .staff-tt-wrapper {
+        background: rgba(30, 30, 30, 0.6);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .staff-tt-table thead th {
+        background: rgba(50, 50, 60, 0.8);
+        color: #e2e8f0;
+    }
+
+    .dark-mode .staff-tt-table th,
+    .dark-mode .staff-tt-table td {
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .dark-mode .staff-th-period {
+        color: #a5b4fc;
+    }
+
+    .dark-mode .staff-td-subject {
+        color: #e2e8f0;
+    }
+
+    .dark-mode .staff-td-course {
+        color: #94a3b8;
+    }
+</style>
+{% endblock custom_css %}
+
 {% block custom_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Initialize chart instances and creators arrays
         window.chartInstances = window.chartInstances || [];
         window.chartCreators = window.chartCreators || [];
-
-        // Chart.js Configuration
-        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif';
-
-        // Set initial colors based on current theme
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        const textColor = isDarkMode ? '#e0e0e0' : '#262626';
-        Chart.defaults.color = textColor;
-
-        // ERPNext-style color palette using CSS variables
-        const colors = {
-            primary: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#5e64ff',
-            success: getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim() || '#28a745',
-            warning: getComputedStyle(document.documentElement).getPropertyValue('--warning-color').trim() || '#ffc107',
-            danger: getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim() || '#dc3545',
-            info: getComputedStyle(document.documentElement).getPropertyValue('--info-color').trim() || '#17a2b8',
-            light: getComputedStyle(document.documentElement).getPropertyValue('--light-color').trim() || '#f8f9fc',
-            dark: getComputedStyle(document.documentElement).getPropertyValue('--dark-color').trim() || '#262626'
-        };
-
-        // Pie Chart Creator Function
-        function createPieChart() {
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            const textColor = isDarkMode ? '#e0e0e0' : '#262626';
-
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            const pieChart = new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Attendance', 'Leave'],
-                    datasets: [{
-                        data: [{{ total_attendance }}, {{ total_leave }}],
-                backgroundColor: [colors.success, colors.warning],
-                borderWidth: 0,
-                cutout: '60%'
-            }]
-                },
-        options: {
-            responsive: true,
-                maintainAspectRatio: false,
-                    plugins: {
-                legend: {
-                    position: 'bottom',
-                        labels: {
-                        padding: 20,
-                            usePointStyle: true,
-                                color: textColor
-                    }
-                }
-            }
-        }
-    });
-    window.chartInstances.push(pieChart);
-    return pieChart;
-        }
-
-    // Create initial pie chart
-    createPieChart();
-    window.chartCreators.push(createPieChart);
-    console.log('Registered pie chart creator, total creators:', window.chartCreators.length);
-
-    // Bar Chart Creator Function
-    function createBarChart() {
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        const textColor = isDarkMode ? '#e0e0e0' : '#262626';
-        const gridColor = isDarkMode ? '#404040' : '#f1f3f4';
-
-        const barCtx = document.getElementById('barChart').getContext('2d');
-        const barChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: {{ subject_list| safe }},
-    datasets: [{
-        label: 'Attendance Count',
-        data: {{ attendance_list }},
-        backgroundColor: colors.info,
-        borderRadius: 4,
-        borderSkipped: false
-                    }]
-                },
-    options: {
-        responsive: true,
-            maintainAspectRatio: false,
-                plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                    grid: {
-                    color: gridColor
-                },
-                ticks: {
-                    color: textColor
-                }
-            },
-            x: {
-                grid: {
-                    display: false
-                },
-                ticks: {
-                    color: textColor
-                }
-            }
-        }
-    }
-            });
-    window.chartInstances.push(barChart);
-    return barChart;
-        }
-
-    // Create initial bar chart
-    createBarChart();
-    window.chartCreators.push(createBarChart);
-    console.log('Registered bar chart creator, total creators:', window.chartCreators.length);
+        // Force sidebar visible
+        document.body.classList.remove('sidebar-collapsed');
     });
 </script>
 
-<!-- Firebase configuration kept from original -->
-<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-analytics.js"></script>
-<script src="https://www.gstatic.com/firebasejs/7.22.1/firebase-messaging.js"></script>
+<!-- Firebase - loaded async so it doesn't block the page -->
+<script async defer src="https://www.gstatic.com/firebasejs/7.23.0/firebase-app.js"></script>
+<script async defer src="https://www.gstatic.com/firebasejs/7.23.0/firebase-analytics.js"></script>
+<script async defer src="https://www.gstatic.com/firebasejs/7.22.1/firebase-messaging.js"></script>
 
 <script>
-    // Firebase configuration
-    var firebaseConfig = {
-        apiKey: "AIzaSyBarDWWHTfTMSrtc5Lj3Cdw5dEvjAkFwtM",
-        authDomain: "sms-with-django.firebaseapp.com",
-        databaseURL: "https://sms-with-django.firebaseio.com",
-        projectId: "sms-with-django",
-        storageBucket: "sms-with-django.appspot.com",
-        messagingSenderId: "945324593139",
-        appId: "1:945324593139:web:03fa99a8854bbd38420c86",
-        measurementId: "G-2F2RXTL9GT"
-    };
+    // Initialize Firebase only after page fully loads
+    window.addEventListener('load', function () {
+        try {
+            if (typeof firebase === 'undefined') return;
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
+            var firebaseConfig = {
+                apiKey: "AIzaSyBarDWWHTfTMSrtc5Lj3Cdw5dEvjAkFwtM",
+                authDomain: "sms-with-django.firebaseapp.com",
+                databaseURL: "https://sms-with-django.firebaseio.com",
+                projectId: "sms-with-django",
+                storageBucket: "sms-with-django.appspot.com",
+                messagingSenderId: "945324593139",
+                appId: "1:945324593139:web:03fa99a8854bbd38420c86",
+                measurementId: "G-2F2RXTL9GT"
+            };
 
-    function InitializeFireBaseMessaging() {
-        messaging
-            .requestPermission()
-            .then(function () {
-                console.log("Notification Permission");
-                return messaging.getToken();
-            })
-            .then(function (token) {
-                console.log("Token : " + token);
-                sendToServer(token);
-            })
-            .catch(function (reason) {
-                console.log(reason)
-            })
-    }
-
-    messaging.onMessage(function (payload) {
-        const notificationOption = {
-            body: payload.notification.body,
-            icon: payload.notification.icon,
-        }
-        if (Notification.permission == 'granted') {
-            var notification = new Notification(payload.notification.title, notificationOption);
-            notification.onclick = function (event) {
-                event.preventDefault();
-                window.open(payload.notification.click_action, "_blank");
-                notification.close();
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
             }
+            var messaging = firebase.messaging();
+
+            messaging.requestPermission()
+                .then(function () { return messaging.getToken(); })
+                .then(function (token) { sendToServer(token); })
+                .catch(function (err) { console.log('FCM error:', err); });
+
+            messaging.onMessage(function (payload) {
+                if (Notification.permission === 'granted') {
+                    var n = new Notification(payload.notification.title, {
+                        body: payload.notification.body,
+                        icon: payload.notification.icon
+                    });
+                    n.onclick = function (e) {
+                        e.preventDefault();
+                        window.open(payload.notification.click_action, '_blank');
+                        n.close();
+                    };
+                }
+            });
+
+            messaging.onTokenRefresh(function () {
+                messaging.getToken()
+                    .then(function (t) { sendToServer(t); })
+                    .catch(function (err) { console.log('Token refresh error:', err); });
+            });
+
+            function sendToServer(token) {
+                if (typeof $ === 'undefined') return;
+                $.ajax({
+                    url: "{% url 'staff_fcmtoken' %}",
+                    type: 'POST',
+                    data: { token: token }
+                });
+            }
+        } catch (e) {
+            console.log('Firebase init error:', e);
         }
-        console.log(payload);
     });
-
-    messaging.onTokenRefresh(function () {
-        messaging.getToken()
-            .then(function (newToken) {
-                console.log("New Token : " + newToken);
-                sendToServer(newToken);
-            })
-            .catch(function (reason) {
-                console.log(reason)
-            })
-    })
-
-    function sendToServer(token) {
-        $.ajax({
-            url: "{% url 'staff_fcmtoken' %}",
-            type: 'POST',
-            data: {
-                token: token,
-            }
-        }).done(function (response) {
-        }).fail(function (response) {
-        })
-    }
-
-    InitializeFireBaseMessaging();
 </script>
 {% endblock custom_js %}

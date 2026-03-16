@@ -5,48 +5,180 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}College ERP - Dashboard{% endblock title %}</title>
-
     <!-- Favicon -->
     <link rel="shortcut icon" href="{% static '/image/favicon1.ico' %}">
-
     <!-- Theme Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
-
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- ERPNext Style CSS -->
-    <link rel="stylesheet" href="{% static 'dist/css/erpnext-style.css' %}">
-
+    <link rel="stylesheet" href="{% static 'dist/css/erpnext-style.css' %}?v={% now 'U' %}">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     {% block custom_css %}{% endblock custom_css %}
+    <style>
+        /* Force Liquid Glass Background for Admin */
+        .role-admin .mesh-background {
+            background-color: #020617 !important;
+            background-image:
+                radial-gradient(circle at 100% 0%, rgba(0, 116, 228, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(0, 148, 255, 0.12) 0%, transparent 50%),
+                linear-gradient(135deg, #020617 0%, #000c24 35%, #001f3f 50%, #000c24 65%, #020617 100%) !important;
+            opacity: 1 !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .role-admin .master-glass-panel {
+            background: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        body {
+            min-width: 1200px;
+            overflow-x: auto;
+        }
+
+        /* Full-screen layout without sidebar */
+        .no-sidebar .erpnext-sidebar {
+            display: none !important;
+        }
+
+        .no-sidebar .sidebar-backdrop {
+            display: none !important;
+        }
+
+        .no-sidebar .erpnext-main {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Profile Dropdown Custom Styling */
+        .profile-dropdown-menu {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(20px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1) !important;
+            padding: 1.5rem !important;
+            min-width: 320px !important;
+            margin-top: 15px !important;
+            transform-origin: top right;
+            animation: dropdownIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .dark-mode .profile-dropdown-menu {
+            background: rgba(15, 23, 42, 0.85) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        @keyframes dropdownIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .dropdown-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .dropdown-profile-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-welcome-badge {
+            background: #fff;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-transform: uppercase;
+        }
+
+        .profile-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .profile-info-icon {
+            font-size: 1.2rem;
+            color: #4b5563;
+            width: 24px;
+            text-align: center;
+            margin-top: 3px;
+        }
+
+        .dark-mode .profile-info-icon {
+            color: #94a3b8;
+        }
+
+        .profile-info-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-info-label {
+            font-size: 0.95rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .dark-mode .profile-info-label {
+            color: #f3f4f6;
+        }
+
+        .profile-info-subtext {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .dark-mode .profile-info-subtext {
+            color: #9ca3af;
+        }
+
+        .user-profile-mini {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .user-profile-mini:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 
-<body>
+<body
+    class="{% if hide_sidebar %}no-sidebar{% endif %} {% if user.user_type|slugify == '1' %}role-admin{% elif user.user_type|slugify == '2' %}role-staff{% elif user.user_type|slugify == '3' %}role-student{% endif %}">
     <!-- Mesh Background -->
     <div class="mesh-background"></div>
 
     <!-- Master Frosted Panel -->
     <div class="master-glass-panel">
-
-        <!-- Floating Sidebar (Full Navigation) -->
         <aside class="erpnext-sidebar">
             {% include "main_app/erpnext_sidebar.html" %}
-
-            <div class="mt-auto px-1 pb-4 w-100">
-                <a href="{% url 'user_logout' %}" class="nav-link text-danger" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-text">Sign Out</span>
-                </a>
-            </div>
         </aside>
         <div class="sidebar-backdrop d-md-none" onclick="toggleSidebar()"></div>
 
@@ -56,25 +188,92 @@
             <!-- Pill Navbar -->
             <nav class="erpnext-navbar d-flex align-items-center justify-content-between">
                 <div class="navbar-left d-flex align-items-center">
-                    <button class="btn sidebar-toggle-btn me-3 d-md-none" onclick="toggleSidebar()">
+                    <button class="btn sidebar-toggle-btn me-3" onclick="toggleSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h5 class="m-0 font-weight-bold">Welcome, {{ user.first_name }}!</h5>
-                </div>
-
-                <div class="search-pill">
-                    <i class="fas fa-search text-muted"></i>
-                    <input type="text" placeholder="Search anything here...">
+                    <!-- College Banner -->
+                    <div class="college-banner d-flex align-items-center">
+                        <img src="{% static 'image/college_logo.jpg' %}" alt="Logo" class="banner-logo me-3">
+                        <div class="banner-text">
+                            <h2 class="college-name m-0">SVR ENGINEERING COLLEGE</h2>
+                            <p class="college-status m-0">(AUTONOMOUS)</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="navbar-right d-flex align-items-center gap-3">
+                    <label class="theme-toggle" for="theme-switch">
+                        <input type="checkbox" id="theme-switch" />
+                        <span class="slider">
+                            <i class="fas fa-sun icon-light"></i>
+                            <i class="fas fa-moon icon-dark"></i>
+                        </span>
+                    </label>
                     <button class="btn btn-link text-dark p-0">
                         <i class="fas fa-bell"></i>
                     </button>
-                    <div class="user-profile-mini">
-                        <img src="{% if request.user.profile_pic %}{{ request.user.profile_pic.url }}{% endif %}"
-                            alt="User" class="rounded-circle" style="width: 32px; height: 32px;"
-                            onerror="this.src='https://ui-avatars.com/api/?name={{ user.first_name }}&background=6366f1&color=fff'">
+                    <div class="dropdown">
+                        <div class="user-profile-mini dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img src="{% if request.user.profile_pic %}{{ request.user.profile_pic.url }}{% endif %}"
+                                alt="User" class="rounded-circle" style="width: 32px; height: 32px;"
+                                onerror="this.src='https://ui-avatars.com/api/?name={{ user.first_name }}&background=6366f1&color=fff'">
+                        </div>
+                        <div class="dropdown-menu dropdown-menu-end profile-dropdown-menu"
+                            aria-labelledby="profileDropdown">
+                            <div class="dropdown-profile-header">
+                                <i class="fas fa-user-circle fa-2x text-primary d-none"></i>
+                                <div>
+                                    <div class="profile-welcome-badge">
+                                        WELCOME
+                                        {% if user.user_type|slugify == '3' %}
+                                        {{ user.student.roll_number|default:user.username }}
+                                        {% else %}
+                                        {{ user.get_full_name|default:user.username }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="profile-info-row">
+                                <div class="profile-info-icon">
+                                    <i class="far fa-calendar-alt"></i>
+                                </div>
+                                <div class="profile-info-text">
+                                    <span class="profile-info-label">{% now "Y-m-d" %}</span>
+                                    <span class="profile-info-label">{% now "h:i:s A" %}</span>
+                                </div>
+                            </div>
+
+                            <div class="profile-info-row">
+                                <div class="profile-info-icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="profile-info-text">
+                                    <span class="profile-info-label">Your last login today@</span>
+                                    <span class="profile-info-label">{{ user.last_login|date:"h:i:s A" }}</span>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-top">
+                                {% if user.user_type|slugify == '1' %}
+                                <a class="dropdown-item rounded-3 mb-1" href="{% url 'admin_view_profile' %}">
+                                    <i class="fas fa-user me-2"></i> My Profile
+                                </a>
+                                {% elif user.user_type|slugify == '2' %}
+                                <a class="dropdown-item rounded-3 mb-1" href="{% url 'staff_view_profile' %}">
+                                    <i class="fas fa-user me-2"></i> My Profile
+                                </a>
+                                {% else %}
+                                <a class="dropdown-item rounded-3 mb-1" href="{% url 'student_view_profile' %}">
+                                    <i class="fas fa-user me-2"></i> My Profile
+                                </a>
+                                {% endif %}
+                                <a class="dropdown-item rounded-3 text-danger" href="{% url 'user_logout' %}">
+                                    <i class="fas fa-power-off me-2"></i> Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -114,98 +313,54 @@
     <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
 
     <script>
-        // Sidebar toggle functionality
-        let isSidebarOpen = false;
-
+        // Sidebar Toggle  
         function toggleSidebar() {
-            const body = document.body;
-            if (window.innerWidth <= 768) {
-                // On mobile, toggle 'sidebar-open'
-                isSidebarOpen = !isSidebarOpen;
-                if (isSidebarOpen) {
-                    body.classList.add('sidebar-open');
-                    body.classList.remove('sidebar-collapsed');
-                } else {
-                    body.classList.remove('sidebar-open');
-                    body.classList.add('sidebar-collapsed');
-                }
+            var body = document.body;
+            var isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                body.classList.toggle('sidebar-open');
+                body.classList.remove('sidebar-collapsed');
             } else {
-                // On desktop, toggle 'sidebar-collapsed'
-                isSidebarOpen = !isSidebarOpen;
-                if (isSidebarOpen) {
-                    body.classList.add('sidebar-collapsed');
-                    body.classList.remove('sidebar-open');
-                } else {
+                if (body.classList.contains('sidebar-collapsed')) {
                     body.classList.remove('sidebar-collapsed');
-                    body.classList.remove('sidebar-open');
+                    localStorage.setItem('sidebarOpen', 'true');
+                } else {
+                    body.classList.add('sidebar-collapsed');
+                    localStorage.setItem('sidebarOpen', 'false');
                 }
+                body.classList.remove('sidebar-open');
             }
-            // Store state in localStorage
-            localStorage.setItem('sidebarOpen', isSidebarOpen);
         }
 
-        // Restore sidebar state on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            const stored = localStorage.getItem('sidebarOpen');
-            if (window.innerWidth <= 768) {
-                if (stored === 'true') {
-                    document.body.classList.add('sidebar-open');
-                    document.body.classList.remove('sidebar-collapsed');
-                    isSidebarOpen = true;
-                } else {
-                    document.body.classList.remove('sidebar-open');
-                    document.body.classList.add('sidebar-collapsed');
-                    isSidebarOpen = false;
-                }
-            } else {
-                if (stored === 'true') {
-                    document.body.classList.add('sidebar-collapsed');
-                    document.body.classList.remove('sidebar-open');
-                    isSidebarOpen = true;
-                } else {
-                    document.body.classList.remove('sidebar-collapsed');
-                    document.body.classList.remove('sidebar-open');
-                    isSidebarOpen = false;
-                }
-            }
-        });
+        // Force reset sidebar on load — clear stale state
+        (function () {
+            localStorage.removeItem('sidebarOpen');
+            document.body.classList.remove('sidebar-collapsed');
+            document.body.classList.remove('sidebar-open');
+        })();
 
-        // Handle window resize
+        // Handle window resize 
         window.addEventListener('resize', function () {
-            if (window.innerWidth <= 768) {
-                if (!isSidebarOpen) {
-                    document.body.classList.add('sidebar-collapsed');
-                    document.body.classList.remove('sidebar-open');
-                } else {
-                    document.body.classList.remove('sidebar-collapsed');
-                    document.body.classList.add('sidebar-open');
-                }
+            var isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                document.body.classList.remove('sidebar-collapsed');
             } else {
-                if (isSidebarOpen) {
-                    document.body.classList.add('sidebar-collapsed');
-                    document.body.classList.remove('sidebar-open');
-                } else {
-                    document.body.classList.remove('sidebar-collapsed');
-                    document.body.classList.remove('sidebar-open');
-                }
+                document.body.classList.remove('sidebar-open');
             }
         });
 
-        // Navigation menu toggle functionality
+        // Navigation menu toggle functionality 
         document.addEventListener('DOMContentLoaded', function () {
             const navItems = document.querySelectorAll('.nav-item.has-submenu');
-
             navItems.forEach(item => {
                 const link = item.querySelector('.nav-link');
                 const submenu = item.querySelector('.nav-submenu');
-
                 if (link && submenu) {
                     link.addEventListener('click', function (e) {
                         e.preventDefault();
-
                         // Toggle current item
                         item.classList.toggle('open');
-
                         // Close other open items
                         navItems.forEach(otherItem => {
                             if (otherItem !== item && otherItem.classList.contains('open')) {
@@ -218,23 +373,19 @@
 
             // Auto-close sidebar on mobile when clicking navigation links
             const sidebarLinks = document.querySelectorAll('.erpnext-sidebar a[href]:not([href="#"]):not([href="javascript:void(0)"])');
-
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
                     // Check if we're on mobile (768px or less)
                     if (window.innerWidth <= 768) {
                         // Close the sidebar
-                        const body = document.body;
-                        body.classList.remove('sidebar-open');
-                        body.classList.add('sidebar-collapsed');
-                        isSidebarOpen = false;
+                        document.body.classList.remove('sidebar-open');
                         localStorage.setItem('sidebarOpen', false);
                     }
                 });
             });
         });
 
-        // Auto-hide alerts after 5 seconds
+        // Auto-hide alerts after 5 seconds 
         document.addEventListener('DOMContentLoaded', function () {
             const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
             alerts.forEach(alert => {
@@ -247,55 +398,40 @@
             });
         });
 
-        // Dark mode toggle functionality
+        // Dark mode toggle functionality 
         document.addEventListener('DOMContentLoaded', function () {
             const themeToggle = document.getElementById('theme-switch');
             const body = document.body;
-
             // Initialize global chart arrays
             window.chartInstances = window.chartInstances || [];
             window.chartCreators = window.chartCreators || [];
-            console.log('Base template initialized chart arrays');
 
             // Simple function to register chart recreation callback
             window.registerChartRecreation = function (callback) {
-                console.log('Registering chart recreation callback');
                 window.chartCreators.push(callback);
             };
 
             // Global function to recreate all charts with new theme colors
             window.recreateAllCharts = function () {
-                console.log('Recreating all charts with new theme colors');
-                console.log('Chart instances:', window.chartInstances ? window.chartInstances.length : 'undefined');
-                console.log('Chart creators:', window.chartCreators ? window.chartCreators.length : 'undefined');
-
                 if (window.chartInstances) {
-                    console.log('Destroying', window.chartInstances.length, 'existing charts');
                     // Destroy existing charts
-                    window.chartInstances.forEach((chart, index) => {
+                    window.chartInstances.forEach((chart) => {
                         if (chart && chart.destroy) {
-                            console.log('Destroying chart', index);
                             chart.destroy();
                         }
                     });
-
                     // Clear the instances array
                     window.chartInstances = [];
                 }
-
                 if (window.chartCreators) {
-                    console.log('Recreating', window.chartCreators.length, 'charts');
                     // Recreate charts using stored creators
-                    window.chartCreators.forEach((creator, index) => {
+                    window.chartCreators.forEach((creator) => {
                         try {
-                            console.log('Calling chart creator', index);
                             creator();
                         } catch (error) {
-                            console.error('Error recreating chart', index, ':', error);
+                            console.error('Error recreating chart:', error);
                         }
                     });
-                } else {
-                    console.warn('No chart creators found - charts cannot be recreated');
                 }
             };
 
@@ -305,17 +441,14 @@
                     const isDarkMode = body.classList.contains('dark-mode');
                     const textColor = isDarkMode ? '#e0e0e0' : '#262626';
                     const gridColor = isDarkMode ? '#404040' : '#f1f3f4';
-
                     Chart.defaults.color = textColor;
                     Chart.defaults.borderColor = isDarkMode ? '#404040' : '#d1d8dd';
                     Chart.defaults.backgroundColor = isDarkMode ? '#2d2d2d' : '#ffffff';
-
                     // Update global legend defaults
                     Chart.defaults.plugins = Chart.defaults.plugins || {};
                     Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
                     Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
                     Chart.defaults.plugins.legend.labels.color = textColor;
-
                     // Update grid colors
                     if (Chart.defaults.scales) {
                         Chart.defaults.scales.linear = Chart.defaults.scales.linear || {};
@@ -323,63 +456,33 @@
                         Chart.defaults.scales.linear.grid.color = gridColor;
                         Chart.defaults.scales.linear.ticks = Chart.defaults.scales.linear.ticks || {};
                         Chart.defaults.scales.linear.ticks.color = textColor;
-
                         Chart.defaults.scales.category = Chart.defaults.scales.category || {};
                         Chart.defaults.scales.category.grid = Chart.defaults.scales.category.grid || {};
                         Chart.defaults.scales.category.grid.color = gridColor;
                         Chart.defaults.scales.category.ticks = Chart.defaults.scales.category.ticks || {};
                         Chart.defaults.scales.category.ticks.color = textColor;
                     }
-
                     // Trigger chart updates if any charts exist
                     if (window.chartInstances) {
-                        console.log('Updating', window.chartInstances.length, 'chart instances for theme change');
-                        window.chartInstances.forEach((chart, index) => {
+                        window.chartInstances.forEach((chart) => {
                             if (chart && typeof chart.update === 'function') {
                                 try {
-                                    console.log('Updating chart', index, 'with legend color:', textColor);
-
-                                    // Ensure plugins object structure exists
                                     chart.options.plugins = chart.options.plugins || {};
                                     chart.options.plugins.legend = chart.options.plugins.legend || {};
                                     chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
-
-                                    // Update legend label colors
                                     chart.options.plugins.legend.labels.color = textColor;
-
-                                    // Update scales if they exist
                                     if (chart.options.scales) {
                                         Object.keys(chart.options.scales).forEach(scaleKey => {
                                             const scale = chart.options.scales[scaleKey];
                                             if (scale) {
-                                                // Update grid colors
                                                 scale.grid = scale.grid || {};
                                                 scale.grid.color = gridColor;
-                                                // Update tick colors
                                                 scale.ticks = scale.ticks || {};
                                                 scale.ticks.color = textColor;
                                             }
                                         });
                                     }
-
-                                    // Force immediate update with resize to ensure legend redraws
                                     chart.update('resize');
-
-                                    // Additional forced redraw after a small delay
-                                    setTimeout(() => {
-                                        if (chart && !chart.destroyed) {
-                                            chart.resize();
-                                            chart.update('active');
-                                        }
-                                    }, 100);
-
-                                    // Final update to ensure everything is rendered
-                                    setTimeout(() => {
-                                        if (chart && !chart.destroyed) {
-                                            chart.render();
-                                        }
-                                    }, 200);
-
                                 } catch (error) {
                                     console.warn('Error updating chart:', error);
                                 }
@@ -388,106 +491,34 @@
                     }
                 }
             }
-
             // Check for saved theme preference or default to light mode
             const savedTheme = localStorage.getItem('theme') || 'light';
-
             // Apply saved theme
             if (savedTheme === 'dark') {
                 body.classList.add('dark-mode');
-                themeToggle.checked = true;
+                if (themeToggle) themeToggle.checked = true;
             } else {
                 body.classList.remove('dark-mode');
-                themeToggle.checked = false;
+                if (themeToggle) themeToggle.checked = false;
             }
-
             // Initialize chart colors
             updateChartColors();
-
             // Toggle theme on switch change
-            themeToggle.addEventListener('change', function () {
-                console.log('Theme toggle clicked, checked:', this.checked);
-
-                if (this.checked) {
-                    body.classList.add('dark-mode');
-                    localStorage.setItem('theme', 'dark');
-                    console.log('Switched to dark mode');
-                } else {
-                    body.classList.remove('dark-mode');
-                    localStorage.setItem('theme', 'light');
-                    console.log('Switched to light mode');
-                }
-
-                // Immediate direct chart update
-                const updateChartsDirectly = () => {
-                    console.log('Trying immediate direct chart update');
-                    const canvases = document.querySelectorAll('canvas');
-                    console.log('Found', canvases.length, 'canvas elements');
-
-                    let updatedCharts = 0;
-                    canvases.forEach((canvas, index) => {
-                        const chart = Chart.getChart(canvas);
-                        if (chart) {
-                            console.log('Found chart on canvas', index, 'attempting immediate update');
-
-                            const isDarkMode = document.body.classList.contains('dark-mode');
-                            const textColor = isDarkMode ? '#e0e0e0' : '#262626';
-                            const gridColor = isDarkMode ? '#404040' : '#f1f3f4';
-
-                            // Update chart options
-                            if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-                                chart.options.plugins.legend.labels.color = textColor;
-                            }
-
-                            if (chart.options.scales) {
-                                Object.keys(chart.options.scales).forEach(scaleKey => {
-                                    const scale = chart.options.scales[scaleKey];
-                                    if (scale) {
-                                        if (scale.grid) scale.grid.color = gridColor;
-                                        if (scale.ticks) scale.ticks.color = textColor;
-                                    }
-                                });
-                            }
-
-                            // Force immediate chart update
-                            chart.update('none'); // Use 'none' for immediate update
-                            updatedCharts++;
-                            console.log('Immediately updated chart on canvas', index);
-                        }
-                    });
-
-                    return updatedCharts;
-                };
-
-                // Try immediate update first
-                const immediateUpdates = updateChartsDirectly();
-
-                // If no charts were updated immediately, try the delayed approaches
-                if (immediateUpdates === 0) {
-                    console.log('No charts updated immediately, trying delayed approaches');
-
-                    setTimeout(() => {
-                        console.log('About to update chart colors (delayed)');
-                        updateChartColors();
-
-                        // Try direct update again after a short delay
-                        setTimeout(() => {
-                            const delayedUpdates = updateChartsDirectly();
-
-                            // If still no luck, try recreation approaches
-                            if (delayedUpdates === 0) {
-                                if (typeof window.recreateAllCharts === 'function') {
-                                    console.log('Trying chart recreation as final backup');
-                                    window.recreateAllCharts();
-                                }
-                            }
-                        }, 100);
-                    }, 50);
-                }
-            });
+            if (themeToggle) {
+                themeToggle.addEventListener('change', function () {
+                    if (this.checked) {
+                        body.classList.add('dark-mode');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        body.classList.remove('dark-mode');
+                        localStorage.setItem('theme', 'light');
+                    }
+                    updateChartColors();
+                });
+            }
         });
     </script>
-
+    {% block modals %}{% endblock modals %}
     {% block custom_js %}{% endblock custom_js %}
 </body>
 

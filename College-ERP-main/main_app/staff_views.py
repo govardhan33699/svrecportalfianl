@@ -304,6 +304,29 @@ def fetch_student_result(request):
         return HttpResponse('False')
 
 #library
+def staff_add_material(request):
+    staff = get_object_or_404(Staff, admin=request.user)
+    subjects = Subject.objects.filter(staff=staff)
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        subject_id = request.POST.get('subject')
+        file = request.FILES.get('file')
+        
+        subject = get_object_or_404(Subject, id=subject_id)
+        StudyMaterial.objects.create(
+            title=title,
+            subject=subject,
+            file=file
+        )
+        messages.success(request, "Study material added successfully!")
+        return redirect('staff_add_material')
+        
+    context = {
+        'subjects': subjects,
+        'page_title': 'Add Study Material'
+    }
+    return render(request, 'staff_template/staff_add_material.html', context)
+
 def add_book(request):
     if request.method == "POST":
         name = request.POST['name']

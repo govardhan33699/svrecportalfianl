@@ -1,0 +1,50 @@
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }} - {{ student.admin.get_full_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <form role="form" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% for field in form %}
+                            <div class="form-group" style="margin-bottom:20px;">
+                                {% if field.errors %}
+                                <div
+                                    style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.2); border-radius:10px; padding:8px 14px; margin-bottom:8px; font-size:12.5px; color:#dc2626;">
+                                    {{ field.errors }}
+                                </div>
+                                {% endif %}
+                                <label for="{{ field.id_for_label }}"
+                                    style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:var(--text-primary, #1e293b);">
+                                    {{ field.label }}
+                                </label>
+                                {{ field }}
+                            </div>
+                            {% endfor %}
+                            <div style="margin-top:20px;">
+                                <button type="submit" class="btn btn-success"
+                                    style="width:100%; padding:12px; font-size:14px; font-weight:650; border-radius:14px;">
+                                    <i class="fas fa-check-circle me-2"></i> Save Certificate
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'view_student_detail' student.id %}" class="btn btn-outline-dark btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Student Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

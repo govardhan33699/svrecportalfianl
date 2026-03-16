@@ -1,0 +1,37 @@
+﻿{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }}</h3>
+                    </div>
+                    {% include "main_app/form_template.html" with messages=messages form=form button_text="Save Template" %}
+                    <div class="card-footer text-center">
+                        <a href="{% url 'manage_email_templates' %}" class="btn btn-outline-dark btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Templates
+                        </a>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <h5><i class="icon fas fa-info"></i> Template Variables</h5>
+                    <p>You can use the following variables in your email body:</p>
+                    <ul>
+                        <li><code>{{student_name}}</code> - Full name of the student</li>
+                        <li><code>{{department}}</code> - Student's course/department</li>
+                        <li><code>{{semester}}</code> - Current semester</li>
+                        <li><code>{{attendance_percentage}}</code> - Current attendance percentage</li>
+                        <li><code>{{marks}}</code> - Relevant marks/grade</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

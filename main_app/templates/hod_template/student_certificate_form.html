@@ -1,0 +1,24 @@
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }} - {{ student.admin.get_full_name }}</h3>
+                    </div>
+                    {% include "main_app/form_template.html" with messages=messages form=form button_text="Save Certificate" %}
+                    <div class="card-footer text-center">
+                        <a href="{% url 'view_student_detail' student.id %}" class="btn btn-outline-dark btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Student Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

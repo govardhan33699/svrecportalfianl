@@ -12,7 +12,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import UpdateView
 
 from .forms import *
-from .models import *
+from .models import (
+    Admin, Internship, Staff, Student, Subject, Course, Session, Degree,
+    Attendance, AttendanceReport, LeaveReportStudent, LeaveReportStaff,
+    FeedbackStudent, FeedbackStaff, NotificationStaff, NotificationStudent,
+    StudentResult, Period, Timetable, Assignment, AssignmentSubmission,
+    Announcement, Regulation, AcademicCalendar, CalendarEvent, SEMESTER_CHOICES, StudentCertificate,
+    AcademicLevel, AcademicSemester,
+    EmailTemplate, Workflow, WorkflowExecutionLog
+)
 
 
 def admin_home(request):
@@ -98,8 +106,52 @@ def admin_home(request):
         "course_name_list": course_name_list,
         "today_absentees": today_absentees,
         "today_date": today,
-
+        "total_internships": Internship.objects.all().count(),
+        "total_degrees": Degree.objects.all().count(),
     }
+
+    # Recent Activities
+    recent_students = Student.objects.all().order_by("-admin__created_at")[:3]
+    recent_staff = Staff.objects.all().order_by("-admin__created_at")[:3]
+    recent_internships = Internship.objects.all().order_by("-created_at")[:3]
+    recent_student_leaves = LeaveReportStudent.objects.filter(status=0).order_by("-created_at")[:3]
+
+    activities = []
+    for s in recent_students:
+        activities.append({
+            'type': 'student',
+            'title': f"New Student: {s.admin.get_full_name()}",
+            'time': s.admin.created_at,
+            'icon': 'fa-user-graduate',
+            'color': 'primary'
+        })
+    for st in recent_staff:
+        activities.append({
+            'type': 'staff',
+            'title': f"New Staff: {st.admin.get_full_name()}",
+            'time': st.admin.created_at,
+            'icon': 'fa-user-tie',
+            'color': 'success'
+        })
+    for i in recent_internships:
+        activities.append({
+            'type': 'internship',
+            'title': f"Internship Posted: {i.title} @ {i.company}",
+            'time': i.created_at,
+            'icon': 'fa-briefcase',
+            'color': 'warning'
+        })
+    for l in recent_student_leaves:
+        activities.append({
+            'type': 'leave',
+            'title': f"Leave Request: {l.student.admin.get_full_name()}",
+            'time': l.created_at,
+            'icon': 'fa-calendar-minus',
+            'color': 'danger'
+        })
+
+    activities.sort(key=lambda x: x['time'], reverse=True)
+    context['recent_activities'] = activities[:10]
     return render(request, 'hod_template/home_content.html', context)
 
 
@@ -182,6 +234,16 @@ def add_student(request):
                 user.student.blood_group = student_form.cleaned_data.get('blood_group')
                 user.student.apaar_id = student_form.cleaned_data.get('apaar_id')
                 user.student.regulation = student_form.cleaned_data.get('regulation')
+                user.student.date_of_birth = student_form.cleaned_data.get('date_of_birth')
+                user.student.annual_income = student_form.cleaned_data.get('annual_income')
+                user.student.father_occupation = student_form.cleaned_data.get('father_occupation')
+                user.student.mother_occupation = student_form.cleaned_data.get('mother_occupation')
+                user.student.mother_mobile_number = student_form.cleaned_data.get('mother_mobile_number')
+                user.student.nationality = student_form.cleaned_data.get('nationality')
+                user.student.religion = student_form.cleaned_data.get('religion')
+                user.student.mother_tongue = student_form.cleaned_data.get('mother_tongue')
+                user.student.admission_date = student_form.cleaned_data.get('admission_date')
+                user.student.admission_type = student_form.cleaned_data.get('admission_type')
                 user.save()
                 user.student.save()
                 messages.success(request, "Successfully Added")
@@ -193,6 +255,186 @@ def add_student(request):
     return render(request, 'hod_template/add_student_template.html', context)
 
 
+def add_degree(request):
+    form = DegreeForm(request.POST or None)
+    context = {
+        'form': form,
+        'page_title': 'Add Course'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            try:
+                degree = Degree()
+                degree.name = name
+                degree.save()
+                messages.success(request, "Course Added Successfully")
+                return redirect(reverse('add_degree'))
+            except:
+                messages.error(request, "Could Not Add")
+        else:
+            messages.error(request, "Could Not Add")
+    return render(request, 'hod_template/add_degree_template.html', context)
+
+
+def manage_degree(request):
+    degrees = Degree.objects.all()
+    context = {
+        'degrees': Degree.objects.all(),
+        'page_title': 'Manage Course'
+    }
+    return render(request, 'hod_template/manage_degree.html', context)
+
+
+def edit_degree(request, degree_id):
+    instance = get_object_or_404(Degree, id=degree_id)
+    form = DegreeForm(request.POST or None, instance=instance)
+    context = {
+        'form': form,
+        'degree_id': degree_id,
+        'page_title': 'Edit Course'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            try:
+                degree = Degree.objects.get(id=degree_id)
+                degree.name = name
+                degree.save()
+                messages.success(request, "Course Updated Successfully")
+            except:
+                messages.error(request, "Could Not Update")
+        else:
+            messages.error(request, "Could Not Update")
+
+    return render(request, 'hod_template/edit_degree_template.html', context)
+
+
+def delete_degree(request, degree_id):
+    degree = get_object_or_404(Degree, id=degree_id)
+    degree.delete()
+    messages.success(request, "Course Deleted Successfully")
+    return redirect(reverse('manage_degree'))
+
+
+def add_year(request):
+    form = AcademicLevelForm(request.POST or None)
+    context = {
+        'form': form,
+        'page_title': 'Add Year'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            try:
+                year = AcademicLevel()
+                year.name = name
+                year.save()
+                messages.success(request, "Year Added Successfully")
+                return redirect(reverse('add_year'))
+            except:
+                messages.error(request, "Could Not Add")
+        else:
+            messages.error(request, "Could Not Add")
+    return render(request, 'hod_template/add_year_template.html', context)
+
+
+def manage_year(request):
+    years = AcademicLevel.objects.all()
+    context = {
+        'years': years,
+        'page_title': 'Manage Years'
+    }
+    return render(request, 'hod_template/manage_year.html', context)
+
+
+def edit_year(request, year_id):
+    instance = get_object_or_404(AcademicLevel, id=year_id)
+    form = AcademicLevelForm(request.POST or None, instance=instance)
+    context = {
+        'form': form,
+        'year_id': year_id,
+        'page_title': 'Edit Year'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            try:
+                year = AcademicLevel.objects.get(id=year_id)
+                year.name = name
+                year.save()
+                messages.success(request, "Year Updated Successfully")
+            except:
+                messages.error(request, "Could Not Update")
+        else:
+            messages.error(request, "Could Not Update")
+
+    return render(request, 'hod_template/edit_year_template.html', context)
+
+
+def delete_year(request, year_id):
+    year = get_object_or_404(AcademicLevel, id=year_id)
+    year.delete()
+    messages.success(request, "Year Deleted Successfully")
+    return redirect(reverse('manage_year'))
+
+
+def add_semester(request):
+    form = AcademicSemesterForm(request.POST or None)
+    context = {
+        'form': form,
+        'page_title': 'Add Semester'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, "Semester Added Successfully")
+                return redirect(reverse('add_semester'))
+            except:
+                messages.error(request, "Could Not Add")
+        else:
+            messages.error(request, "Could Not Add")
+    return render(request, 'hod_template/add_semester_template.html', context)
+
+
+def manage_semester(request):
+    semesters = AcademicSemester.objects.all()
+    context = {
+        'semesters': semesters,
+        'page_title': 'Manage Semesters'
+    }
+    return render(request, 'hod_template/manage_semester.html', context)
+
+
+def edit_semester(request, semester_id):
+    instance = get_object_or_404(AcademicSemester, id=semester_id)
+    form = AcademicSemesterForm(request.POST or None, instance=instance)
+    context = {
+        'form': form,
+        'semester_id': semester_id,
+        'page_title': 'Edit Semester'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, "Semester Updated Successfully")
+            except:
+                messages.error(request, "Could Not Update")
+        else:
+            messages.error(request, "Could Not Update")
+
+    return render(request, 'hod_template/edit_semester_template.html', context)
+
+
+def delete_semester(request, semester_id):
+    semester = get_object_or_404(AcademicSemester, id=semester_id)
+    semester.delete()
+    messages.success(request, "Semester Deleted Successfully")
+    return redirect(reverse('manage_semester'))
+
+
 def add_course(request):
     form = CourseForm(request.POST or None)
     context = {
@@ -201,11 +443,8 @@ def add_course(request):
     }
     if request.method == 'POST':
         if form.is_valid():
-            name = form.cleaned_data.get('name')
             try:
-                course = Course()
-                course.name = name
-                course.save()
+                form.save()
                 messages.success(request, "Branch Added Successfully")
                 return redirect(reverse('add_course'))
             except:
@@ -224,19 +463,38 @@ def edit_course(request, course_id):
         'page_title': 'Edit Branch'
     }
     if request.method == 'POST':
+        print('DEBUG POST DATA:', request.POST)
         if form.is_valid():
-            name = form.cleaned_data.get('name')
             try:
                 course = Course.objects.get(id=course_id)
-                course.name = name
+                course.name = form.cleaned_data.get('name')
+                course.degree = form.cleaned_data.get('degree')
                 course.save()
                 messages.success(request, "Branch Updated Successfully")
-            except:
+                return redirect(reverse('manage_course'))
+            except Exception as e:
+                print('Error updating course:', str(e))
                 messages.error(request, "Could Not Update")
         else:
             messages.error(request, "Could Not Update")
 
     return render(request, 'hod_template/edit_course_template.html', context)
+
+
+def manage_course(request):
+    courses = Course.objects.all().select_related('degree')
+    context = {
+        'courses': courses,
+        'page_title': 'Manage Branches'
+    }
+    return render(request, 'hod_template/manage_course.html', context)
+
+
+def delete_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    course.delete()
+    messages.success(request, "Branch Deleted Successfully")
+    return redirect(reverse('manage_course'))
 
 
 def add_subject(request):
@@ -247,18 +505,10 @@ def add_subject(request):
     }
     if request.method == 'POST':
         if form.is_valid():
-            name = form.cleaned_data.get('name')
-            course = form.cleaned_data.get('course')
-            staff = form.cleaned_data.get('staff')
             try:
-                subject = Subject()
-                subject.name = name
-                subject.staff = staff
-                subject.course = course
-                subject.save()
+                form.save()
                 messages.success(request, "Successfully Added")
                 return redirect(reverse('add_subject'))
-
             except Exception as e:
                 messages.error(request, "Could Not Add " + str(e))
         else:
@@ -297,7 +547,7 @@ def manage_student(request):
         students = students.filter(student__regulation_id=regulation_id)
 
     courses = Course.objects.all()
-    semesters = Student.SEMESTER_CHOICES
+    semesters = SEMESTER_CHOICES
     regulations = Regulation.objects.all()
 
     context = {
@@ -312,26 +562,213 @@ def manage_student(request):
 
 def view_student_detail(request, student_id):
     student = get_object_or_404(Student, id=student_id)
+    certificates = StudentCertificate.objects.filter(student=student).order_by('-issue_date')
     context = {
         'student': student,
+        'certificates': certificates,
         'page_title': 'View Student Details'
     }
     return render(request, "hod_template/view_student_detail.html", context)
 
 
-def manage_course(request):
-    courses = Course.objects.all()
+def add_student_certificate(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    form = StudentCertificateForm(request.POST or None, request.FILES or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            certificate = form.save(commit=False)
+            certificate.student = student
+            certificate.save()
+            messages.success(request, "Certificate added successfully")
+            return redirect(reverse('view_student_detail', args=[student_id]))
+        else:
+            messages.error(request, "Failed to add certificate. Please check the form.")
+    
     context = {
-        'courses': courses,
-        'page_title': 'Manage Courses'
+        'form': form,
+        'student': student,
+        'page_title': 'Add Student Certificate'
     }
-    return render(request, "hod_template/manage_course.html", context)
+    return render(request, "hod_template/final_certificate_form.html", context)
+
+
+def edit_student_certificate(request, student_id, certificate_id):
+    student = get_object_or_404(Student, id=student_id)
+    certificate = get_object_or_404(StudentCertificate, id=certificate_id)
+    form = StudentCertificateForm(request.POST or None, request.FILES or None, instance=certificate)
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Certificate updated successfully")
+            return redirect(reverse('view_student_detail', args=[student_id]))
+        else:
+            messages.error(request, "Failed to update certificate. Please check the form.")
+            
+    context = {
+        'form': form,
+        'student': student,
+        'certificate': certificate,
+        'page_title': 'Edit Student Certificate'
+    }
+    return render(request, "hod_template/final_certificate_form.html", context)
+
+
+def delete_student_certificate(request, student_id, certificate_id):
+    certificate = get_object_or_404(StudentCertificate, id=certificate_id)
+    certificate.delete()
+    messages.success(request, "Certificate deleted successfully")
+    return redirect(reverse('view_student_detail', args=[student_id]))
+
+
+def manage_email_templates(request):
+    templates = EmailTemplate.objects.all()
+    context = {
+        'templates': templates,
+        'page_title': 'Manage Email Templates'
+    }
+    return render(request, "hod_template/manage_email_templates.html", context)
+
+
+def add_email_template(request):
+    form = EmailTemplateForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Email template added successfully")
+            return redirect(reverse('manage_email_templates'))
+        else:
+            messages.error(request, "Failed to add email template")
+    context = {
+        'form': form,
+        'page_title': 'Add Email Template'
+    }
+    return render(request, "hod_template/add_email_template_template.html", context)
+
+
+def edit_email_template(request, template_id):
+    template = get_object_or_404(EmailTemplate, id=template_id)
+    form = EmailTemplateForm(request.POST or None, instance=template)
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Email template updated successfully")
+            return redirect(reverse('manage_email_templates'))
+        else:
+            messages.error(request, "Failed to update email template")
+    context = {
+        'form': form,
+        'template_id': template_id,
+        'page_title': 'Edit Email Template'
+    }
+    return render(request, "hod_template/add_email_template_template.html", context)
+
+
+def delete_email_template(request, template_id):
+    template = get_object_or_404(EmailTemplate, id=template_id)
+    template.delete()
+    messages.success(request, "Email template deleted successfully")
+    return redirect(reverse('manage_email_templates'))
+
+
+def manage_workflows(request):
+    workflows = Workflow.objects.all()
+    context = {
+        'workflows': workflows,
+        'page_title': 'Manage Workflows'
+    }
+    return render(request, "hod_template/manage_workflows.html", context)
+
+
+def workflow_builder(request, workflow_id=None):
+    workflow = None
+    if workflow_id:
+        workflow = get_object_or_404(Workflow, id=workflow_id)
+    
+    email_templates = EmailTemplate.objects.all()
+    semesters = [{'id': c[0], 'name': c[1]} for c in SEMESTER_CHOICES]
+    courses = Course.objects.all()
+
+    # Serialize for json_script
+    email_templates_json = [{'id': t.id, 'name': t.name} for t in email_templates]
+    courses_json = [{'id': c.id, 'name': c.name} for c in courses]
+    semesters_json = semesters
+    
+    context = {
+        'workflow': workflow,
+        'email_templates': email_templates,
+        'email_templates_json': email_templates_json,
+        'courses': courses,
+        'courses_json': courses_json,
+        'semesters': semesters,
+        'semesters_json': semesters_json,
+        'page_title': 'Workflow Builder'
+    }
+    return render(request, "hod_template/workflow_builder.html", context)
+
+
+@csrf_exempt
+def save_workflow(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            workflow_id = data.get('id')
+            name = data.get('name')
+            trigger_type = data.get('trigger_type')
+            graph_data = data.get('graph_data')
+            
+            if workflow_id:
+                workflow = Workflow.objects.get(id=workflow_id)
+                workflow.name = name
+                workflow.trigger_type = trigger_type
+                workflow.graph_data = graph_data
+                workflow.save()
+            else:
+                Workflow.objects.create(
+                    name=name,
+                    trigger_type=trigger_type,
+                    graph_data=graph_data
+                )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+
+def delete_workflow(request, workflow_id):
+    workflow = get_object_or_404(Workflow, id=workflow_id)
+    workflow.delete()
+    messages.success(request, "Workflow deleted successfully")
+    return redirect(reverse('manage_workflows'))
+
 
 
 def manage_subject(request):
-    subjects = Subject.objects.all()
+    from collections import OrderedDict
+    SEMESTER_DISPLAY = {
+        '1': 'I B.Tech. I Sem.',
+        '2': 'I B.Tech. II Sem.',
+        '3': 'II B.Tech. I Sem.',
+        '4': 'II B.Tech. II Sem.',
+        '5': 'III B.Tech. I Sem.',
+        '6': 'III B.Tech. II Sem.',
+        '7': 'IV B.Tech. I Sem.',
+        '8': 'IV B.Tech. II Sem.',
+    }
+    subjects = Subject.objects.all().select_related('staff__admin', 'course', 'regulation').order_by('semester', 'name')
+    
+    semester_subjects = OrderedDict()
+    for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
+        sem_name = SEMESTER_DISPLAY[sem_key]
+        sem_subs = [s for s in subjects if s.semester == sem_key]
+        semester_subjects[sem_name] = sem_subs
+    
+    # Unassigned subjects (no semester)
+    unassigned = [s for s in subjects if not s.semester]
+    if unassigned:
+        semester_subjects['Unassigned'] = unassigned
+
     context = {
-        'subjects': subjects,
+        'semester_subjects': semester_subjects,
         'page_title': 'Manage Subjects'
     }
     return render(request, "hod_template/manage_subject.html", context)
@@ -340,13 +777,15 @@ def manage_subject(request):
 def edit_staff(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
     form = StaffForm(request.POST or None, instance=staff)
+    formset = StaffQualificationFormSet(request.POST or None, instance=staff)
     context = {
         'form': form,
+        'formset': formset,
         'staff_id': staff_id,
         'page_title': 'Edit Staff'
     }
     if request.method == 'POST':
-        if form.is_valid():
+        if form.is_valid() and formset.is_valid():
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
             address = form.cleaned_data.get('address')
@@ -378,8 +817,13 @@ def edit_staff(request, staff_id):
                 staff.blood_group = form.cleaned_data.get('blood_group')
                 staff.designation = form.cleaned_data.get('designation')
                 staff.faculty_role = form.cleaned_data.get('faculty_role')
+                staff.date_of_birth = form.cleaned_data.get('date_of_birth')
+                staff.date_of_joining = form.cleaned_data.get('date_of_joining')
+                staff.experience = form.cleaned_data.get('experience')
+                staff.mobile_number = form.cleaned_data.get('mobile_number')
                 user.save()
                 staff.save()
+                formset.save()
                 messages.success(request, "Successfully Updated")
                 return redirect(reverse('edit_staff', args=[staff_id]))
             except Exception as e:
@@ -437,6 +881,16 @@ def edit_student(request, student_id):
                 student.blood_group = form.cleaned_data.get('blood_group')
                 student.apaar_id = form.cleaned_data.get('apaar_id')
                 student.regulation = form.cleaned_data.get('regulation')
+                student.date_of_birth = form.cleaned_data.get('date_of_birth')
+                student.annual_income = form.cleaned_data.get('annual_income')
+                student.father_occupation = form.cleaned_data.get('father_occupation')
+                student.mother_occupation = form.cleaned_data.get('mother_occupation')
+                student.mother_mobile_number = form.cleaned_data.get('mother_mobile_number')
+                student.nationality = form.cleaned_data.get('nationality')
+                student.religion = form.cleaned_data.get('religion')
+                student.mother_tongue = form.cleaned_data.get('mother_tongue')
+                student.admission_date = form.cleaned_data.get('admission_date')
+                student.admission_type = form.cleaned_data.get('admission_type')
                 user.save()
                 student.save()
                 messages.success(request, "Successfully Updated")
@@ -455,7 +909,7 @@ def edit_course(request, course_id):
     context = {
         'form': form,
         'course_id': course_id,
-        'page_title': 'Edit Course'
+        'page_title': 'Edit Branch'
     }
     if request.method == 'POST':
         if form.is_valid():
@@ -483,19 +937,12 @@ def edit_subject(request, subject_id):
     }
     if request.method == 'POST':
         if form.is_valid():
-            name = form.cleaned_data.get('name')
-            course = form.cleaned_data.get('course')
-            staff = form.cleaned_data.get('staff')
             try:
-                subject = Subject.objects.get(id=subject_id)
-                subject.name = name
-                subject.staff = staff
-                subject.course = course
-                subject.save()
+                form.save()
                 messages.success(request, "Successfully Updated")
                 return redirect(reverse('edit_subject', args=[subject_id]))
             except Exception as e:
-                messages.error(request, "Could Not Add " + str(e))
+                messages.error(request, "Could Not Update " + str(e))
         else:
             messages.error(request, "Fill Form Properly")
     return render(request, 'hod_template/edit_subject_template.html', context)
@@ -654,12 +1101,12 @@ def admin_view_attendance(request):
     courses = Course.objects.all()
     sessions = Session.objects.all()
     sections = Student.SECTION
-    semesters = Student.SEMESTER_CHOICES
+    semesters = SEMESTER_CHOICES
     regulations = Regulation.objects.all()
 
     students_data = []
     subjects_list = []
-    summary = {'below_60': 0, 'between_60_65': 0, 'between_65_75': 0, 'above_75': 0}
+    summary = {'below_60': 0, 'between_60_65': 0, 'avg': 0, 'above_75': 0}
     total_students = 0
     filters_applied = False
 
@@ -673,8 +1120,10 @@ def admin_view_attendance(request):
 
     if course_id and session_id:
         filters_applied = True
-        # Get subjects for this course
+        # Get subjects for this course filtered by semester
         subjects_qs = Subject.objects.filter(course_id=course_id)
+        if semester:
+            subjects_qs = subjects_qs.filter(semester=semester)
         subjects_list = list(subjects_qs)
 
         # Get students matching filters
@@ -688,6 +1137,8 @@ def admin_view_attendance(request):
 
         # Build attendance filter
         att_filter = {'session_id': session_id}
+        if semester:
+            att_filter['semester'] = semester
         if from_date:
             att_filter['date__gte'] = from_date
         if to_date:
@@ -729,7 +1180,7 @@ def admin_view_attendance(request):
             elif pct < 65:
                 summary['between_60_65'] += 1
             elif pct < 75:
-                summary['between_65_75'] += 1
+                summary['avg'] += 1
             else:
                 summary['above_75'] += 1
 
@@ -798,6 +1249,9 @@ def admin_view_profile(request):
                     custom_user.profile_pic = passport
                 custom_user.first_name = first_name
                 custom_user.last_name = last_name
+                custom_user.email = form.cleaned_data.get('email')
+                custom_user.gender = form.cleaned_data.get('gender')
+                custom_user.address = form.cleaned_data.get('address')
                 custom_user.save()
                 messages.success(request, "Profile Updated!")
                 return redirect(reverse('admin_view_profile'))
@@ -1064,6 +1518,7 @@ def manage_timetable(request):
     courses = Course.objects.all()
     
     selected_course_id = request.GET.get('course')
+    selected_semester = request.GET.get('semester')
     
     # Default to first course if not selected
     if not selected_course_id:
@@ -1078,13 +1533,17 @@ def manage_timetable(request):
 
     staff_timetable_list = []
     if selected_course_id:
-        # Get all timetable entries for this course to find teaching staff
-        course_timetables = Timetable.objects.filter(course_id=selected_course_id).select_related('staff__admin')
+        # Filter timetables by course AND semester if provided
+        timetable_filter = {'course_id': selected_course_id}
+        if selected_semester:
+            timetable_filter['semester'] = selected_semester
+            
+        course_timetables = Timetable.objects.filter(**timetable_filter).select_related('staff__admin')
         
-        # Get unique staff members who have a timetable entry in this course
+        # Get unique staff members who have a timetable entry in this course/semester
         teaching_staff_ids = list(course_timetables.values_list('staff_id', flat=True).distinct())
         
-        # Also get staff who "belong" to this course
+        # Also get staff who "belong" to this course (we show them even if empty)
         belonging_staff_ids = list(Staff.objects.filter(course_id=selected_course_id).values_list('id', flat=True))
         
         # Combined set of staff to show
@@ -1092,10 +1551,8 @@ def manage_timetable(request):
         
         staff_list = Staff.objects.filter(id__in=all_staff_ids).select_related('admin')
         
-        # Group ALL timetables by staff (not just for this course, so we see their full workload if desired, 
-        # but the request is specifically for "this branch's timetable").
-        # If we want to only show entries belonging to current branch in the grid:
-        all_timetables = Timetable.objects.filter(course_id=selected_course_id, staff__in=staff_list).select_related('period', 'subject', 'course')
+        # Group timetables by staff
+        all_timetables = Timetable.objects.filter(**timetable_filter, staff__in=staff_list).select_related('period', 'subject', 'course')
         
         staff_map = defaultdict(list)
         for t in all_timetables:
@@ -1124,6 +1581,8 @@ def manage_timetable(request):
         'periods': periods,
         'courses': courses,
         'selected_course_id': selected_course_id,
+        'selected_semester': selected_semester,
+        'semester_choices': SEMESTER_CHOICES,
         'staff_timetable_list': staff_timetable_list,
         'page_title': 'Manage Timetables'
     }
@@ -1297,7 +1756,7 @@ def add_regulation(request):
 
 
 def manage_regulation(request):
-    regulations = Regulation.objects.all().order_by('-created_at')
+    regulations = Regulation.objects.all().select_related('course', 'session').order_by('-created_at')
     context = {
         'regulations': regulations,
         'page_title': 'Manage Regulations'
@@ -1334,3 +1793,369 @@ def delete_regulation(request, regulation_id):
     except Exception as e:
         messages.error(request, "Could not delete: " + str(e))
     return redirect(reverse('manage_regulation'))
+
+def manage_internship(request):
+    internships = Internship.objects.all().order_by('-created_at')
+    context = {
+        'internships': internships,
+        'page_title': 'Manage Internships'
+    }
+    return render(request, "hod_template/manage_internship.html", context)
+
+
+def add_internship(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        company = request.POST.get('company')
+        description = request.POST.get('description')
+        link = request.POST.get('link')
+        deadline = request.POST.get('deadline')
+        
+        try:
+            internship = Internship(
+                title=title,
+                company=company,
+                description=description,
+                link=link,
+                deadline=deadline
+            )
+            internship.save()
+            messages.success(request, "Internship Added Successfully")
+            return redirect(reverse('manage_internship'))
+        except Exception as e:
+            messages.error(request, "Could Not Add Internship: " + str(e))
+            
+    context = {
+        'page_title': 'Add Internship'
+    }
+    return render(request, "hod_template/add_internship_template.html", context)
+
+
+def edit_internship(request, internship_id):
+    internship = get_object_or_404(Internship, id=internship_id)
+    if request.method == 'POST':
+        internship.title = request.POST.get('title')
+        internship.company = request.POST.get('company')
+        internship.description = request.POST.get('description')
+        internship.link = request.POST.get('link')
+        internship.deadline = request.POST.get('deadline')
+        
+        try:
+            internship.save()
+            messages.success(request, "Internship Updated Successfully")
+            return redirect(reverse('manage_internship'))
+        except Exception as e:
+            messages.error(request, "Could Not Update Internship: " + str(e))
+            
+    context = {
+        'internship': internship,
+        'page_title': 'Edit Internship'
+    }
+    return render(request, "hod_template/edit_internship_template.html", context)
+
+
+def delete_internship(request, internship_id):
+    internship = get_object_or_404(Internship, id=internship_id)
+    try:
+        internship.delete()
+        messages.success(request, "Internship Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete Internship: " + str(e))
+    return redirect(reverse('manage_internship'))
+
+def manage_calendar(request):
+    calendars = AcademicCalendar.objects.all().select_related(
+        'session', 'regulation'
+    ).prefetch_related('events').order_by('-session__start_year', 'semester')
+    
+    # Group calendars by session
+    from collections import OrderedDict
+    grouped = OrderedDict()
+    for cal in calendars:
+        session_key = cal.session_id
+        if session_key not in grouped:
+            grouped[session_key] = {
+                'session': cal.session,
+                'calendars': []
+            }
+        grouped[session_key]['calendars'].append(cal)
+    
+    context = {
+        'grouped_calendars': grouped,
+        'calendars': calendars,
+        'page_title': 'Manage Academic Calendar'
+    }
+    return render(request, "hod_template/manage_calendar.html", context)
+
+
+def add_calendar(request):
+    form = AcademicCalendarForm(request.POST or None)
+    formset = CalendarEventFormSet(request.POST or None, prefix='events')
+    context = {
+        'form': form,
+        'formset': formset,
+        'page_title': 'Add Academic Calendar'
+    }
+    if request.method == 'POST':
+        if form.is_valid() and formset.is_valid():
+            try:
+                calendar = form.save()
+                events = formset.save(commit=False)
+                for event in events:
+                    event.calendar = calendar
+                    event.save()
+                for obj in formset.deleted_objects:
+                    obj.delete()
+                messages.success(request, "Calendar Entry Added Successfully")
+                return redirect(reverse('manage_calendar'))
+            except Exception as e:
+                messages.error(request, "Could Not Add Calendar Entry: " + str(e))
+        else:
+            messages.error(request, "Please Fill Form Properly")
+    return render(request, "hod_template/add_calendar_template.html", context)
+
+
+def edit_calendar(request, calendar_id):
+    instance = get_object_or_404(AcademicCalendar, id=calendar_id)
+    form = AcademicCalendarForm(request.POST or None, instance=instance)
+    formset = CalendarEventFormSet(request.POST or None, instance=instance, prefix='events')
+    context = {
+        'form': form,
+        'formset': formset,
+        'calendar_id': calendar_id,
+        'page_title': 'Edit Academic Calendar'
+    }
+    if request.method == 'POST':
+        if form.is_valid() and formset.is_valid():
+            try:
+                form.save()
+                events = formset.save(commit=False)
+                for event in events:
+                    event.calendar = instance
+                    event.save()
+                for obj in formset.deleted_objects:
+                    obj.delete()
+                messages.success(request, "Calendar Entry Updated Successfully")
+                return redirect(reverse('manage_calendar'))
+            except Exception as e:
+                messages.error(request, "Could Not Update Calendar: " + str(e))
+        else:
+            messages.error(request, "Please Fill Form Properly")
+    
+    return render(request, "hod_template/edit_calendar_template.html", context)
+
+
+def delete_calendar(request, calendar_id):
+    calendar = get_object_or_404(AcademicCalendar, id=calendar_id)
+    try:
+        calendar.delete()
+        messages.success(request, "Calendar Entry Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete Calendar Entry: " + str(e))
+    return redirect(reverse('manage_calendar'))
+
+
+def admin_view_marks_memo(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    results = StudentResult.objects.filter(student=student).select_related('subject')
+
+    from django.db.models import Q
+    from collections import OrderedDict
+
+    # Get all subjects for the student's course and regulation
+    all_subjects = Subject.objects.filter(
+        course=student.course, show_in_marks=True
+    ).filter(
+        Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    ).order_by('semester', 'order', 'name')
+
+    # Build marks lookup: {subject_id: {exam_name: total}}
+    marks_lookup = {}
+    for res in results:
+        if res.subject_id not in marks_lookup:
+            marks_lookup[res.subject_id] = {}
+        if res.exam_name:
+            marks_lookup[res.subject_id][res.exam_name] = res.total
+        
+        # Store external and internal specifically
+        if res.external_marks:
+            marks_lookup[res.subject_id]['EXTERNAL'] = res.external_marks
+        if res.internal_marks:
+            marks_lookup[res.subject_id]['INTERNAL_OVERRIDE'] = res.internal_marks
+
+    # Organize subjects by semester
+    sem_subjects = {}
+    for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
+        sem_subjects[sem_key] = []
+
+    for sub in all_subjects:
+        sem = sub.semester or '1'
+        if sem in sem_subjects:
+            sub_marks = marks_lookup.get(sub.id, {})
+            # IM calculation
+            if 'INTERNAL_OVERRIDE' in sub_marks:
+                im = sub_marks['INTERNAL_OVERRIDE']
+            else:
+                int1 = float(sub_marks.get('Mid 1', sub_marks.get('INT-1', sub_marks.get('MID-1', 0))) or 0)
+                int2 = float(sub_marks.get('Mid 2', sub_marks.get('INT-2', sub_marks.get('MID-2', 0))) or 0)
+                m_max = max(int1, int2)
+                m_min = min(int1, int2)
+                im = round((0.8 * m_max) + (0.2 * m_min))
+            
+            em = sub_marks.get('EXTERNAL', '')
+            tot = im + (float(em) if em else 0)
+
+            # Result Status (RS) and Grade based on TOTAL
+            if em == '' and im == 0:
+                status = ''
+                grade = ''
+            else:
+                status = 'P' if tot >= 40 else 'F'
+
+                if tot >= 90:
+                    grade = 'S'
+                elif tot >= 80:
+                    grade = 'A'
+                elif tot >= 70:
+                    grade = 'B'
+                elif tot >= 60:
+                    grade = 'C'
+                elif tot >= 50:
+                    grade = 'D'
+                elif tot >= 40:
+                    grade = 'E'
+                else:
+                    grade = 'F'
+
+            sem_subjects[sem].append({
+                'name': sub.name,
+                'code': sub.code or '',
+                'im': im,
+                'em': em,
+                'tot': tot,
+                'status': status,
+                'grade': grade,
+                'cr': sub.credits or '',
+            })
+
+    # Group into years
+    years = OrderedDict()
+    year_labels = {
+        '1': ('I Year', '1', '2', 'I Sem', 'II Sem'),
+        '2': ('II Year', '3', '4', 'I Sem', 'II Sem'),
+        '3': ('III Year', '5', '6', 'I Sem', 'II Sem'),
+        '4': ('IV Year', '7', '8', 'I Sem', 'II Sem'),
+    }
+
+    for yr_key, (yr_name, sem1, sem2, sem1_label, sem2_label) in year_labels.items():
+        s1_list = sem_subjects.get(sem1, [])
+        s2_list = sem_subjects.get(sem2, [])
+        max_rows = max(len(s1_list), len(s2_list), 1)
+        years[yr_name] = {
+            'sem1_label': sem1_label,
+            'sem2_label': sem2_label,
+            'sem1': s1_list,
+            'sem2': s2_list,
+            'max_rows': range(max_rows),
+        }
+
+    context = {
+        'student': student,
+        'years': years,
+        'page_title': 'Consolidate Marks Memo',
+    }
+    return render(request, "hod_template/admin_view_marks_memo.html", context)
+
+
+def admin_edit_marks_memo(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    from django.db.models import Q
+    from collections import OrderedDict
+    
+    # Get all subjects for student
+    all_subjects = Subject.objects.filter(
+        course=student.course, show_in_marks=True
+    ).filter(
+        Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    ).order_by('semester', 'order', 'name')
+
+    if request.method == 'POST':
+        for sub in all_subjects:
+            im_val = request.POST.get(f'im_{sub.id}', '')
+            em_val = request.POST.get(f'em_{sub.id}', '')
+            cr_val = request.POST.get(f'cr_{sub.id}', '')
+            order_val = request.POST.get(f'order_{sub.id}', '')
+            
+            # Update Subject order weight
+            if order_val != '':
+                try:
+                    sub.order = int(order_val)
+                    sub.save()
+                except (TypeError, ValueError):
+                    pass
+            
+            # Update Subject credits
+            if cr_val != '':
+                sub.credits = float(cr_val)
+                sub.save()
+            
+            # Get or create a dedicated record for consolidated internal/external marks
+            res = StudentResult.objects.filter(
+                student=student,
+                subject=sub,
+                exam_name='FINAL_EXTERNAL',
+            ).order_by('id').first()
+            if not res:
+                res = StudentResult(
+                    student=student,
+                    subject=sub,
+                    exam_name='FINAL_EXTERNAL',
+                )
+            if em_val != '':
+                try:
+                    em_float = float(em_val)
+                except (TypeError, ValueError):
+                    em_float = 0
+                # External marks max is 70
+                res.external_marks = min(em_float, 70)
+            if im_val != '':
+                try:
+                    im_float = float(im_val)
+                except (TypeError, ValueError):
+                    im_float = 0
+                res.internal_marks = im_float
+            
+            # Ensure semester is set correctly from the subject
+            res.semester = sub.semester
+            res.save()
+            
+        messages.success(request, "Marks Memo updated successfully")
+        return redirect(reverse('admin_view_marks_memo', args=[student_id]))
+
+    # Organize data for editing
+    sem_data = OrderedDict()
+    semester_choices_dict = dict(SEMESTER_CHOICES)
+    
+    for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
+        sem_name = semester_choices_dict.get(sem_key, f"Semester {sem_key}")
+        subs = all_subjects.filter(semester=sem_key)
+        
+        sem_subs = []
+        for s in subs:
+            res = StudentResult.objects.filter(student=student, subject=s).first()
+            sem_subs.append({
+                'subject': s,
+                'internal_marks': res.internal_marks if res else 0,
+                'external_marks': res.external_marks if res else 0,
+                'credits': s.credits
+            })
+        
+        if sem_subs:
+            sem_data[sem_name] = sem_subs
+
+    context = {
+        'student': student,
+        'sem_data': sem_data,
+        'page_title': 'Edit Marks Memo'
+    }
+    return render(request, "hod_template/admin_edit_marks_memo.html", context)

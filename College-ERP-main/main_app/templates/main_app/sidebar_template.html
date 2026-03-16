@@ -3,18 +3,20 @@
     {% if request.user.user_type == '1' %}
     <!-- Brand Logo -->
     <a href="{% url 'admin_home' %}" class="brand-link">
-        <img src="{% static 'dist/img/virusx.png' %} " alt="SIGCE LOGO"
-            class="brand-image " >
-        <span class="brand-text font-weight-light" >SIGCE Admin Panel</span>
+        <img src="{% static 'dist/img/virusx.png' %} " alt="SIGCE LOGO" class="brand-image ">
+        <span class="brand-text font-weight-light">SVREC Admin Panel</span>
     </a>
 
     <!-- Sidebar -->
-    <div class="sidebar" style="background-image: linear-gradient(to right top, #0b3574, #033f91, #004aae, #0054cc, #125eeb);">
+    <div class="sidebar"
+        style="background-image: linear-gradient(to right top, #0b3574, #033f91, #004aae, #0054cc, #125eeb);">
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{{ request.user.profile_pic}}" class="img-circle elevation-2" alt="User Image" id="sidebar-avatar-adminlte" onerror="showDefaultAvatarAdminLTE()">
-                <i class="nav-icon fas fa-user-circle adminlte-default-avatar" id="default-avatar-adminlte" style="display: none;"></i>
+                <img src="{{ request.user.profile_pic}}" class="img-circle elevation-2" alt="User Image"
+                    id="sidebar-avatar-adminlte" onerror="showDefaultAvatarAdminLTE()">
+                <i class="nav-icon fas fa-user-circle adminlte-default-avatar" id="default-avatar-adminlte"
+                    style="display: none;"></i>
             </div>
             <div class="info">
                 <a href="#" class="d-block">{{user}}</a>
@@ -46,11 +48,11 @@
                         </p>
                     </a>
                 </li>
-                
+
 
 
                 <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link" >
+                    <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-bookmark"></i>
                         <p>
                             Course
@@ -129,7 +131,7 @@
 
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
-                        <i  class="nav-icon fas fa-clock"></i>
+                        <i class="nav-icon fas fa-clock"></i>
                         <p>
                             Session
                             <i class="fas fa-angle-left right"></i>
@@ -264,7 +266,7 @@
 
                     <a href="{{staff_feedback_message}}"
                         class="nav-link   {% if staff_feedback_message == request.path %} active {% endif %}">
-                        <i  class="nav-icon fas fa-comment"></i>
+                        <i class="nav-icon fas fa-comment"></i>
                         <p>
                             Staff Feedback
 
@@ -276,7 +278,7 @@
 
                     <a href="{{view_staff_leave}}"
                         class="nav-link  {% if view_staff_leave == request.path %} active {% endif %}">
-                        <i  class="nav-icon fas fa-check-double"></i>
+                        <i class="nav-icon fas fa-check-double"></i>
                         <p>
                             Staff Leave
 
@@ -288,7 +290,7 @@
 
                     <a href="{% url 'view_student_leave' %}"
                         class="nav-link  {% if view_student_leave == request.path %} active {% endif %}">
-                        <i  class="nav-icon fas fa-check-double"></i>
+                        <i class="nav-icon fas fa-check-double"></i>
                         <p>
                             Student Leave
 
@@ -299,13 +301,14 @@
                 {% elif request.user.user_type == '2' %}
                 <!-- Brand Logo -->
                 <a href="#" class="brand-link">
-                    <img src="{% static 'dist/img/virusx.png' %}" alt="AdminLTE Logo"
-                        class="brand-image " style="opacity: .8">
+                    <img src="{% static 'dist/img/virusx.png' %}" alt="AdminLTE Logo" class="brand-image "
+                        style="opacity: .8">
                     <span class="brand-text font-weight-light">SIGCE Staff Panel</span>
                 </a>
 
                 <!-- Sidebar -->
-                <div class="sidebar" style="background-image: linear-gradient(to right top, #0b3574, #033f91, #004aae, #0054cc, #125eeb);">
+                <div class="sidebar"
+                    style="background-image: linear-gradient(to right top, #0b3574, #033f91, #004aae, #0054cc, #125eeb);">
                     <!-- Sidebar user panel (optional) -->
                     <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                         <div class="image">
@@ -402,13 +405,12 @@
                             </li>
 
                             <li class="nav-item">
-                                {% url 'add_book' as add_book %}
-                                <a href="{{add_book}}"
-                                    class="nav-link {% if add_book == request.path %} active {% endif %}">
-                                    <i class="nav-icon fas fa-comment-alt"></i>
+                                {% url 'staff_add_material' as staff_add_material %}
+                                <a href="{{staff_add_material}}"
+                                    class="nav-link {% if staff_add_material == request.path %} active {% endif %}">
+                                    <i class="nav-icon fas fa-file-alt"></i>
                                     <p>
-                                        Add Books To Lib
-
+                                        Add Study Materials
                                     </p>
                                 </a>
                             </li>
@@ -441,19 +443,22 @@
                             <!-- Brand Logo -->
                             <a href="" class="brand-link">
 
-                                <img src="{% static 'dist/img/virusx.png' %} " alt="AdminLTE Logo"
-                                    class="brand-image " style="opacity: .8">
+                                <img src="{% static 'dist/img/virusx.png' %} " alt="AdminLTE Logo" class="brand-image "
+                                    style="opacity: .8">
                                 <span class="brand-text font-weight-light">SIGCE Student Panel</span>
                             </a>
 
                             <!-- Sidebar -->
-                            <div class="sidebar" style="background-image: linear-gradient(to right top, #0b3574, #033f91, #004aae, #0054cc, #125eeb);">
+                            <div class="sidebar"
+                                style="background-image: linear-gradient(to right top, #0b3574, #033f91, #004aae, #0054cc, #125eeb);">
                                 <!-- Sidebar user panel (optional) -->
                                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                                     <div class="image">
                                         <img src="{{ request.user.profile_pic}}" class="img-circle elevation-2"
-                                            alt="User Image" id="sidebar-avatar-student" onerror="showDefaultAvatarStudent()">
-                                        <i class="nav-icon fas fa-user-circle adminlte-default-avatar" id="default-avatar-student" style="display: none;"></i>
+                                            alt="User Image" id="sidebar-avatar-student"
+                                            onerror="showDefaultAvatarStudent()">
+                                        <i class="nav-icon fas fa-user-circle adminlte-default-avatar"
+                                            id="default-avatar-student" style="display: none;"></i>
                                     </div>
                                     <div class="info">
                                         <a href="#" class="d-block">{{user}}</a>
@@ -535,13 +540,12 @@
                                         </li>
 
                                         <li class="nav-item">
-                                            {% url 'view_books' as view_books %}
-                                            <a href="{{view_books}}"
-                                                class="nav-link {% if view_books == request.path %} active {% endif %}">
-                                                <i class="nav-icon fas 	fas fa-atlas"></i>
+                                            {% url 'student_view_material' as student_view_material %}
+                                            <a href="{{student_view_material}}"
+                                                class="nav-link {% if student_view_material == request.path %} active {% endif %}">
+                                                <i class="nav-icon fas fa-file-alt"></i>
                                                 <p>
-                                                    Available Books in LIB
-
+                                                    Study Materials
                                                 </p>
                                             </a>
                                         </li>
@@ -556,38 +560,38 @@
 </aside>
 
 <script>
-function showDefaultAvatarAdminLTE() {
-    // Hide the broken image
-    document.getElementById('sidebar-avatar-adminlte').style.display = 'none';
-    // Show the default FontAwesome icon
-    document.getElementById('default-avatar-adminlte').style.display = 'inline-block';
-}
-
-function showDefaultAvatarStudent() {
-    // Hide the broken image
-    document.getElementById('sidebar-avatar-student').style.display = 'none';
-    // Show the default FontAwesome icon
-    document.getElementById('default-avatar-student').style.display = 'inline-block';
-}
-
-// Also check if profile_pic is empty or null and show default avatar
-document.addEventListener('DOMContentLoaded', function() {
-    // Check AdminLTE avatar
-    const avatarAdminLTE = document.getElementById('sidebar-avatar-adminlte');
-    const defaultAvatarAdminLTE = document.getElementById('default-avatar-adminlte');
-    
-    if (avatarAdminLTE && (!avatarAdminLTE.src || avatarAdminLTE.src.trim() === '' || avatarAdminLTE.src === window.location.href)) {
-        avatarAdminLTE.style.display = 'none';
-        defaultAvatarAdminLTE.style.display = 'inline-block';
+    function showDefaultAvatarAdminLTE() {
+        // Hide the broken image
+        document.getElementById('sidebar-avatar-adminlte').style.display = 'none';
+        // Show the default FontAwesome icon
+        document.getElementById('default-avatar-adminlte').style.display = 'inline-block';
     }
-    
-    // Check Student avatar
-    const avatarStudent = document.getElementById('sidebar-avatar-student');
-    const defaultAvatarStudent = document.getElementById('default-avatar-student');
-    
-    if (avatarStudent && (!avatarStudent.src || avatarStudent.src.trim() === '' || avatarStudent.src === window.location.href)) {
-        avatarStudent.style.display = 'none';
-        defaultAvatarStudent.style.display = 'inline-block';
+
+    function showDefaultAvatarStudent() {
+        // Hide the broken image
+        document.getElementById('sidebar-avatar-student').style.display = 'none';
+        // Show the default FontAwesome icon
+        document.getElementById('default-avatar-student').style.display = 'inline-block';
     }
-});
+
+    // Also check if profile_pic is empty or null and show default avatar
+    document.addEventListener('DOMContentLoaded', function () {
+        // Check AdminLTE avatar
+        const avatarAdminLTE = document.getElementById('sidebar-avatar-adminlte');
+        const defaultAvatarAdminLTE = document.getElementById('default-avatar-adminlte');
+
+        if (avatarAdminLTE && (!avatarAdminLTE.src || avatarAdminLTE.src.trim() === '' || avatarAdminLTE.src === window.location.href)) {
+            avatarAdminLTE.style.display = 'none';
+            defaultAvatarAdminLTE.style.display = 'inline-block';
+        }
+
+        // Check Student avatar
+        const avatarStudent = document.getElementById('sidebar-avatar-student');
+        const defaultAvatarStudent = document.getElementById('default-avatar-student');
+
+        if (avatarStudent && (!avatarStudent.src || avatarStudent.src.trim() === '' || avatarStudent.src === window.location.href)) {
+            avatarStudent.style.display = 'none';
+            defaultAvatarStudent.style.display = 'inline-block';
+        }
+    });
 </script>

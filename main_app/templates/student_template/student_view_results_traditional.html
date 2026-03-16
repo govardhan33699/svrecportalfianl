@@ -1,0 +1,300 @@
+{% extends 'main_app/erpnext_base.html' %} {% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    .results-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .dark-mode .results-container {
+        background: #1e1e2e;
+        color: #eee;
+    }
+
+    .header-table {
+        width: 100%;
+        margin-bottom: 25px;
+        border-collapse: collapse;
+    }
+
+    .header-table td {
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    .dark-mode .header-table td {
+        border-color: #444;
+    }
+
+    .header-label {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        width: 15%;
+    }
+
+    .dark-mode .header-label {
+        background-color: #252538;
+    }
+
+    .exam-header {
+        text-align: center;
+        font-weight: 600;
+        margin-top: 35px;
+        margin-bottom: 15px;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    .dark-mode .exam-header {
+        color: #ddd;
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+    .results-table th,
+    .results-table td {
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .dark-mode .results-table th,
+    .dark-mode .results-table td {
+        border-color: #444;
+    }
+
+    .results-table th {
+        background-color: #1a73e8;
+        color: #ffffff;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .dark-mode .results-table th {
+        background-color: #252538;
+    }
+
+    .text-center {
+        text-align: center !important;
+    }
+
+    .results-table tr.row-fail {
+        background-color: #db3240 !important;
+    }
+
+    /* Stats Card Box */
+    .stats-card {
+        background: #fff;
+        border-radius: 0 0 8px 8px;
+        padding: 12px 20px;
+        margin-bottom: 40px;
+        margin-top: -30px;
+        /* stick to table */
+        box-shadow: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #2d83da;
+        border-top: none;
+        max-width: 100%;
+    }
+
+    .dark-mode .stats-card {
+        background: #1e1e2e;
+        border-color: #444;
+        box-shadow: none;
+    }
+
+    .stats-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        text-align: left;
+    }
+
+    .stats-label {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 600;
+    }
+
+    .dark-mode .stats-label {
+        color: #aaa;
+    }
+
+    .stats-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2b2b3c;
+    }
+
+    .dark-mode .stats-value {
+        color: #fff;
+    }
+
+    .stats-value.danger {
+        color: #d94141;
+    }
+
+    /* Force black text for stats items inside footer as background is always white */
+    .results-table tfoot .stats-label,
+    .results-table tfoot .stats-value:not(.danger) {
+        color: #000000 !important;
+    }
+
+    /* SGPA Dynamic Color Ranges */
+    .sgpa-green { color: #28a745 !important; }
+    .sgpa-blue { color: #17a2b8 !important; }
+    .sgpa-yellow { color: #d58512 !important; } /* Darker golden for text readability on white bg */
+    .sgpa-orange { color: #fd7e14 !important; }
+    .sgpa-red { color: #dc3545 !important; }
+
+    /* Percentage Dynamic Color Ranges */
+    .pct-blue { color: #1a73e8 !important; }
+    .pct-green { color: #28a745 !important; }
+    .pct-yellow { color: #d58512 !important; } /* Golden for readability on white bg */
+    .pct-orange { color: #fd7e14 !important; }
+    .pct-red { color: #dc3545 !important; }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="results-container">
+        <!-- Student Info Header -->
+        <table class="header-table">
+            <tr>
+                <td class="header-label">Regd. No.</td>
+                <td style="font-weight: 600;">{{ student.roll_number }}</td>
+                <td class="header-label">Name</td>
+                <td>{{ student.admin.get_full_name|upper }}</td>
+                <td class="header-label">Father Name</td>
+                <td>{{ student.father_name|upper|default:"-" }}</td>
+            </tr>
+        </table>
+
+        <!-- Loop Semesters -->
+        {% for sem_key, subjects in sem_subjects.items %}
+        {% if subjects %}
+        <!-- Table -->
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th colspan="7" class="text-center"
+                        style="background-color: #1a73e8; color: #ffffff; font-weight: 700; font-size: 1.1rem; border-bottom: none;">
+                        {% for k, v in semester_labels.items %}{% if k == sem_key %}{{ v }}{% endif %}{% endfor %}
+                    </th>
+                </tr>
+                <tr>
+                    <th class="text-center" style="width: 5%;">S.No.</th>
+                    <th style="width: 50%;">Subject Name</th>
+                    <th class="text-center" style="width: 8%;">INT</th>
+                    <th class="text-center" style="width: 8%;">EXT</th>
+                    <th class="text-center" style="width: 8%;">TOT</th>
+                    <th class="text-center" style="width: 10%;">Credits</th>
+                    <th class="text-center" style="width: 11%;">Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in subjects %}
+                <tr class="{% if item.status == 'Fail' %}row-fail{% endif %}">
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td>
+                        <div>{{ item.name|upper }}</div>
+                    </td>
+                    <td class="text-center">{{ item.im|floatformat:"0" }}</td>
+                    <td class="text-center">{% if item.em != "" %}{{ item.em|floatformat:"0" }}{% else %}-{% endif %}
+                    </td>
+                    <td class="text-center">{{ item.tot|floatformat:"0" }}</td>
+                    <td class="text-center">{{ item.cr|floatformat }}</td>
+                    <td class="text-center"
+                        style="font-weight: 600; color: {% if item.status == 'Pass' %}#28a745{% else %}#000000{% endif %};">
+                        {{ item.status }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="background-color: #ffffff;">
+                    <!-- S.No (spacer) -->
+                    <td style="border-top: 2px solid #1a73e8;"></td>
+
+                    <!-- Subject Name -->
+                    <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
+                        <span class="stats-label">Semester</span>
+                        <span class="stats-value" style="font-weight: 700;">
+                            {% for k, v in semester_labels_short.items %}
+                            {% if k == sem_key %}
+                            {{ v }}
+                            {% endif %}
+                            {% endfor %}
+                        </span>
+                    </td>
+
+                    <!-- INT (spacer) -->
+                    <td style="border-top: 2px solid #1a73e8;"></td>
+
+                    <!-- EXT (spacer) -->
+                    <td style="border-top: 2px solid #1a73e8;"></td>
+
+                    <!-- TOT (SGPA) -->
+                    <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
+                        <span class="stats-label" style="display: block;">SGPA</span>
+                        <span class="stats-value" style="font-weight: 700;">
+                            {% for k, v in sem_stats.items %}
+                                {% if k == sem_key %}
+                                    <span class="{% if v.sgpa >= 9.0 %}sgpa-green{% elif v.sgpa >= 8.0 %}sgpa-blue{% elif v.sgpa >= 7.0 %}sgpa-yellow{% elif v.sgpa >= 6.0 %}sgpa-orange{% else %}sgpa-red{% endif %}">
+                                        {{ v.sgpa|floatformat:2 }}
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                    </td>
+
+                    <!-- Credits (Percentage) -->
+                    <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
+                        <span class="stats-label" style="display: block;">Percentage</span>
+                        <span class="stats-value" style="font-weight: 700;">
+                            {% for k, v in sem_stats.items %}
+                                {% if k == sem_key %}
+                                    <span class="{% if v.percentage >= 90 %}pct-blue{% elif v.percentage >= 80 %}pct-green{% elif v.percentage >= 70 %}pct-yellow{% elif v.percentage >= 60 %}pct-orange{% else %}pct-red{% endif %}">
+                                        {{ v.percentage }}%
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                    </td>
+
+                    <!-- Result (Backlogs) -->
+                    <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
+                        <span class="stats-label" style="display: block;">Backlogs</span>
+                        <span class="stats-value danger" style="font-weight: 700;">
+                            {% for k, v in sem_stats.items %}
+                            {% if k == sem_key %}
+                            {{ v.backlogs }}
+                            {% endif %}
+                            {% endfor %}
+                        </span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

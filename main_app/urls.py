@@ -25,9 +25,13 @@ urlpatterns = [
     path("firebase-messaging-sw.js", views.showFirebaseJS, name='showFirebaseJS'),
     path("doLogin/", views.doLogin, name='user_login'),
     path("logout_user/", views.logout_user, name='user_logout'),
+    path("get_user_profile_pic/", views.get_user_profile_pic, name='get_user_profile_pic'),
     path("admin/home/", hod_views.admin_home, name='admin_home'),
     path("staff/add", hod_views.add_staff, name='add_staff'),
-    path("course/add", hod_views.add_course, name='add_course'),
+    path("course/add", hod_views.add_degree, name='add_degree'),
+    path("academic_level/add", hod_views.add_year, name='add_year'),
+    path("academic_semester/add", hod_views.add_semester, name='add_semester'),
+    path("branch/add", hod_views.add_course, name='add_course'),
     path("send_student_notification/", hod_views.send_student_notification,
          name='send_student_notification'),
     path("send_staff_notification/", hod_views.send_staff_notification,
@@ -60,14 +64,26 @@ urlpatterns = [
     path("staff/manage/", hod_views.manage_staff, name='manage_staff'),
     path("student/manage/", hod_views.manage_student, name='manage_student'),
     path("student/view/<int:student_id>/", hod_views.view_student_detail, name='view_student_detail'),
+    path("student/view/<int:student_id>/marks-memo/", hod_views.admin_view_marks_memo, name='admin_view_marks_memo'),
+    path("student/view/<int:student_id>/edit-memo/", hod_views.admin_edit_marks_memo, name='admin_edit_marks_memo'),
     path("student/import/", hod_views.import_student, name='import_student'),
-    path("course/manage/", hod_views.manage_course, name='manage_course'),
+    path("course/manage/", hod_views.manage_degree, name='manage_degree'),
+    path("academic_level/manage/", hod_views.manage_year, name='manage_year'),
+    path("academic_semester/manage/", hod_views.manage_semester, name='manage_semester'),
+    path("branch/manage/", hod_views.manage_course, name='manage_course'),
     path("subject/manage/", hod_views.manage_subject, name='manage_subject'),
     path("staff/edit/<int:staff_id>", hod_views.edit_staff, name='edit_staff'),
     path("staff/delete/<int:staff_id>",
          hod_views.delete_staff, name='delete_staff'),
 
-    path("course/delete/<int:course_id>",
+    path("course/delete/<int:degree_id>",
+         hod_views.delete_degree, name='delete_degree'),
+    path("academic_level/delete/<int:year_id>",
+         hod_views.delete_year, name='delete_year'),
+    path("academic_semester/delete/<int:semester_id>",
+         hod_views.delete_semester, name='delete_semester'),
+
+    path("branch/delete/<int:course_id>",
          hod_views.delete_course, name='delete_course'),
 
     path("subject/delete/<int:subject_id>",
@@ -80,7 +96,13 @@ urlpatterns = [
          hod_views.delete_student, name='delete_student'),
     path("student/edit/<int:student_id>",
          hod_views.edit_student, name='edit_student'),
-    path("course/edit/<int:course_id>",
+    path("course/edit/<int:degree_id>",
+         hod_views.edit_degree, name='edit_degree'),
+    path("academic_level/edit/<int:year_id>",
+         hod_views.edit_year, name='edit_year'),
+    path("academic_semester/edit/<int:semester_id>",
+         hod_views.edit_semester, name='edit_semester'),
+    path("branch/edit/<int:course_id>",
          hod_views.edit_course, name='edit_course'),
     path("subject/edit/<int:subject_id>",
          hod_views.edit_subject, name='edit_subject'),
@@ -99,9 +121,7 @@ urlpatterns = [
          name='staff_update_attendance'),
     path("staff/attendance/grid/", staff_views.get_faculty_attendance_grid, name='get_faculty_attendance_grid'),
     path("staff/get_students/", staff_views.get_students, name='get_students'),
-     path("staff/addbook/", staff_views.add_book, name="add_book"),
-    path("staff/issue_book/", staff_views.issue_book, name="issue_book"),
-    path("staff/view_issued_book/", staff_views.view_issued_book, name="view_issued_book"),
+    path("staff/materials/add/", staff_views.staff_add_material, name="staff_add_material"),
 
 
 
@@ -119,6 +139,11 @@ urlpatterns = [
          name='edit_student_result'),
     path('staff/result/fetch/', staff_views.fetch_student_result,
          name='fetch_student_result'),
+    path('staff/result/export-template/', staff_views.export_marks_template, name='export_marks_template'),
+    path('staff/result/generic-template/', staff_views.download_generic_template, name='download_generic_template'),
+    path('staff/result/import-excel/', staff_views.import_marks_excel, name='import_marks_excel'),
+    path('staff/internships/', staff_views.staff_view_internship,
+         name='staff_view_internship'),
 
 
 
@@ -137,12 +162,15 @@ urlpatterns = [
      # path('student/todo',student_views.todo,name='todo'),
 
      
-     path("student/viewbooks/", student_views.view_books, name="view_books"),
+     path("student/materials/view/", student_views.student_view_material, name="student_view_material"),
 
     path("student/view/notification/", student_views.student_view_notification,
          name="student_view_notification"),
     path('student/view/result/', student_views.student_view_result,
          name='student_view_result'),
+    path('student/consolidated-marks/', student_views.student_consolidated_marks,          name='student_consolidated_marks'),     path('student/results-traditional/', student_views.student_view_results_traditional,          name='student_view_results_traditional'),
+    path('student/internships/', student_views.student_view_internship,
+         name='student_view_internship'),
 
     # Staff Timetable
     path("staff/timetable/add/", staff_views.staff_add_timetable, name='staff_add_timetable'),
@@ -158,6 +186,7 @@ urlpatterns = [
     path("staff/assignment/create/", staff_views.staff_create_assignment, name='staff_create_assignment'),
     path("staff/assignment/manage/", staff_views.staff_manage_assignments, name='staff_manage_assignments'),
     path("staff/assignment/submissions/<int:assignment_id>", staff_views.staff_view_submissions, name='staff_view_submissions'),
+    path("staff/assignment/grade/", staff_views.staff_grade_submission, name='staff_grade_submission'),
     path("staff/assignment/delete/<int:assignment_id>", staff_views.staff_delete_assignment, name='staff_delete_assignment'),
 
     # Student features
@@ -167,11 +196,11 @@ urlpatterns = [
     path("student/change-password/", student_views.student_change_password, name='student_change_password'),
     path("student/attendance/report/", student_views.student_attendance_report, name='student_attendance_report'),
 
-    # Period management (Admin)
-    path("period/manage/", hod_views.manage_periods, name='manage_periods'),
-    path("period/add/", hod_views.add_period, name='add_period'),
-    path("period/edit/<int:period_id>", hod_views.edit_period, name='edit_period'),
-    path("period/delete/<int:period_id>", hod_views.delete_period, name='delete_period'),
+    # Period management (Admin) - Hidden as periods are fixed
+    # path("period/manage/", hod_views.manage_periods, name='manage_periods'),
+    # path("period/add/", hod_views.add_period, name='add_period'),
+    # path("period/edit/<int:period_id>", hod_views.edit_period, name='edit_period'),
+    # path("period/delete/<int:period_id>", hod_views.delete_period, name='delete_period'),
     
     # Announcement management
     path("announcement/manage/", hod_views.manage_announcement, name='manage_announcement'),
@@ -190,5 +219,41 @@ urlpatterns = [
 
     # Student View Announcement
     path("student/announcement/view/", student_views.student_view_announcement, name='student_view_announcement'),
+
+    # Internship management (Admin)
+    path("internship/manage/", hod_views.manage_internship, name='manage_internship'),
+    path("internship/add/", hod_views.add_internship, name='add_internship'),
+    path("internship/edit/<int:internship_id>", hod_views.edit_internship, name='edit_internship'),
+    path("internship/delete/<int:internship_id>", hod_views.delete_internship, name='delete_internship'),
+
+    # Academic Calendar management
+    path("calendar/manage/", hod_views.manage_calendar, name='manage_calendar'),
+    path("calendar/add/", hod_views.add_calendar, name='add_calendar'),
+    path("calendar/edit/<int:calendar_id>", hod_views.edit_calendar, name='edit_calendar'),
+    path("calendar/delete/<int:calendar_id>", hod_views.delete_calendar, name='delete_calendar'),
+
+    # Student Certificate management (Admin)
+    path("student/view/<int:student_id>/certificate/add/", hod_views.add_student_certificate, name='add_student_certificate'),
+    path("student/view/<int:student_id>/certificate/edit/<int:certificate_id>/", hod_views.edit_student_certificate, name='edit_student_certificate'),
+    path('student/view/<int:student_id>/delete-certificate/<int:certificate_id>/', hod_views.delete_student_certificate, name="delete_student_certificate"),
     
+    # Workflow Automation
+    path('manage_email_templates/', hod_views.manage_email_templates, name="manage_email_templates"),
+    path('add_email_template/', hod_views.add_email_template, name="add_email_template"),
+    path('edit_email_template/<int:template_id>/', hod_views.edit_email_template, name="edit_email_template"),
+    path('delete_email_template/<int:template_id>/', hod_views.delete_email_template, name="delete_email_template"),
+    
+    path('manage_workflows/', hod_views.manage_workflows, name="manage_workflows"),
+    path('workflow_builder/', hod_views.workflow_builder, name="workflow_builder"),
+    path('workflow_builder/<int:workflow_id>/', hod_views.workflow_builder, name="edit_workflow"),
+    path('save_workflow/', hod_views.save_workflow, name="save_workflow"),
+    path('delete_workflow/<int:workflow_id>/', hod_views.delete_workflow, name="delete_workflow"),
+
+    # Student Certificates
+    path("student/my-certificates/", student_views.student_view_certificates, name='student_view_certificates'),
+
+    # Student Cloud Storage
+    path("student/cloud/", student_views.student_cloud_storage, name='student_cloud_storage'),
+    path("student/cloud/upload/", student_views.student_upload_file, name='student_upload_file'),
+    path("student/cloud/delete/<int:file_id>/", student_views.student_delete_file, name='student_delete_file'),
 ]

@@ -1,5 +1,6 @@
 from django import forms
 from django.forms.widgets import DateInput, TextInput, TimeInput
+from django.forms import inlineformset_factory
 
 from .models import *
 from . import models
@@ -15,26 +16,55 @@ class FormSettings(forms.ModelForm):
 
 class CustomUserForm(FormSettings):
     email = forms.EmailField(required=True)
-    gender = forms.ChoiceField(choices=[('M', 'Male'), ('F', 'Female')])
-    first_name = forms.CharField(required=True)
-    last_name = forms.CharField(required=True)
+    gender = forms.ChoiceField(choices=[('', 'Select Gender'), ('M', 'Male'), ('F', 'Female')])
+    full_name = forms.CharField(required=True, label='Name')
     address = forms.CharField(widget=forms.Textarea)
     password = forms.CharField(widget=forms.PasswordInput)
     widget = {
         'password': forms.PasswordInput(),
     }
-    profile_pic = forms.ImageField()
+    profile_pic = forms.ImageField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(CustomUserForm, self).__init__(*args, **kwargs)
+        # Remove the model's first_name/last_name from rendered fields
+        if 'first_name' in self.fields:
+            del self.fields['first_name']
+        if 'last_name' in self.fields:
+            del self.fields['last_name']
 
         if kwargs.get('instance'):
             instance = kwargs.get('instance').admin.__dict__
             self.fields['password'].required = False
             for field in CustomUserForm.Meta.fields:
-                self.fields[field].initial = instance.get(field)
+                if field in self.fields:
+                    self.fields[field].initial = instance.get(field)
             if self.instance.pk is not None:
                 self.fields['password'].widget.attrs['placeholder'] = "Fill this only if you wish to update password"
+            # Combine first + last name into full_name
+            fn = instance.get('first_name', '')
+            ln = instance.get('last_name', '')
+            self.fields['full_name'].initial = f"{fn} {ln}".strip()
+
+        # Reorder fields to put full_name at the top
+        field_order = list(self.fields.keys())
+        if 'full_name' in field_order:
+            field_order.remove('full_name')
+            field_order.insert(0, 'full_name')
+            self.order_fields(field_order)
+
+    def clean_full_name(self):
+        full_name = self.cleaned_data.get('full_name', '').strip()
+        if not full_name:
+            raise forms.ValidationError("Name is required")
+        parts = full_name.rsplit(' ', 1)
+        if len(parts) == 2:
+            self.cleaned_data['first_name'] = parts[0]
+            self.cleaned_data['last_name'] = parts[1]
+        else:
+            self.cleaned_data['first_name'] = parts[0]
+            self.cleaned_data['last_name'] = ''
+        return full_name
 
     def clean_email(self, *args, **kwargs):
         formEmail = self.cleaned_data['email'].lower()
@@ -53,17 +83,31 @@ class CustomUserForm(FormSettings):
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'email', 'gender',  'password','profile_pic', 'address' ]
+        fields = ['email', 'gender', 'password', 'profile_pic', 'address']
 
 
 class StudentForm(CustomUserForm):
+    academic_year = forms.ModelChoiceField(queryset=AcademicLevel.objects.all(), empty_label="Select Year", required=False)
+    semester = forms.ModelChoiceField(queryset=AcademicSemester.objects.all(), empty_label="Select Semester", required=False)
+
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
+        self.fields['course'].empty_label = "Select Course"
+        self.fields['session'].empty_label = "Select Session"
+        self.fields['regulation'].empty_label = "Select Regulation"
+        
+        # Add blank choices to ChoiceFields
+        self.fields['section'].choices = [('', 'Select Section')] + list(self.fields['section'].choices)
+        self.fields['blood_group'].choices = [('', 'Select Blood Group')] + list(self.fields['blood_group'].choices)
+        self.fields['admission_type'].choices = [('', 'Select Admission Type')] + list(self.fields['admission_type'].choices)
+        
+        # Remove pre-selections for ChoiceFields
+        self.fields['section'].initial = ''
 
     class Meta(CustomUserForm.Meta):
         model = Student
         fields = CustomUserForm.Meta.fields + \
-            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id']
+            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id', 'date_of_birth', 'annual_income', 'father_occupation', 'mother_occupation', 'mother_mobile_number', 'nationality', 'religion', 'mother_tongue', 'admission_date', 'admission_type']
 
 
 class AdminForm(CustomUserForm):
@@ -82,15 +126,49 @@ class StaffForm(CustomUserForm):
     class Meta(CustomUserForm.Meta):
         model = Staff
         fields = CustomUserForm.Meta.fields + \
-            ['course', 'father_name', 'mother_name', 'aadhaar_number', 'pan_number', 'spouse_name', 'qualification', 'blood_group', 'designation', 'faculty_role']
+            ['course', 'father_name', 'mother_name', 'aadhaar_number', 'pan_number', 'spouse_name', 'qualification', 'blood_group', 'designation', 'faculty_role', 'date_of_birth', 'date_of_joining', 'experience', 'mobile_number']
+        widgets = {
+            'date_of_birth': DateInput(attrs={'type': 'date'}),
+            'date_of_joining': DateInput(attrs={'type': 'date'}),
+        }
+
+
+class AcademicLevelForm(FormSettings):
+    def __init__(self, *args, **kwargs):
+        super(AcademicLevelForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        fields = ['name']
+        model = AcademicLevel
+
+
+class AcademicSemesterForm(FormSettings):
+    def __init__(self, *args, **kwargs):
+        super(AcademicSemesterForm, self).__init__(*args, **kwargs)
+        self.fields['academic_level'].empty_label = "Select Year"
+
+    class Meta:
+        fields = ['academic_level', 'name']
+        model = AcademicSemester
+
+
+class DegreeForm(FormSettings):
+    def __init__(self, *args, **kwargs):
+        super(DegreeForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        fields = ['name']
+        model = Degree
 
 
 class CourseForm(FormSettings):
+    degree = forms.ModelChoiceField(queryset=Degree.objects.all(), empty_label="Select Course", required=True)
+    
     def __init__(self, *args, **kwargs):
         super(CourseForm, self).__init__(*args, **kwargs)
 
     class Meta:
-        fields = ['name']
+        fields = ['degree', 'name']
         model = Course
 
 
@@ -101,7 +179,7 @@ class SubjectForm(FormSettings):
 
     class Meta:
         model = Subject
-        fields = ['name', 'staff', 'course']
+        fields = ['name', 'code', 'staff', 'course', 'regulation', 'semester']
 
 
 class SessionForm(FormSettings):
@@ -123,7 +201,7 @@ class RegulationForm(FormSettings):
 
     class Meta:
         model = Regulation
-        fields = ['name', 'description']
+        fields = ['name', 'course', 'session', 'semester']
 
 
 class LeaveReportStaffForm(FormSettings):
@@ -171,13 +249,16 @@ class FeedbackStudentForm(FormSettings):
 
 
 class StudentEditForm(CustomUserForm):
+    academic_year = forms.ModelChoiceField(queryset=AcademicLevel.objects.all(), empty_label="Select Year", required=False)
+    semester = forms.ModelChoiceField(queryset=AcademicSemester.objects.all(), empty_label="Select Semester", required=False)
+
     def __init__(self, *args, **kwargs):
         super(StudentEditForm, self).__init__(*args, **kwargs)
 
     class Meta(CustomUserForm.Meta):
         model = Student
         fields = CustomUserForm.Meta.fields + \
-            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id']
+            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id', 'date_of_birth', 'annual_income', 'father_occupation', 'mother_occupation', 'mother_mobile_number', 'nationality', 'religion', 'mother_tongue', 'admission_date', 'admission_type']
 
 
 class StaffEditForm(CustomUserForm):
@@ -187,7 +268,20 @@ class StaffEditForm(CustomUserForm):
     class Meta(CustomUserForm.Meta):
         model = Staff
         fields = CustomUserForm.Meta.fields + \
-            ['course', 'father_name', 'mother_name', 'aadhaar_number', 'pan_number', 'spouse_name', 'qualification', 'blood_group', 'designation', 'faculty_role']
+            ['course', 'father_name', 'mother_name', 'aadhaar_number', 'pan_number', 'spouse_name', 'qualification', 'blood_group', 'designation', 'faculty_role', 'date_of_birth', 'date_of_joining', 'experience', 'mobile_number']
+        widgets = {
+            'date_of_birth': DateInput(attrs={'type': 'date'}),
+            'date_of_joining': DateInput(attrs={'type': 'date'}),
+        }
+
+
+StaffQualificationFormSet = inlineformset_factory(
+    Staff,
+    StaffQualification,
+    fields=('examination_passed', 'classification', 'percentage_of_marks', 'year', 'university_institution'),
+    extra=1,
+    can_delete=True
+)
 
 
 class EditResultForm(FormSettings):
@@ -197,10 +291,31 @@ class EditResultForm(FormSettings):
 
     def __init__(self, *args, **kwargs):
         super(EditResultForm, self).__init__(*args, **kwargs)
+        self.fields['objective'].widget.attrs.update({'max': '30', 'min': '0'})
+        self.fields['descriptive'].widget.attrs.update({'max': '10', 'min': '0'})
+        self.fields['assignment'].widget.attrs.update({'max': '5', 'min': '0'})
+
+    def clean_objective(self):
+        objective = self.cleaned_data.get('objective')
+        if objective > 30:
+            raise forms.ValidationError("Objective marks cannot exceed 30")
+        return objective
+
+    def clean_descriptive(self):
+        descriptive = self.cleaned_data.get('descriptive')
+        if descriptive > 10:
+            raise forms.ValidationError("Descriptive marks cannot exceed 10")
+        return descriptive
+
+    def clean_assignment(self):
+        assignment = self.cleaned_data.get('assignment')
+        if assignment > 5:
+            raise forms.ValidationError("Assignment marks cannot exceed 5")
+        return assignment
 
     class Meta:
         model = StudentResult
-        fields = ['session_year', 'subject', 'student', 'test', 'exam']
+        fields = ['session_year', 'subject', 'student', 'objective', 'descriptive', 'assignment', 'total']
 
 #todos
 # class TodoForm(forms.ModelForm):
@@ -237,7 +352,7 @@ class TimetableForm(FormSettings):
 
     class Meta:
         model = models.Timetable
-        fields = ['course', 'section', 'subject', 'day', 'period', 'staff']
+        fields = ['course', 'section', 'semester', 'subject', 'day', 'period', 'staff']
 
 
 class AssignmentForm(FormSettings):
@@ -295,3 +410,64 @@ class AnnouncementForm(FormSettings):
     class Meta:
         model = models.Announcement
         fields = ['title', 'content', 'category', 'audience']
+
+
+class AcademicCalendarForm(FormSettings):
+    def __init__(self, *args, **kwargs):
+        super(AcademicCalendarForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = AcademicCalendar
+        fields = ['session', 'semester', 'regulation', 'commencement_date', 'instruction_end_date']
+        widgets = {
+            'commencement_date': DateInput(attrs={'type': 'date'}),
+            'instruction_end_date': DateInput(attrs={'type': 'date'}),
+        }
+
+
+class CalendarEventForm(FormSettings):
+    def __init__(self, *args, **kwargs):
+        super(CalendarEventForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.CalendarEvent
+        fields = ['event_type', 'custom_name', 'start_date', 'end_date', 'duration_text', 'order']
+        widgets = {
+            'start_date': DateInput(attrs={'type': 'date'}),
+            'end_date': DateInput(attrs={'type': 'date'}),
+            'order': TextInput(attrs={'type': 'number', 'min': '0'}),
+        }
+
+
+CalendarEventFormSet = inlineformset_factory(
+    AcademicCalendar,
+    models.CalendarEvent,
+    form=CalendarEventForm,
+    fields=['event_type', 'custom_name', 'start_date', 'end_date', 'duration_text', 'order'],
+    extra=1,
+    can_delete=True,
+    widgets={
+        'start_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        'end_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        'order': TextInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
+    }
+)
+
+class StudentCertificateForm(FormSettings):
+    def __init__(self, *args, **kwargs):
+        super(StudentCertificateForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = StudentCertificate
+        fields = ['title', 'certificate_type', 'issued_by', 'issue_date', 'file', 'description']
+        widgets = {
+            'issue_date': DateInput(attrs={'type': 'date'}),
+        }
+
+class EmailTemplateForm(FormSettings):
+    class Meta:
+        model = EmailTemplate
+        fields = ['name', 'subject', 'body']
+        widgets = {
+            'body': forms.Textarea(attrs={'rows': 10, 'class': 'form-control', 'id': 'email_body'}),
+        }

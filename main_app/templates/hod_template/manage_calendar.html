@@ -1,0 +1,315 @@
+{% extends 'main_app/erpnext_base.html' %} {% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'manage_calendar' %}">Calendar</a></li>
+<li class="breadcrumb-item active">Manage</li>
+{% endblock breadcrumb %}
+
+{% block custom_css %}
+<style>
+    .manage-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .manage-header h2 {
+        font-size: 1.5rem;
+        font-weight: 750;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .manage-header h2 i {
+        color: var(--success);
+        font-size: 1.2rem;
+    }
+
+    /* JNTUA Style Calendar Table */
+    .cal-session-block {
+        margin-bottom: 32px;
+    }
+
+    .cal-session-header {
+        text-align: center;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(99, 102, 241, 0.08));
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        border: 1px solid rgba(59, 130, 246, 0.15);
+        border-bottom: none;
+    }
+
+    .cal-session-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .cal-session-header small {
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+    }
+
+    .cal-semester-block {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+        margin-bottom: 20px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(12px);
+    }
+
+    .cal-semester-header {
+        text-align: center;
+        padding: 10px;
+        background: rgba(226, 232, 240, 0.7);
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #1e293b;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .cal-semester-header .sem-badge {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        padding: 3px 12px;
+        border-radius: 100px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .cal-semester-actions {
+        position: absolute;
+        right: 12px;
+    }
+
+    .cal-semester-header {
+        position: relative;
+    }
+
+    .cal-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .cal-table th,
+    .cal-table td {
+        padding: 10px 14px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        font-size: 0.85rem;
+    }
+
+    .cal-table thead th {
+        background: rgba(241, 245, 249, 0.8);
+        font-weight: 700;
+        color: #334155;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .cal-table tbody tr:hover {
+        background: rgba(59, 130, 246, 0.04);
+    }
+
+    .cal-table .event-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .cal-table .event-date {
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .cal-table .event-duration {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .cal-table .section-row td {
+        background: rgba(241, 245, 249, 0.6);
+        font-weight: 700;
+        text-align: center;
+        font-size: 0.82rem;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .action-btn-group {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-btn-group .btn {
+        padding: 4px 10px;
+        font-size: 11px;
+        border-radius: var(--radius-xs);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-tertiary);
+        opacity: 0.5;
+        margin-bottom: 16px;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    /* Dark Mode */
+    .dark-mode .cal-session-header {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.1));
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .cal-session-header h3 {
+        color: #e2e8f0;
+    }
+
+    .dark-mode .cal-semester-block {
+        background: rgba(30, 30, 30, 0.6);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .cal-semester-header {
+        background: rgba(50, 50, 60, 0.8);
+        color: #e2e8f0;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .cal-table th {
+        background: rgba(50, 50, 60, 0.6);
+        color: #94a3b8;
+    }
+
+    .dark-mode .cal-table td {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .dark-mode .cal-table .event-name {
+        color: #e2e8f0;
+    }
+
+    .dark-mode .cal-table .event-date {
+        color: #94a3b8;
+    }
+
+    .dark-mode .cal-table .section-row td {
+        background: rgba(50, 50, 60, 0.4);
+        color: #94a3b8;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="manage-header">
+    <h2><i class="fas fa-calendar"></i> {{ page_title }}</h2>
+    <a href="{% url 'add_calendar' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Entry</a>
+</div>
+
+{% for session_id, group in grouped_calendars.items %}
+<div class="cal-session-block">
+    <!-- Session Header -->
+    <div class="cal-session-header">
+        <h3>{{ group.session }}</h3>
+    </div>
+
+    {% for calendar in group.calendars %}
+    <!-- Semester Block -->
+    <div class="cal-semester-block">
+        <div class="cal-semester-header">
+            <span>{{ calendar.get_semester_display }} Semester</span>
+            {% if calendar.regulation %}
+            <span class="sem-badge">{{ calendar.regulation.name }}</span>
+            {% endif %}
+            <div class="cal-semester-actions">
+                <div class="action-btn-group">
+                    <a href="{% url 'edit_calendar' calendar.id %}" class="btn btn-info btn-sm" title="Edit"><i
+                            class="fas fa-edit"></i></a>
+                    <a href="{% url 'delete_calendar' calendar.id %}"
+                        onclick="return confirm('Delete this entire semester calendar?')" class="btn btn-danger btn-sm"
+                        title="Delete"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <table class="cal-table">
+            <thead>
+                <tr>
+                    <th style="width:45%">Event</th>
+                    <th style="width:35%">Date</th>
+                    <th style="width:20%">Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Commencement -->
+                <tr>
+                    <td class="event-name">Commencement of Class Work</td>
+                    <td class="event-date">{{ calendar.commencement_date|date:"d-m-Y" }}</td>
+                    <td class="event-duration">—</td>
+                </tr>
+                <!-- Instruction Period -->
+                <tr>
+                    <td class="event-name">Instruction Period for the Semester</td>
+                    <td class="event-date">{{ calendar.commencement_date|date:"d-m-Y" }} to {{
+                        calendar.instruction_end_date|date:"d-m-Y" }}</td>
+                    <td class="event-duration">
+                        {% widthratio calendar.instruction_end_date|timeuntil:calendar.commencement_date 1 1 %}
+                    </td>
+                </tr>
+
+                {% with calendar.events.all as events %}
+                {% if events %}
+                <!-- Examinations Section -->
+                <tr class="section-row">
+                    <td colspan="3">Examinations & Events</td>
+                </tr>
+                {% for event in events %}
+                <tr>
+                    <td class="event-name">{{ event.display_name }}</td>
+                    <td class="event-date">{{ event.date_range_display }}</td>
+                    <td class="event-duration">{{ event.duration_text|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+</div>
+{% empty %}
+<div class="erpnext-card">
+    <div class="card-body">
+        <div class="empty-state">
+            <i class="fas fa-calendar"></i>
+            <p>No academic calendar entries found.</p>
+            <a href="{% url 'add_calendar' %}" class="btn btn-primary btn-sm mt-3"><i class="fas fa-plus"></i> Add First
+                Entry</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock content %}

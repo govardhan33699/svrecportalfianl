@@ -1,0 +1,249 @@
+{% extends 'main_app/erpnext_base.html' %} {% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'manage_calendar' %}">Calendar</a></li>
+<li class="breadcrumb-item active">Edit</li>
+{% endblock breadcrumb %}
+
+{% block custom_css %}
+<style>
+    .cal-form-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .cal-form-card h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cal-form-card h3 i {
+        color: var(--primary);
+    }
+
+    .event-row {
+        background: rgba(241, 245, 249, 0.5);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+
+    .event-row .delete-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+
+    .event-row .delete-btn:hover {
+        background: rgba(220, 53, 69, 0.2);
+    }
+
+    .add-event-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: 2px dashed rgba(99, 102, 241, 0.3);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: #6366f1;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .add-event-btn:hover {
+        background: rgba(99, 102, 241, 0.05);
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+
+    .dark-mode .cal-form-card {
+        background: rgba(30, 30, 30, 0.6);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .event-row {
+        background: rgba(50, 50, 60, 0.4);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Calendar Details -->
+    <div class="cal-form-card">
+        <h3><i class="fas fa-calendar-alt"></i> Calendar Details</h3>
+        <div class="row">
+            {% for field in form %}
+            <div
+                class="col-md-{% if field.name == 'session' or field.name == 'regulation' %}4{% elif field.name == 'semester' %}4{% else %}6{% endif %} mb-3">
+                <label class="form-label fw-bold">{{ field.label }}</label>
+                {{ field.errors }}
+                {{ field }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Events Section -->
+    <div class="cal-form-card">
+        <h3><i class="fas fa-list-ul"></i> Examination & Events</h3>
+        <p class="text-muted mb-3" style="font-size:0.85rem;">Add examination dates, workshops, results declaration,
+            etc.</p>
+
+        {{ formset.management_form }}
+
+        <div id="event-formset">
+            {% for event_form in formset %}
+            <div class="event-row" id="event-row-{{ forloop.counter0 }}">
+                {{ event_form.id }}
+                <button type="button" class="delete-btn" onclick="deleteEventRow(this)" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold" style="font-size:0.8rem;">Event Type</label>
+                        {{ event_form.event_type }}
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold" style="font-size:0.8rem;">Custom Name <small
+                                class="text-muted">(for "Other")</small></label>
+                        {{ event_form.custom_name }}
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold" style="font-size:0.8rem;">Duration <small
+                                class="text-muted">(e.g. 03 Days)</small></label>
+                        {{ event_form.duration_text }}
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold" style="font-size:0.8rem;">Start Date</label>
+                        {{ event_form.start_date }}
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label fw-bold" style="font-size:0.8rem;">End Date</label>
+                        {{ event_form.end_date }}
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label fw-bold" style="font-size:0.8rem;">Order</label>
+                        {{ event_form.order }}
+                    </div>
+                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                        {% if event_form.DELETE %}
+                        <div class="form-check">
+                            {{ event_form.DELETE }}
+                            <label class="form-check-label text-danger" style="font-size:0.75rem;">Delete</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {{ event_form.errors }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="add-event-btn mt-2" onclick="addEventRow()">
+            <i class="fas fa-plus"></i> Add Event
+        </button>
+    </div>
+
+    <div class="d-flex gap-3 mt-3">
+        <button type="submit" class="btn btn-success px-4"><i class="fas fa-check"></i> Update Calendar Entry</button>
+        <a href="{% url 'manage_calendar' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+    </div>
+</form>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    function addEventRow() {
+        var formset = document.getElementById('event-formset');
+        var totalForms = document.getElementById('id_events-TOTAL_FORMS');
+        var currentCount = parseInt(totalForms.value);
+
+        // Clone the first event row as template
+        var template = formset.querySelector('.event-row');
+        if (!template) return;
+
+        var newRow = template.cloneNode(true);
+        newRow.id = 'event-row-' + currentCount;
+
+        // Update all input names and ids
+        var inputs = newRow.querySelectorAll('input, select, textarea');
+        inputs.forEach(function (input) {
+            var name = input.name;
+            if (name) {
+                input.name = name.replace(/events-\d+-/, 'events-' + currentCount + '-');
+                input.id = input.id.replace(/events-\d+-/, 'events-' + currentCount + '-');
+                // Clear values
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else if (input.tagName === 'SELECT') {
+                    input.selectedIndex = 0;
+                } else if (input.type !== 'hidden') {
+                    input.value = '';
+                }
+                // Clear hidden id field for new rows
+                if (input.type === 'hidden' && input.name.endsWith('-id')) {
+                    input.value = '';
+                }
+            }
+        });
+
+        // Update labels
+        var labels = newRow.querySelectorAll('label');
+        labels.forEach(function (label) {
+            var forAttr = label.getAttribute('for');
+            if (forAttr) {
+                label.setAttribute('for', forAttr.replace(/events-\d+-/, 'events-' + currentCount + '-'));
+            }
+        });
+
+        formset.appendChild(newRow);
+        totalForms.value = currentCount + 1;
+    }
+
+    function deleteEventRow(btn) {
+        var row = btn.closest('.event-row');
+        var deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        if (deleteCheckbox) {
+            // For existing events, mark for deletion
+            deleteCheckbox.checked = true;
+            row.style.display = 'none';
+        } else {
+            // For new rows, just remove
+            row.remove();
+            var totalForms = document.getElementById('id_events-TOTAL_FORMS');
+            totalForms.value = parseInt(totalForms.value) - 1;
+        }
+    }
+</script>
+{% endblock custom_js %}

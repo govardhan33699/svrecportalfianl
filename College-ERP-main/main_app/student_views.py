@@ -209,6 +209,15 @@ def student_view_result(request):
 
 #library
 
+def student_view_material(request):
+    student = get_object_or_404(Student, admin=request.user)
+    materials = StudyMaterial.objects.filter(subject__course=student.course).order_by('-created_at')
+    context = {
+        'materials': materials,
+        'page_title': 'Study Materials'
+    }
+    return render(request, 'student_template/student_view_material.html', context)
+
 def view_books(request):
     books = Book.objects.all()
     context = {

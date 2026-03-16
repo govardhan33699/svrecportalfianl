@@ -25,6 +25,7 @@ def login_page(request):
     return render(request, 'main_app/login.html')
 
 
+@csrf_exempt
 def doLogin(request, **kwargs):
     if request.method != 'POST':
         return HttpResponse("<h4>Denied</h4>")
@@ -81,6 +82,34 @@ def get_attendance(request):
         return JsonResponse(json.dumps(attendance_list), safe=False)
     except Exception as e:
         return None
+
+
+@csrf_exempt
+def get_user_profile_pic(request):
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Method not allowed"})
+    
+    email = request.POST.get('email', '').strip()
+    if not email:
+        return JsonResponse({"status": "error", "message": "Email is required"})
+        
+    try:
+        from .models import CustomUser
+        users = CustomUser.objects.filter(email__iexact=email)
+        if not users.exists():
+            return JsonResponse({"status": "error", "message": f"Account with email '{email}' not found."})
+        
+        user = users.first()
+        if user.profile_pic:
+            url = user.profile_pic.url
+        else:
+            name = f"{user.first_name} {user.last_name}".strip() or "User"
+            url = f"https://ui-avatars.com/api/?name={name}&background=6197e6&color=fff"
+            
+        return JsonResponse({"status": "success", "url": url})
+        
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": f"Server Error: {str(e)}"})
 
 
 def showFirebaseJS(request):

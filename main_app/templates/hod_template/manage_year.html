@@ -1,0 +1,114 @@
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'manage_year' %}">Year Levels</a></li>
+<li class="breadcrumb-item active">Manage</li>
+{% endblock breadcrumb %}
+
+{% block custom_css %}
+<style>
+    .manage-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .manage-header h2 {
+        font-size: 1.5rem;
+        font-weight: 750;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .manage-header h2 i {
+        color: var(--warning);
+        font-size: 1.2rem;
+    }
+
+    .action-btn-group {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-btn-group .btn {
+        padding: 6px 14px;
+        font-size: 12px;
+        border-radius: var(--radius-xs);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .item-name {
+        font-weight: 650;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .item-index {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        background: rgba(99, 102, 241, 0.08);
+        color: var(--primary);
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="manage-header">
+    <h2><i class="fas fa-calendar"></i> {{ page_title }}</h2>
+    <a href="{% url 'add_year' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Year Level</a>
+</div>
+
+<div class="erpnext-card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-responsive"
+            style="border:none; box-shadow:none; border-radius:0; background:transparent; backdrop-filter:none;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">#</th>
+                        <th>Year Level (I, II, III, IV)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year in years %}
+                    <tr>
+                        <td><span class="item-index">{{ forloop.counter }}</span></td>
+                        <td class="item-name">{{ year.name }}</td>
+                        <td>
+                            <div class="action-btn-group">
+                                <a href="{% url 'edit_year' year.id %}" class="btn btn-info btn-sm"><i
+                                        class="fas fa-edit"></i> Edit</a>
+                                <a href="{% url 'delete_year' year.id %}"
+                                    onclick="return confirm('Are you sure you want to delete this year level?')"
+                                    class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No years added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

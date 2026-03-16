@@ -1,0 +1,68 @@
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-dark">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">Automation Workflows</h3>
+                        <a href="{% url 'workflow_builder' %}" class="btn btn-success btn-sm ml-auto">
+                            <i class="fas fa-plus"></i> Create New Workflow
+                        </a>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Workflow Name</th>
+                                    <th>Trigger Type</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for workflow in workflows %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ workflow.name }}</td>
+                                    <td><span class="badge badge-primary">{{ workflow.get_trigger_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if workflow.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                        <span class="badge badge-secondary">Disabled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ workflow.created_at|date:"d M, Y" }}</td>
+                                    <td class="text-center">
+                                        <a href="{% url 'edit_workflow' workflow.id %}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-project-diagram"></i> Open Builder
+                                        </a>
+                                        <a href="{% url 'delete_workflow' workflow.id %}" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Are you sure you want to delete this workflow?')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No workflows created yet. Build your first
+                                        automation!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

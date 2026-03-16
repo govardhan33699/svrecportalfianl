@@ -1,4 +1,6 @@
 import json
+import pandas as pd
+import io
 
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
@@ -7,9 +9,16 @@ from django.shortcuts import (HttpResponseRedirect, get_object_or_404,redirect, 
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
-from .forms import *
-from .models import *
-from . import forms, models
+from .models import (
+    Staff, Student, Subject, Attendance, AttendanceReport, LeaveReportStaff,
+    StudentResult, Session, Course, Period, Timetable, Announcement, Internship,
+    NotificationStaff, Book, IssuedBook, Assignment, AssignmentSubmission, FeedbackStaff, StudyMaterial,
+    SEMESTER_CHOICES
+)
+from .forms import (
+    StaffEditForm, LeaveReportStaffForm, FeedbackStaffForm, AssignmentForm,
+    StaffQualificationFormSet
+)
 from datetime import date
 
 def staff_home(request):
@@ -35,6 +44,47 @@ def staff_home(request):
         'subject_list': subject_list,
         'attendance_list': attendance_list
     }
+
+    # Timetable for today (staff-specific)
+    from datetime import date as dt_date
+    today_name = dt_date.today().strftime('%A')
+    timetable_today = Timetable.objects.filter(
+        staff=staff, day=today_name
+    ).select_related('period', 'subject', 'course').order_by('period__number')
+    context['today_name'] = today_name
+    context['timetable_today'] = timetable_today
+
+    # Recent Activities for Staff
+    recent_attendance = Attendance.objects.filter(subject__staff=staff).order_by("-created_at")[:3]
+    recent_marks = StudentResult.objects.filter(subject__staff=staff).order_by("-updated_at")[:3]
+    recent_leaves = LeaveReportStaff.objects.filter(staff=staff).order_by("-created_at")[:3]
+
+    activities = []
+    for att in recent_attendance:
+        activities.append({
+            'title': f"Attendance Taken: {att.subject.name}",
+            'time': att.created_at,
+            'icon': 'fa-check-circle',
+            'color': 'success'
+        })
+    for mark in recent_marks:
+        activities.append({
+            'title': f"Marks Added: {mark.student.admin.get_full_name()} ({mark.subject.name})",
+            'time': mark.updated_at,
+            'icon': 'fa-edit',
+            'color': 'primary'
+        })
+    for leave in recent_leaves:
+        status = "Pending" if leave.status == 0 else ("Approved" if leave.status == 1 else "Rejected")
+        activities.append({
+            'title': f"Leave Request {status}: {leave.date}",
+            'time': leave.created_at,
+            'icon': 'fa-calendar-minus',
+            'color': 'warning' if leave.status == 0 else ('success' if leave.status == 1 else 'danger')
+        })
+
+    activities.sort(key=lambda x: x['time'], reverse=True)
+    context['recent_activities'] = activities[:10]
     return render(request, "staff_template/erpnext_staff_home.html", context)
 
 
@@ -44,7 +94,7 @@ def staff_take_attendance(request):
     sessions = Session.objects.all()
     courses = Course.objects.all()
     sections = Student.SECTION
-    semesters = Student.SEMESTER_CHOICES
+    semesters = SEMESTER_CHOICES
     
     context = {
         'subjects': subjects,
@@ -106,37 +156,85 @@ def get_faculty_attendance_grid(request):
                 'section': section
             })
             
-        return JsonResponse(json.dumps(grid_data), safe=False)
+        return JsonResponse(grid_data, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
 
 @csrf_exempt
 def get_students(request):
-    subject_id = request.POST.get('subject')
-    session_id = request.POST.get('session')
     try:
-        subject = get_object_or_404(Subject, id=subject_id)
-        session = get_object_or_404(Session, id=session_id)
+        subject_id = request.POST.get('subject')
+        session_id = request.POST.get('session')
+        course_idSelection = request.POST.get('branch')
         section = request.POST.get('section')
         semester = request.POST.get('semester')
-        students = Student.objects.filter(
-            course_id=subject.course.id, session=session)
-        if section:
-            students = students.filter(section=section)
+        attendance_date = request.POST.get('date')  # Optional
+        period_id = request.POST.get('period')     # Optional
+        exam_name = request.POST.get('exam_name')   # Optional, for marks entry
+        
+        if not all([subject_id, session_id, section]):
+            return JsonResponse({"error": "Missing mandatory fields (Subject, Session, Section)"}, status=400)
+
+        if not course_idSelection:
+            subject = get_object_or_404(Subject, id=subject_id)
+            course_idSelection = subject.course.id
+
+        students_query = Student.objects.filter(
+            course_id=course_idSelection, 
+            session_id=session_id,
+            section=section
+        )
+
         if semester:
-            students = students.filter(semester=semester)
+            students_query = students_query.filter(semester=semester)
+        
+        students = students_query.all()
+
+        # Check for existing attendance if date and period are provided
+        attendance_map = {}
+        if attendance_date and period_id:
+            attendance = Attendance.objects.filter(date=attendance_date, subject_id=subject_id, period_id=period_id).first()
+            if attendance:
+                reports = AttendanceReport.objects.filter(attendance=attendance)
+                attendance_map = {r.student_id: r.status for r in reports}
+
+        # Check for existing marks if exam_name and subject_id are provided
+        marks_map = {}
+        if exam_name and subject_id:
+            results = StudentResult.objects.filter(subject_id=subject_id, exam_name=exam_name)
+            for r in results:
+                marks_map[r.student_id] = {
+                    'objective': r.objective,
+                    'descriptive': r.descriptive,
+                    'assignment': r.assignment,
+                    'total': r.total,
+                    'exists': True
+                }
+        
         student_data = []
         for student in students:
+            # Default to True (Present) unless a record says otherwise
+            status = attendance_map.get(student.id, True)
+            marks = marks_map.get(student.id, {'objective': 0, 'descriptive': 0, 'assignment': 0, 'total': 0, 'exists': False})
+            
+            # Get profile pic URL if it exists
+            profile_pic_url = student.admin.profile_pic.url if student.admin.profile_pic else ""
+
             data = {
-                    "id": student.id,
-                    "name": student.admin.last_name + " " + student.admin.first_name,
-                    "roll_number": student.roll_number
-                    }
+                "id": student.id,
+                "name": f"{student.admin.last_name} {student.admin.first_name}".strip(),
+                "roll_number": student.roll_number or "",
+                "attendance_status": status,
+                "marks": marks,
+                "profile_pic": profile_pic_url
+            }
             student_data.append(data)
-        return JsonResponse(json.dumps(student_data), content_type='application/json', safe=False)
+            
+        return JsonResponse(student_data, safe=False)
+        
     except Exception as e:
-        return e
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -152,7 +250,15 @@ def save_attendance(request):
         subject = get_object_or_404(Subject, id=subject_id)
         period = get_object_or_404(Period, id=period_id) if period_id else None
         
-        attendance = Attendance(session=session, subject=subject, date=date, period=period)
+        # Check if attendance already exists for this period/date/subject
+        if Attendance.objects.filter(date=date, subject=subject, period=period).exists():
+            return HttpResponse("ALREADY_TAKEN")
+
+        # Get the semester from the first student to categorize this attendance record
+        first_student = get_object_or_404(Student, id=students[0].get('id'))
+        semester = first_student.semester
+
+        attendance = Attendance(session=session, subject=subject, date=date, period=period, semester=semester)
         attendance.save()
 
         for student_dict in students:
@@ -266,7 +372,8 @@ def staff_feedback(request):
 def staff_view_profile(request):
     staff = get_object_or_404(Staff, admin=request.user)
     form = StaffEditForm(request.POST or None, request.FILES or None,instance=staff)
-    context = {'form': form, 'page_title': 'View/Update Profile'}
+    formset = StaffQualificationFormSet(request.POST or None, instance=staff)
+    context = {'form': form, 'formset': formset, 'page_title': 'View/Update Profile'}
     if request.method == 'POST':
         try:
             if form.is_valid():
@@ -286,7 +393,25 @@ def staff_view_profile(request):
                 admin.address = address
                 admin.gender = gender
                 admin.save()
+                
+                staff.course = form.cleaned_data.get('course')
+                staff.designation = form.cleaned_data.get('designation')
+                staff.date_of_birth = form.cleaned_data.get('date_of_birth')
+                staff.date_of_joining = form.cleaned_data.get('date_of_joining')
+                staff.experience = form.cleaned_data.get('experience')
+                staff.mobile_number = form.cleaned_data.get('mobile_number')
+                staff.father_name = form.cleaned_data.get('father_name')
+                staff.mother_name = form.cleaned_data.get('mother_name')
+                staff.aadhaar_number = form.cleaned_data.get('aadhaar_number')
+                staff.pan_number = form.cleaned_data.get('pan_number')
+                staff.spouse_name = form.cleaned_data.get('spouse_name')
+                staff.qualification = form.cleaned_data.get('qualification')
+                staff.blood_group = form.cleaned_data.get('blood_group')
+                staff.faculty_role = form.cleaned_data.get('faculty_role')
                 staff.save()
+                
+                if formset.is_valid():
+                    formset.save()
                 messages.success(request, "Profile Updated!")
                 return redirect(reverse('staff_view_profile'))
             else:
@@ -327,8 +452,8 @@ def staff_add_result(request):
     subjects = Subject.objects.filter(staff=staff)
     courses = Course.objects.all()
     sections = Student.SECTION
-    semesters = Student.SEMESTER_CHOICES
-    exam_choices = ["MID I", "MID II", "Assignment", "External"]
+    semesters = SEMESTER_CHOICES
+    exam_choices = ["Mid 1", "Mid 2", "Final mid marks", "External"]
     sessions = Session.objects.all()
     
     context = {
@@ -348,18 +473,36 @@ def staff_add_result(request):
             subject = get_object_or_404(Subject, id=subject_id)
 
             for student_id in student_ids:
-                test = request.POST.get('test_' + student_id)
-                exam = request.POST.get('exam_' + student_id)
+                objective = request.POST.get('objective_' + student_id, 0)
+                descriptive = request.POST.get('descriptive_' + student_id, 0)
+                assignment = request.POST.get('assignment_' + student_id, 0)
+                
+                # Convert to float and calculate total
+                try:
+                    objective = float(objective)
+                    descriptive = float(descriptive)
+                    assignment = float(assignment)
+                except (ValueError, TypeError):
+                    objective = descriptive = assignment = 0
+                
+                # Enforce limits
+                objective = min(objective, 30)
+                descriptive = min(descriptive, 10)
+                assignment = min(assignment, 5)
+                
+                total = (objective / 2) + descriptive + assignment
                 student = get_object_or_404(Student, id=student_id)
                 
                 try:
                     data = StudentResult.objects.get(
-                        student=student, subject=subject, exam_name=exam_name)
-                    data.exam = exam
-                    data.test = test
+                        student=student, subject=subject, exam_name=exam_name, semester=subject.semester)
+                    data.objective = objective
+                    data.descriptive = descriptive
+                    data.assignment = assignment
+                    data.total = total
                     data.save()
                 except StudentResult.DoesNotExist:
-                    result = StudentResult(student=student, subject=subject, test=test, exam=exam, exam_name=exam_name)
+                    result = StudentResult(student=student, subject=subject, objective=objective, descriptive=descriptive, assignment=assignment, total=total, exam_name=exam_name, semester=subject.semester)
                     result.save()
             
             messages.success(request, "Marks Saved Successfully")
@@ -375,67 +518,184 @@ def fetch_student_result(request):
         student_id = request.POST.get('student')
         student = get_object_or_404(Student, id=student_id)
         subject = get_object_or_404(Subject, id=subject_id)
-        result = StudentResult.objects.get(student=student, subject=subject)
+        result = StudentResult.objects.filter(student=student, subject=subject).last()
+        if not result:
+            return HttpResponse('False')
+            
         result_data = {
-            'exam': result.exam,
-            'test': result.test
+            'objective': result.objective,
+            'descriptive': result.descriptive,
+            'assignment': result.assignment,
+            'total': result.total
         }
-        return HttpResponse(json.dumps(result_data))
+        return JsonResponse(result_data, safe=False)
     except Exception as e:
         return HttpResponse('False')
 
-#library
-def add_book(request):
-    if request.method == "POST":
-        name = request.POST['name']
-        author = request.POST['author']
-        isbn = request.POST['isbn']
-        category = request.POST['category']
+def export_marks_template(request):
+    try:
+        subject_id = request.GET.get('subject')
+        session_id = request.GET.get('session')
+        course_id = request.GET.get('branch')
+        section = request.GET.get('section')
+        semester = request.GET.get('semester')
 
+        if not all([subject_id, session_id, section, course_id, semester]):
+            return HttpResponse("Missing filter parameters")
 
-        books = Book.objects.create(name=name, author=author, isbn=isbn, category=category )
-        books.save()
-        alert = True
-        return render(request, "staff_template/add_book.html", {'alert':alert})
+        students = Student.objects.filter(
+            course_id=course_id,
+            session_id=session_id,
+            section=section,
+            semester=semester
+        ).select_related('admin')
+
+        data = []
+        for s in students:
+            data.append({
+                'Student ID': s.id,
+                'Roll Number': s.roll_number,
+                'Name': f"{s.admin.last_name} {s.admin.first_name}".strip(),
+                'Objective (30)': 0,
+                'Descriptive (10)': 0,
+                'Assignment (5)': 0
+            })
+
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Marks')
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=marks_template_{section}_{semester}.xlsx'
+        return response
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}")
+
+def download_generic_template(request):
+    try:
+        data = [{
+            'Student ID': '',
+            'Objective (30)': '',
+            'Descriptive (10)': '',
+            'Assignment (5)': ''
+        }]
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Marks')
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=sample_marks_template.xlsx'
+        return response
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}")
+
+def import_marks_excel(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        try:
+            excel_file = request.FILES['excel_file']
+            subject_id = request.POST.get('subject')
+            exam_name = request.POST.get('exam_name')
+            
+            if not all([subject_id, exam_name]):
+                messages.error(request, "Please select Subject and Exam Name first.")
+                return redirect(reverse('staff_add_result'))
+
+            subject = get_object_or_404(Subject, id=subject_id)
+            df = pd.read_excel(excel_file)
+            
+            # Required columns validation
+            required_cols = ['Student ID', 'Objective (30)', 'Descriptive (10)', 'Assignment (5)']
+            if not all(col in df.columns for col in required_cols):
+                messages.error(request, f"Excel file must contain columns: {', '.join(required_cols)}")
+                return redirect(reverse('staff_add_result'))
+
+            count = 0
+            for index, row in df.iterrows():
+                try:
+                    student_id = row['Student ID']
+                    obj = float(row.get('Objective (30)', 0))
+                    desc = float(row.get('Descriptive (10)', 0))
+                    assign = float(row.get('Assignment (5)', 0))
+                    
+                    # Limits
+                    obj = min(max(obj, 0), 30)
+                    desc = min(max(desc, 0), 10)
+                    assign = min(max(assign, 0), 5)
+                    
+                    total = (obj / 2) + desc + assign
+                    student = get_object_or_404(Student, id=student_id)
+                    
+                    # Update or create
+                    StudentResult.objects.update_or_create(
+                        student=student,
+                        subject=subject,
+                        exam_name=exam_name,
+                        semester=subject.semester,
+                        defaults={
+                            'objective': obj,
+                            'descriptive': desc,
+                            'assignment': assign,
+                            'total': total
+                        }
+                    )
+                    count += 1
+                except Exception as row_error:
+                    print(f"Error processing row {index}: {row_error}")
+                    continue
+
+            messages.success(request, f"Successfully uploaded marks for {count} students.")
+        except Exception as e:
+            messages.error(request, f"Error processing Excel: {str(e)}")
+    else:
+        messages.error(request, "No file uploaded.")
+    
+    return redirect(reverse('staff_add_result'))
+
+#materials
+def staff_add_material(request):
+    staff = get_object_or_404(Staff, admin=request.user)
+    subjects = Subject.objects.filter(staff=staff)
+    materials = StudyMaterial.objects.filter(subject__in=subjects).order_by('-created_at')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        subject_id = request.POST.get('subject')
+        file = request.FILES.get('file')
+        description = request.POST.get('description')
+        
+        if title and subject_id and file:
+            try:
+                subject = get_object_or_404(Subject, id=subject_id)
+                material = StudyMaterial.objects.create(
+                    title=title,
+                    subject=subject,
+                    file=file,
+                    description=description
+                )
+                messages.success(request, "Material uploaded successfully!")
+                return redirect(reverse('staff_add_material'))
+            except Exception as e:
+                messages.error(request, f"Error uploading material: {str(e)}")
+        else:
+            messages.error(request, "Please fill all required fields.")
+            
     context = {
-        'page_title': "Add Book"
+        'page_title': 'Manage Study Materials',
+        'subjects': subjects,
+        'materials': materials
     }
-    return render(request, "staff_template/add_book.html",context)
-
-#issue book
-
-
-def issue_book(request):
-    form = forms.IssueBookForm()
-    if request.method == "POST":
-        form = forms.IssueBookForm(request.POST)
-        if form.is_valid():
-            obj = models.IssuedBook()
-            obj.student_id = request.POST['name2']
-            obj.isbn = request.POST['isbn2']
-            obj.save()
-            alert = True
-            return render(request, "staff_template/issue_book.html", {'obj':obj, 'alert':alert})
-    return render(request, "staff_template/issue_book.html", {'form':form})
-
-def view_issued_book(request):
-    issuedBooks = IssuedBook.objects.all()
-    details = []
-    for i in issuedBooks:
-        days = (date.today()-i.issued_date)
-        d=days.days
-        fine=0
-        if d>14:
-            day=d-14
-            fine=day*5
-        books = list(models.Book.objects.filter(isbn=i.isbn))
-        # students = list(models.Student.objects.filter(admin=i.admin))
-        i=0
-        for l in books:
-            t=(books[i].name,books[i].isbn,issuedBooks[0].issued_date,issuedBooks[0].expiry_date,fine)
-            i=i+1
-            details.append(t)
-    return render(request, "staff_template/view_issued_book.html", {'issuedBooks':issuedBooks, 'details':details})
+    return render(request, "staff_template/staff_add_material.html", context)
 
 
 def staff_create_assignment(request):
@@ -485,6 +745,37 @@ def staff_view_submissions(request, assignment_id):
         'page_title': f'Submissions - {assignment.title}'
     }
     return render(request, "staff_template/staff_view_submissions.html", context)
+
+
+@csrf_exempt
+def staff_grade_submission(request):
+    if request.method == 'POST':
+        submission_id = request.POST.get('submission_id')
+        marks = request.POST.get('marks')
+        remarks = request.POST.get('remarks')
+        status = request.POST.get('status')
+
+        try:
+            submission = get_object_or_404(AssignmentSubmission, id=submission_id)
+            
+            if marks:
+                try:
+                    marks_val = float(marks)
+                    if marks_val < 0 or marks_val > 5:
+                        return JsonResponse({"status": "error", "message": "Marks must be between 0 and 5"})
+                    submission.marks = marks_val
+                except ValueError:
+                    return JsonResponse({"status": "error", "message": "Invalid marks format"})
+            else:
+                submission.marks = None
+
+            submission.remarks = remarks
+            submission.status = status
+            submission.save()
+            return JsonResponse({"status": "success", "message": "Submission Graded Successfully"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+    return JsonResponse({"status": "error", "message": "Invalid Request"})
 
 
 def staff_delete_assignment(request, assignment_id):
@@ -551,3 +842,12 @@ def staff_view_announcement(request):
         'page_title': 'Announcements'
     }
     return render(request, "staff_template/staff_view_announcement.html", context)
+
+
+def staff_view_internship(request):
+    internships = Internship.objects.all().order_by('-created_at')
+    context = {
+        'internships': internships,
+        'page_title': 'Internship Opportunities'
+    }
+    return render(request, "staff_template/staff_view_internship.html", context)

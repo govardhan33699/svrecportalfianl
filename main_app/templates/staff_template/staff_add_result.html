@@ -5,17 +5,25 @@
 {% block custom_css %}
 <style>
     .marks-card {
-        border-radius: 8px;
+        border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         background: #fff;
-        padding: 20px;
+        padding: 30px;
         margin-bottom: 20px;
+        border: 1px solid #e1e4e8;
     }
 
     .form-label {
-        font-weight: 500;
-        color: #444;
-        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        border: 1px solid #ced4da;
     }
 
     .form-control:focus {
@@ -28,6 +36,7 @@
         color: white;
         font-weight: 600;
         transition: all 0.3s;
+        border-radius: 8px;
     }
 
     .btn-fetch:hover {
@@ -41,117 +50,161 @@
         border-top: 1px solid #eee;
         padding-top: 20px;
     }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 10px;
+        color: #5e64ff;
+    }
+
+    .custom-table th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 15px;
+        border-bottom: 2px solid #edf2f7;
+    }
+
+    .custom-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #edf2f7;
+    }
 </style>
 {% endblock custom_css %}
 
 {% block content %}
-<section class="content">
+<section class="content mt-4 pt-4">
     <div class="container-fluid">
         <div class="row justify-content-center">
-            <div class="col-md-10">
+            <div class="col-md-11">
                 <div class="marks-card">
-                    <h5 class="mb-4 text-primary"><i class="fas fa-edit me-2"></i>Marks Entry Portal</h5>
+                    <div class="section-title">
+                        <i class="fas fa-edit"></i> Marks Entry
+                    </div>
 
                     <form method="POST" id="marks_entry_form">
                         {% csrf_token %}
+
                         <div class="row">
-                            <!-- Left Column -->
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">AcademicYear:*</label>
-                                    <select name="session" id="session" class="form-control" required>
-                                        <option value="">Select Session</option>
-                                        {% for session in sessions %}
-                                        <option value="{{session.id}}">{{session}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Program:</label>
-                                    <select name="course" id="course" class="form-control">
-                                        <option value="">Select Program</option>
-                                        {% for course in courses %}
-                                        <option value="{{course.id}}">{{course.name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Sem:*</label>
-                                    <select name="semester" id="semester" class="form-control" required>
-                                        <option value="">Select Semester</option>
-                                        {% for sem_val, sem_name in semesters %}
-                                        <option value="{{sem_val}}">{{sem_name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Batch:</label>
-                                    <select name="batch" id="batch" class="form-control">
-                                        <option value="">Select Batch</option>
-                                        {% for session in sessions %}
-                                        <option value="{{session.id}}">{{session}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Academic Year:*</label>
+                                <select name="session" id="session" class="form-control" required>
+                                    <option value="">Select Session</option>
+                                    {% for session in sessions %}
+                                    <option value="{{session.id}}">{{session}}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
-
-                            <!-- Right Column -->
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Branch:</label>
-                                    <select name="branch" id="branch" class="form-control">
-                                        <option value="">Select Branch</option>
-                                        {% for course in courses %}
-                                        <option value="{{course.id}}">{{course.name}} (Branch)</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Section:*</label>
-                                    <select name="section" id="section" class="form-control" required>
-                                        <option value="">Select Section</option>
-                                        {% for sec_val, sec_name in sections %}
-                                        <option value="{{sec_val}}">{{sec_name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Internal Exam Name:*</label>
-                                    <select name="exam_name" id="exam_name" class="form-control" required>
-                                        <option value="">Select Exam</option>
-                                        {% for choice in exam_choices %}
-                                        <option value="{{choice}}">{{choice}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Subjects:</label>
-                                    <select name="subject" id="subject" class="form-control" required>
-                                        <option value="">Select Subject</option>
-                                        {% for subject in subjects %}
-                                        <option value="{{subject.id}}">{{subject.name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Branch:*</label>
+                                <select name="branch" id="branch" class="form-control" required>
+                                    <option value="">Select Branch</option>
+                                    {% for course in courses %}
+                                    <option value="{{course.id}}">{{course.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Sem:*</label>
+                                <select name="semester" id="semester" class="form-control" required>
+                                    <option value="">Select Semester</option>
+                                    {% for sem_val, sem_name in semesters %}
+                                    <option value="{{sem_val}}">{{sem_name}}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
 
-                        <div class="mt-3 text-end">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Section:*</label>
+                                <select name="section" id="section" class="form-control" required>
+                                    <option value="">Select Section</option>
+                                    {% for sec_val, sec_name in sections %}
+                                    <option value="{{sec_val}}">{{sec_name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Internal Exam Name:*</label>
+                                <select name="exam_name" id="exam_name" class="form-control" required>
+                                    <option value="">Select Exam</option>
+                                    {% for choice in exam_choices %}
+                                    <option value="{{choice}}">{{choice}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Subjects:*</label>
+                                <select name="subject" id="subject" class="form-control" required>
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{subject.id}}">{{subject.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
                             <button type="button" id="fetch_student" class="btn btn-fetch btn-lg px-5">
                                 <i class="fas fa-search me-2"></i>Fetch Students
                             </button>
                         </div>
 
                         <div id="student_data" class="student-list-container">
-                            <!-- Student table injection -->
+                            <!-- Student list will be injected here via AJAX -->
                         </div>
                     </form>
+                </div>
+
+                <!-- Bulk Actions Card -->
+                <div class="marks-card mt-4">
+                    <div class="section-title">
+                        <i class="fas fa-file-excel"></i> Bulk Actions
+                    </div>
+
+                    <div class="row align-items-end">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Step 1: Download Template</label>
+                            <p class="text-muted small">Select filters above first, then download the pre-filled
+                                template.</p>
+                            <button type="button" id="download_template" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-download me-2"></i>Download Excel Template
+                            </button>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label d-flex justify-content-between align-items-center">
+                                <span>Step 2: Upload Marks</span>
+                                <a href="{% url 'download_generic_template' %}" class="small text-decoration-none">
+                                    <i class="fas fa-file-download"></i> Firstly, Download Excel Template
+                                </a>
+                            </label>
+                            <form action="{% url 'import_marks_excel' %}" method="POST" enctype="multipart/form-data"
+                                id="bulk_upload_form">
+                                {% csrf_token %}
+                                <!-- Hidden fields to pass context to import view -->
+                                <input type="hidden" name="subject" class="sync-subject">
+                                <input type="hidden" name="exam_name" class="sync-exam">
+
+                                <div class="input-group">
+                                    <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls"
+                                        required>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-upload me-2"></i>Upload
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -162,19 +215,55 @@
 {% block custom_js %}
 <script>
     $(document).ready(function () {
-        $("#fetch_student").click(function () {
+        // Sync hidden fields for bulk upload
+        $(".sync-subject").val($("#subject").val());
+        $(".sync-exam").val($("#exam_name").val());
+
+        $("#subject").change(function () { $(".sync-subject").val($(this).val()); });
+        $("#exam_name").change(function () { $(".sync-exam").val($(this).val()); });
+
+        $("#download_template").click(function () {
             var subject = $("#subject").val();
             var session = $("#session").val();
+            var branch = $("#branch").val();
             var section = $("#section").val();
             var semester = $("#semester").val();
 
-            $("#student_data").html("<div class='text-center'><div class='spinner-border text-primary' role='status'></div><p>Fetching students...</p></div>");
+            if (!subject || !session || !branch || !section || !semester) {
+                alert("Please select all filters (Year, Branch, Sem, Section, Subject) before downloading the template.");
+                return;
+            }
 
-            if (subject.length == 0 || session.length == 0 || section.length == 0 || semester.length == 0) {
-                alert("Please select all mandatory fields (*)");
-                $("#student_data").html("");
+            var url = "{% url 'export_marks_template' %}?" +
+                "subject=" + subject +
+                "&session=" + session +
+                "&branch=" + branch +
+                "&section=" + section +
+                "&semester=" + semester;
+
+            window.location.href = url;
+        });
+        $("#fetch_student").click(function () {
+            var subject = $("#subject").val();
+            var session = $("#session").val();
+            var branch = $("#branch").val();
+            var section = $("#section").val();
+            var semester = $("#semester").val();
+
+            console.log("Fetching students with:", {
+                subject: subject,
+                session: session,
+                branch: branch,
+                section: section,
+                semester: semester
+            });
+
+            if (!subject || !session || !branch || !section || !semester) {
+                alert("Please select all mandatory fields (*)\nAcademic Year, Branch, Sem, Section, and Subject are required.");
                 return false;
             }
+
+            $("#student_data").html("<div class='text-center my-4'><div class='spinner-border text-primary' role='status'></div><p class='mt-2'>Fetching students...</p></div>");
 
             $.ajax({
                 url: "{% url 'get_students' %}",
@@ -182,37 +271,62 @@
                 data: {
                     subject: subject,
                     session: session,
+                    branch: branch,
                     section: section,
-                    semester: semester
+                    semester: semester,
+                    exam_name: $("#exam_name").val(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
                 }
             }).done(function (response) {
-                var json_data = JSON.parse(response);
-                if (json_data.length < 1) {
-                    $("#student_data").html("<div class='alert alert-info'>No students found for given criteria.</div>");
+                console.log("Success response:", response);
+                var json_data = response;
+                if (!json_data || json_data.length < 1) {
+                    $("#student_data").html("<div class='alert alert-info shadow-sm'>No students found for the given criteria. Please verify that the selected Academic Year, Branch, Semester, and Section match your students.</div>");
                 } else {
-                    var div_data = "<div class='table-responsive'><table class='table table-hover align-middle'><thead><tr><th>Student Name</th><th>Roll Number</th><th>Test Score (40)</th><th>Exam Score (60)</th></tr></thead><tbody>";
+                    var div_data = "<div class='table-responsive mt-3'><table class='table table-hover align-middle custom-table'><thead><tr class='bg-light'><th>Student Name</th><th>Roll Number</th><th style='width: 15%'>Objective (30)</th><th style='width: 15%'>Descriptive (10)</th><th style='width: 15%'>Assignment (5)</th><th style='width: 12%'>Total</th></tr></thead><tbody>";
 
                     for (key in json_data) {
+                        var studentId = json_data[key]['id'];
+                        var marks = json_data[key]['marks'];
+                        var isLocked = marks['exists'] ? "readonly style='background-color: #f8f9fa; cursor: not-allowed;'" : "";
+                        var lockBadge = marks['exists'] ? " <span class='badge badge-success ms-2 ml-2'><i class='fas fa-lock'></i></span>" : "";
+
                         div_data += "<tr>";
-                        div_data += "<td>" + json_data[key]['name'] + "</td>";
-                        div_data += "<td>" + (json_data[key]['roll_number'] || 'N/A') + "</td>";
-                        div_data += "<td><input type='number' class='form-control' name='test_" + json_data[key]['id'] + "' value='0' min='0' max='40'></td>";
-                        div_data += "<td><input type='number' class='form-control' name='exam_" + json_data[key]['id'] + "' value='0' min='0' max='60'></td>";
-                        div_data += "<input type='hidden' name='student_ids[]' value='" + json_data[key]['id'] + "'>";
+                        div_data += "<td><span class='fw-bold'>" + json_data[key]['name'] + "</span></td>";
+                        div_data += "<td><code>" + (json_data[key]['roll_number'] || 'N/A') + "</code></td>";
+                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='objective_" + studentId + "' value='" + marks['objective'] + "' min='0' max='30' " + isLocked + "></td>";
+                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='descriptive_" + studentId + "' value='" + marks['descriptive'] + "' min='0' max='10' " + isLocked + "></td>";
+                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='assignment_" + studentId + "' value='" + marks['assignment'] + "' min='0' max='5' " + isLocked + "></td>";
+                        div_data += "<td><div class='d-flex align-items-center'><input type='number' class='form-control fw-bold bg-light total-field border-0 text-center' id='total_" + studentId + "' name='total_" + studentId + "' value='" + marks['total'] + "' readonly style='width: 70px;'>" + lockBadge + "</div></td>";
+                        div_data += "<input type='hidden' name='student_ids[]' value='" + studentId + "'>";
                         div_data += "</tr>";
                     }
 
                     div_data += "</tbody></table></div>";
-                    div_data += "<div class='mt-4'><button class='btn btn-success btn-lg w-100' type='submit'>Save Marks</button></div>";
+                    div_data += "<div class='mt-4'><button class='btn btn-success btn-lg w-100 shadow-sm' type='submit'><i class='fas fa-save me-2'></i>Save / Update Marks</button></div>";
                     $("#student_data").html(div_data);
                 }
-            }).fail(function (response) {
-                alert("Error in fetching students");
-                $("#student_data").html("");
+            }).fail(function (xhr, status, error) {
+                console.error("AJAX Error:", status, error, xhr.responseText);
+                alert("Error in fetching students: " + error + "\nServer response: " + xhr.responseText);
+                $("#student_data").html("<div class='alert alert-danger'>Could not reach server. Details: " + error + "</div>");
             });
         });
 
-        // Add client-side validation for marks
+        // Auto-calculate total
+        $(document).on('input', '.mark-input', function () {
+            var studentId = $(this).data('id');
+            var obj = parseFloat($("input[name='objective_" + studentId + "']").val()) || 0;
+            var desc = parseFloat($("input[name='descriptive_" + studentId + "']").val()) || 0;
+            var assign = parseFloat($("input[name='assignment_" + studentId + "']").val()) || 0;
+
+            // Internal calculation: (Obj / 2) + Desc + Assign
+            var converted_obj = obj / 2;
+            var total = converted_obj + desc + assign;
+            $("#total_" + studentId).val(total.toFixed(1));
+        });
+
+        // Validation for limits
         $(document).on('change', 'input[type="number"]', function () {
             var val = parseFloat($(this).val());
             var max = parseFloat($(this).attr('max'));

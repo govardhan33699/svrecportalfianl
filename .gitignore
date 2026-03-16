@@ -32,3 +32,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Node
+node_modules/
+
+# Static and media outputs
+staticfiles/
+*.txt
+*.log
+
+# Cursor or other config tools
+.cursor/

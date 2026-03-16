@@ -37,6 +37,44 @@ class Session(models.Model):
         return "From " + str(self.start_year) + " to " + str(self.end_year)
 
 
+class Degree(models.Model):
+    name = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class AcademicLevel(models.Model):
+    name = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class AcademicSemester(models.Model):
+    name = models.CharField(max_length=20)
+    academic_level = models.ForeignKey(AcademicLevel, on_delete=models.CASCADE, related_name='semesters')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.academic_level.name})"
+
+
+class Course(models.Model):
+    name = models.CharField(max_length=120)
+    degree = models.ForeignKey(Degree, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
 class CustomUser(AbstractUser):
     USER_TYPE = ((1, "HOD"), (2, "Staff"), (3, "Student"))
     GENDER = [("M", "Male"), ("F", "Female")]
@@ -59,9 +97,18 @@ class CustomUser(AbstractUser):
         return  self.first_name + " " + self.last_name
 
 
+SEMESTER_CHOICES = [
+    ('1', '1-1'), ('2', '1-2'), ('3', '2-1'),
+    ('4', '2-2'), ('5', '3-1'), ('6', '3-2'),
+    ('7', '4-1'), ('8', '4-2'),
+]
+
+
 class Regulation(models.Model):
     name = models.CharField(max_length=120)
-    description = models.TextField(null=True, blank=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -73,11 +120,6 @@ class Admin(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
 
 
-
-class Course(models.Model):
-    name = models.CharField(max_length=120)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -102,10 +144,9 @@ class Student(models.Model):
         ('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ('B-', 'B-'),
         ('O+', 'O+'), ('O-', 'O-'), ('AB+', 'AB+'), ('AB-', 'AB-'),
     ]
-    SEMESTER_CHOICES = [
-        ('1', '1st Semester'), ('2', '2nd Semester'), ('3', '3rd Semester'),
-        ('4', '4th Semester'), ('5', '5th Semester'), ('6', '6th Semester'),
-        ('7', '7th Semester'), ('8', '8th Semester'),
+    ADMISSION_TYPE_CHOICES = [
+        ('management', 'Management'),
+        ('convenor', 'Convenor'),
     ]
     roll_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     section = models.CharField(max_length=1, choices=SECTION, default='A')
@@ -117,10 +158,21 @@ class Student(models.Model):
     caste = models.CharField(max_length=50, null=True, blank=True)
     # New fields
     admission_number = models.CharField(max_length=50, null=True, blank=True)
-    academic_year = models.CharField(max_length=20, null=True, blank=True)
-    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
+    academic_year = models.ForeignKey(AcademicLevel, on_delete=models.SET_NULL, null=True, blank=True)
+    semester = models.ForeignKey(AcademicSemester, on_delete=models.SET_NULL, null=True, blank=True)
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, null=True, blank=True)
     apaar_id = models.CharField(max_length=50, null=True, blank=True)
+    # Additional detail fields
+    date_of_birth = models.DateField(null=True, blank=True)
+    annual_income = models.CharField(max_length=20, null=True, blank=True)
+    father_occupation = models.CharField(max_length=100, null=True, blank=True)
+    mother_occupation = models.CharField(max_length=100, null=True, blank=True)
+    mother_mobile_number = models.CharField(max_length=15, null=True, blank=True)
+    nationality = models.CharField(max_length=50, default='Indian', null=True, blank=True)
+    religion = models.CharField(max_length=50, null=True, blank=True)
+    mother_tongue = models.CharField(max_length=50, null=True, blank=True)
+    admission_date = models.DateField(null=True, blank=True)
+    admission_type = models.CharField(max_length=20, choices=ADMISSION_TYPE_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.admin.last_name + ", " + self.admin.first_name
@@ -162,15 +214,38 @@ class Staff(models.Model):
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, null=True, blank=True)
     designation = models.CharField(max_length=100, null=True, blank=True)
     faculty_role = models.CharField(max_length=20, choices=FACULTY_ROLE_CHOICES, null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    date_of_joining = models.DateField(null=True, blank=True)
+    experience = models.CharField(max_length=50, null=True, blank=True)
+    mobile_number = models.CharField(max_length=15, null=True, blank=True)
 
     def __str__(self):
         return self.admin.first_name + " " +  self.admin.last_name
 
 
+class StaffQualification(models.Model):
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='qualifications')
+    examination_passed = models.CharField(max_length=200)
+    classification = models.CharField(max_length=100, null=True, blank=True)
+    percentage_of_marks = models.CharField(max_length=20, null=True, blank=True)
+    year = models.CharField(max_length=20, null=True, blank=True)
+    university_institution = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.examination_passed} - {self.staff.admin.first_name}"
+
+
 class Subject(models.Model):
     name = models.CharField(max_length=120)
-    staff = models.ForeignKey(Staff,on_delete=models.CASCADE,)
+    code = models.CharField(max_length=20, null=True, blank=True)
+    max_marks = models.PositiveIntegerField(default=30)
+    show_in_marks = models.BooleanField(default=True)
+    staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    regulation = models.ForeignKey(Regulation, on_delete=models.SET_NULL, null=True, blank=True)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
+    credits = models.FloatField(default=0)
+    order = models.PositiveIntegerField(default=1, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -183,6 +258,7 @@ class Attendance(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     period = models.ForeignKey('Period', on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField()
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -246,9 +322,14 @@ class NotificationStudent(models.Model):
 class StudentResult(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
     exam_name = models.CharField(max_length=50, null=True, blank=True)
-    test = models.FloatField(default=0)
-    exam = models.FloatField(default=0)
+    objective = models.FloatField(default=0)
+    descriptive = models.FloatField(default=0)
+    assignment = models.FloatField(default=0)
+    internal_marks = models.FloatField(default=0)
+    external_marks = models.FloatField(default=0)
+    total = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -276,10 +357,11 @@ class Timetable(models.Model):
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
     period = models.ForeignKey(Period, on_delete=models.CASCADE)
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE, null=True, blank=True)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
 
     class Meta:
         ordering = ['day', 'period__number']
-        unique_together = ['course', 'section', 'day', 'period']
+        unique_together = ['course', 'section', 'day', 'period', 'semester']
 
     def __str__(self):
         return f"{self.day} - Period {self.period.number} - {self.subject.name}"
@@ -310,12 +392,25 @@ class AssignmentSubmission(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='submitted')
     marks = models.FloatField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ['assignment', 'student']
 
     def __str__(self):
         return f"{self.student} - {self.assignment.title}"
+
+
+class StudyMaterial(models.Model):
+    title = models.CharField(max_length=200)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='study_materials/')
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.subject.name}"
 
 
 class Announcement(models.Model):
@@ -335,6 +430,75 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Internship(models.Model):
+    title = models.CharField(max_length=200)
+    company = models.CharField(max_length=200)
+    description = models.TextField()
+    link = models.URLField(max_length=500, null=True, blank=True)
+    deadline = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} at {self.company}"
+
+
+class AcademicCalendar(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES)
+    regulation = models.ForeignKey(Regulation, on_delete=models.CASCADE, null=True, blank=True)
+    commencement_date = models.DateField()
+    instruction_end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['session', 'semester']
+
+    def __str__(self):
+        return f"{self.session} - {self.get_semester_display()}"
+
+
+class CalendarEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ('mid1', 'I Mid-term Examinations'),
+        ('mid2', 'II Mid-term Examinations'),
+        ('lab_exam', 'Preparation & End Laboratory Examinations'),
+        ('end_exam', 'End Theory Examinations'),
+        ('workshop', 'Branch Specific Workshop'),
+        ('results', 'Declaration of Results'),
+        ('internship', 'Industry Internship'),
+        ('next_commencement', 'Commencement of Next Semester'),
+        ('other', 'Other'),
+    ]
+    calendar = models.ForeignKey(AcademicCalendar, on_delete=models.CASCADE, related_name='events')
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
+    custom_name = models.CharField(max_length=200, blank=True, help_text='Used when event type is "Other"')
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    duration_text = models.CharField(max_length=50, blank=True, help_text='e.g. "03 Days", "02 Weeks"')
+    order = models.PositiveIntegerField(default=0, help_text='Display order')
+
+    class Meta:
+        ordering = ['order', 'start_date']
+
+    def __str__(self):
+        name = self.custom_name if self.event_type == 'other' else self.get_event_type_display()
+        return f"{name} ({self.start_date})"
+
+    @property
+    def display_name(self):
+        if self.event_type == 'other' and self.custom_name:
+            return self.custom_name
+        return self.get_event_type_display()
+
+    @property
+    def date_range_display(self):
+        if self.end_date and self.end_date != self.start_date:
+            return f"{self.start_date.strftime('%d-%m-%Y')} to {self.end_date.strftime('%d-%m-%Y')}"
+        return self.start_date.strftime('%d-%m-%Y')
 
 
 @receiver(post_save, sender=CustomUser)
@@ -357,4 +521,87 @@ def save_user_profile(sender, instance, **kwargs):
     if instance.user_type == 3:
         instance.student.save()
 
-# todos
+class StudentCloudFile(models.Model):
+    CATEGORY_CHOICES = [
+        ('notes', 'Notes'),
+        ('pdf', 'PDF'),
+        ('question_paper', 'Question Paper'),
+        ('important', 'Important File'),
+    ]
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    file = models.FileField(upload_to='student_cloud/')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='notes')
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.student.admin.first_name}"
+
+# Student Certificates
+CERTIFICATE_TYPE_CHOICES = [
+    ('Internship', 'Internship'),
+    ('Workshop', 'Workshop'),
+    ('Sports', 'Sports'),
+    ('Technical', 'Technical'),
+    ('Others', 'Others'),
+]
+
+class StudentCertificate(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    certificate_type = models.CharField(max_length=50, choices=CERTIFICATE_TYPE_CHOICES)
+    issued_by = models.CharField(max_length=200)
+    issue_date = models.DateField()
+    file = models.FileField(upload_to='student_certificates/')
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.student.admin.first_name}"
+
+# Workflow Automation System
+class EmailTemplate(models.Model):
+    name = models.CharField(max_length=200)
+    subject = models.CharField(max_length=255)
+    body = models.TextField()  # HTML content
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class Workflow(models.Model):
+    TRIGGER_CHOICES = [
+        ('announcement', 'New Announcement'),
+        ('marks', 'Marks Uploaded'),
+        ('assignment', 'Assignment Created'),
+        ('attendance', 'Attendance Alert'),
+        ('manual', 'Manual Trigger'),
+    ]
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    graph_data = models.JSONField()  # Drawflow JSON data
+    trigger_type = models.CharField(max_length=50, choices=TRIGGER_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class WorkflowExecutionLog(models.Model):
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('error', 'Error'),
+    ]
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    log_message = models.TextField()
+    executed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.workflow.name} - {self.status} - {self.executed_at}"

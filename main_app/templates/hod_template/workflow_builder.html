@@ -1,0 +1,570 @@
+﻿{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block custom_css %}
+<!-- Drawflow CSS -->
+<link rel="stylesheet" href="https://unpkg.com/drawflow/dist/drawflow.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    :root {
+        --canvas-bg: #1e1e20;
+        --sidebar-bg: #252529;
+        --node-bg: #2d2d31;
+        --node-border: #3e3e42;
+        --text-main: #e1e1e1;
+        --text-muted: #9ca3af;
+        --accent-color: #ff6c37;
+        /* n8n orange */
+        --connection-color: #525252;
+        --grid-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .content-wrapper {
+        background-color: var(--canvas-bg) !important;
+    }
+
+    .workflow-container {
+        display: flex;
+        height: calc(100vh - 150px);
+        background: var(--canvas-bg);
+        overflow: hidden;
+    }
+
+    /* Sidebar Styles */
+    .nodes-sidebar {
+        width: 280px;
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--node-border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        z-index: 10;
+        color: var(--text-main);
+    }
+
+    .sidebar-section {
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 15px;
+    }
+
+    .drag-drawflow {
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        background: var(--node-bg);
+        border: 1px solid var(--node-border);
+        border-radius: 8px;
+        cursor: grab;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 13px;
+        color: var(--text-main);
+    }
+
+    .drag-drawflow:hover {
+        border-color: var(--accent-color);
+        background: #35353a;
+        transform: translateY(-1px);
+    }
+
+    .drag-drawflow i {
+        font-size: 16px;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* Canvas Styles */
+    #drawflow {
+        flex-grow: 1;
+        position: relative;
+        background-color: var(--canvas-bg);
+        background-image: radial-gradient(var(--grid-color) 1px, transparent 1px);
+        background-size: 25px 25px;
+    }
+
+    /* Node Styles Customization */
+    .drawflow .drawflow-node {
+        background: transparent !important;
+        border: none !important;
+        width: auto !important;
+        min-width: 100px !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Professional Node Design */
+    .n8n-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        pointer-events: all;
+    }
+
+    .n8n-node .icon-container {
+        width: 56px;
+        height: 56px;
+        background: var(--node-bg);
+        border: 2px solid var(--node-border);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        transition: all 0.2s;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .drawflow-node.selected .n8n-node .icon-container {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(255, 108, 55, 0.3);
+    }
+
+    .n8n-node .node-label {
+        color: var(--text-main);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .n8n-node .node-sublabel {
+        color: var(--text-muted);
+        font-size: 10px;
+        margin-top: -6px;
+    }
+
+    /* Drawflow Connection Styles */
+    .drawflow .connection .main-path {
+        stroke: var(--connection-color);
+        stroke-width: 2px;
+    }
+
+    .drawflow .connection .main-path:hover {
+        stroke: var(--accent-color);
+    }
+
+    .drawflow .drawflow-node .input,
+    .drawflow .drawflow-node .output {
+        border: 2px solid var(--node-border);
+        background: var(--sidebar-bg);
+        width: 12px;
+        height: 12px;
+    }
+
+    .drawflow .drawflow-node .input:hover,
+    .drawflow .drawflow-node .output:hover {
+        background: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+    .builder-header {
+        background: var(--sidebar-bg);
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--node-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--text-main);
+    }
+
+    .input-group-minimal input {
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-main);
+        font-size: 16px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 6px;
+        width: 250px;
+    }
+
+    .input-group-minimal input:hover {
+        background: var(--node-bg);
+        border-color: var(--node-border);
+    }
+
+    #trigger_type {
+        background: var(--node-bg);
+        border: 1px solid var(--node-border);
+        color: var(--text-main);
+        border-radius: 6px;
+        padding: 4px 8px;
+    }
+
+    .actions .btn-primary {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+    .actions .btn-primary:hover {
+        background-color: #e55a2b;
+        border-color: #e55a2b;
+    }
+
+    /* Node Icon Colors */
+    .bg-trigger {
+        background: #ff6c37 !important;
+    }
+
+    .bg-filter {
+        background: #4d90ff !important;
+    }
+
+    .bg-action {
+        background: #44bb44 !important;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--sidebar-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--node-border);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #4a4a4e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid p-0">
+        <div class="builder-header">
+            <div class="input-group-minimal">
+                <a href="{% url 'manage_workflows' %}" class="btn btn-outline-light btn-sm mr-2"
+                    style="border-color: var(--node-border);">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <input type="text" id="workflow_name" value="{{ workflow.name|default:'Untitled Workflow' }}"
+                    placeholder="Workflow Name...">
+                <select id="trigger_type" class="form-control-sm ml-3"
+                    data-selected-trigger="{{ workflow.trigger_type|default:'' }}">
+                    <option value="">Select Trigger...</option>
+                    <option value="announcement">New Announcement</option>
+                    <option value="marks">Marks Uploaded</option>
+                    <option value="assignment">Assignment Created</option>
+                    <option value="attendance">Attendance Alert</option>
+                    <option value="manual">Manual Trigger</option>
+                </select>
+            </div>
+            <div class="actions">
+                <button class="btn btn-outline-light btn-sm mr-2" style="border-color: var(--node-border);"
+                    onclick="clearCanvas()">Clear</button>
+                <button class="btn btn-primary btn-sm" onclick="saveWorkflow()">
+                    <i class="fas fa-save mr-1"></i> Save Workflow
+                </button>
+            </div>
+        </div>
+
+        {{ email_templates_json|json_script:"email-templates-data" }}
+        {{ courses_json|json_script:"courses-data" }}
+        {{ semesters_json|json_script:"semesters-data" }}
+
+        <div id="workflow-data-storage" style="display:none;" data-graph="{{ workflow.graph_data|default:'' }}"
+            data-id="{{ workflow.id|default:'' }}"></div>
+
+        <div class="workflow-container">
+            <!-- Sidebar with draggable nodes -->
+            <div class="nodes-sidebar">
+                <div class="sidebar-section">
+                    <div class="section-title">Triggers</div>
+                    <div class="drag-drawflow" draggable="true" ondragstart="drag(event)"
+                        onclick="addNodeOnClick('trigger_start')" data-node="trigger_start">
+                        <i class="fas fa-bolt" style="color: #ff6c37;"></i> <span>On Event</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Logic & Filters</div>
+                    <div class="drag-drawflow" draggable="true" ondragstart="drag(event)"
+                        onclick="addNodeOnClick('filter_course')" data-node="filter_course">
+                        <i class="fas fa-graduation-cap" style="color: #4d90ff;"></i> Course Filter
+                    </div>
+                    <div class="drag-drawflow" draggable="true" ondragstart="drag(event)"
+                        onclick="addNodeOnClick('filter_semester')" data-node="filter_semester">
+                        <i class="fas fa-calendar-alt" style="color: #4d90ff;"></i> Semester Filter
+                    </div>
+                    <div class="drag-drawflow" draggable="true" ondragstart="drag(event)"
+                        onclick="addNodeOnClick('filter_marks')" data-node="filter_marks">
+                        <i class="fas fa-poll" style="color: #4d90ff;"></i> Marks Filter
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Actions</div>
+                    <div class="drag-drawflow" draggable="true" ondragstart="drag(event)"
+                        onclick="addNodeOnClick('action_email')" data-node="action_email">
+                        <i class="fas fa-envelope-open-text" style="color: #44bb44;"></i> Send Email
+                    </div>
+                    <div class="drag-drawflow" draggable="true" ondragstart="drag(event)"
+                        onclick="addNodeOnClick('action_log')" data-node="action_log">
+                        <i class="fas fa-clipboard-list" style="color: #44bb44;"></i> Log Activity
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawflow Canvas -->
+            <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block custom_js %}
+<!-- Drawflow JS -->
+<script src="https://unpkg.com/drawflow/dist/drawflow.min.js"></script>
+<script>
+    var editor;
+    const id = document.getElementById("drawflow");
+
+    // Initialize Drawflow safely
+    try {
+        if (typeof Drawflow === 'undefined') {
+            console.error("Drawflow library not loaded!");
+            alert("Error: Visual library (Drawflow) failed to load. Please refresh the page.");
+        } else {
+            editor = new Drawflow(id);
+            editor.start();
+            window.editor = editor;
+            console.log("Drawflow initialized successfully");
+        }
+    } catch (e) {
+        console.error("Drawflow init error:", e);
+        alert("Error initializing workflow editor: " + e.message);
+    }
+
+    // Data from Django
+    const workflowDataStorage = document.getElementById("workflow-data-storage");
+    const graphDataStr = workflowDataStorage.getAttribute("data-graph");
+
+    if (editor && graphDataStr && graphDataStr !== 'null' && graphDataStr.trim() !== '') {
+        try {
+            editor.import(JSON.parse(graphDataStr));
+        } catch (e) {
+            console.error("Error parsing workflow graph data", e);
+        }
+    }
+
+    const emailTemplates = JSON.parse(document.getElementById('email-templates-data').textContent);
+    const courses = JSON.parse(document.getElementById('courses-data').textContent);
+    const semesters = JSON.parse(document.getElementById('semesters-data').textContent);
+
+    const triggerSelect = document.getElementById("trigger_type");
+    const selectedTrigger = triggerSelect.getAttribute("data-selected-trigger");
+    if (selectedTrigger) {
+        triggerSelect.value = selectedTrigger;
+    }
+
+    /* DRAG & DROP LOGIC (BACKUP) */
+    let draggedNodeName = null;
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+        if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
+    }
+
+    function drag(ev) {
+        const element = ev.target.closest('.drag-drawflow');
+        if (element) {
+            const name = element.getAttribute('data-node');
+            draggedNodeName = name;
+            ev.dataTransfer.setData("text/plain", name);
+            ev.dataTransfer.setData("node", name);
+            ev.dataTransfer.effectAllowed = "copy";
+        }
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        let data = ev.dataTransfer.getData("text/plain") || ev.dataTransfer.getData("node") || draggedNodeName;
+        if (data) addNodeToDrawFlow(data, ev.clientX, ev.clientY);
+        draggedNodeName = null;
+    }
+
+    /* CLICK TO ADD LOGIC (PRIMARY) */
+    function addNodeOnClick(name) {
+        const canvas = document.getElementById("drawflow");
+        const x = canvas.offsetWidth / 2;
+        const y = canvas.offsetHeight / 2;
+        addNodeToDrawFlow(name, x + canvas.getBoundingClientRect().left, y + canvas.getBoundingClientRect().top);
+    }
+
+    function addNodeToDrawFlow(name, x, y) {
+        if (!editor) {
+            alert("Editor not ready");
+            return;
+        }
+        try {
+            if (editor.editor_mode === 'fixed') return false;
+
+            // Simpler math for coordinate conversion
+            const rect = id.getBoundingClientRect();
+            x = (x - rect.left) * (id.clientWidth / (id.clientWidth * editor.zoom));
+            y = (y - rect.top) * (id.clientHeight / (id.clientHeight * editor.zoom));
+
+            console.log("Adding node:", name, "at", x, y);
+
+            let nodeHtml = "";
+            let nodeOptions = "";
+
+            switch (name) {
+                case 'trigger_start':
+                    nodeHtml = `
+                <div class="n8n-node">
+                    <div class="icon-container bg-trigger">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="node-label">On Event</div>
+                    <div class="node-sublabel">Trigger</div>
+                </div>`;
+                    editor.addNode('trigger', 0, 1, x, y, 'trigger', {}, nodeHtml);
+                    break;
+                case 'filter_course':
+                    nodeOptions = courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                    nodeHtml = `
+                <div class="n8n-node">
+                    <div class="icon-container bg-filter">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="node-label">Course Filter</div>
+                    <div class="node-config-field" style="margin-top:5px; pointer-events:all;">
+                        <select df-course_id style="background:#1e1e20; color:white; border:1px solid #3e3e42; border-radius:4px; font-size:10px;">${nodeOptions}</select>
+                    </div>
+                </div>`;
+                    editor.addNode('filter_course', 1, 1, x, y, 'filter', {}, nodeHtml);
+                    break;
+                case 'filter_semester':
+                    nodeOptions = semesters.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                    nodeHtml = `
+                <div class="n8n-node">
+                    <div class="icon-container bg-filter">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="node-label">Semester Filter</div>
+                    <div class="node-config-field" style="margin-top:5px; pointer-events:all;">
+                        <select df-semester_id style="background:#1e1e20; color:white; border:1px solid #3e3e42; border-radius:4px; font-size:10px;">${nodeOptions}</select>
+                    </div>
+                </div>`;
+                    editor.addNode('filter_semester', 1, 1, x, y, 'filter', {}, nodeHtml);
+                    break;
+                case 'filter_marks':
+                    nodeHtml = `
+                <div class="n8n-node">
+                    <div class="icon-container bg-filter">
+                        <i class="fas fa-poll"></i>
+                    </div>
+                    <div class="node-label">Marks Filter</div>
+                    <div class="node-config-field" style="margin-top:5px; pointer-events:all;">
+                        <select df-condition style="background:#1e1e20; color:white; border:1px solid #3e3e42; border-radius:4px; font-size:10px; margin-bottom: 4px;">
+                            <option value=">">Greater than</option>
+                            <option value="<">Less than</option>
+                        </select>
+                        <input type="number" df-marks_threshold placeholder="Value" style="background:#1e1e20; color:white; border:1px solid #3e3e42; border-radius:4px; font-size:10px; width:100%;">
+                    </div>
+                </div>`;
+                    editor.addNode('filter_marks', 1, 1, x, y, 'filter', {}, nodeHtml);
+                    break;
+                case 'action_email':
+                    nodeOptions = emailTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                    nodeHtml = `
+                <div class="n8n-node">
+                    <div class="icon-container bg-action">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="node-label">Send Email</div>
+                    <div class="node-config-field" style="margin-top:5px; pointer-events:all;">
+                        <select df-template_id style="background:#1e1e20; color:white; border:1px solid #3e3e42; border-radius:4px; font-size:10px;">${nodeOptions}</select>
+                    </div>
+                </div>`;
+                    editor.addNode('action_email', 1, 0, x, y, 'action', {}, nodeHtml);
+                    break;
+                case 'action_log':
+                    nodeHtml = `
+                <div class="n8n-node">
+                    <div class="icon-container bg-action">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="node-label">Log Activity</div>
+                    <div class="node-config-field" style="margin-top:5px; pointer-events:all;">
+                        <input type="text" df-message placeholder="Message..." style="background:#1e1e20; color:white; border:1px solid #3e3e42; border-radius:4px; font-size:10px; width:80px;">
+                    </div>
+                </div>`;
+                    editor.addNode('action_log', 1, 0, x, y, 'action', {}, nodeHtml);
+                    break;
+                default:
+                    alert("Unknown node drag type: " + name);
+                    return;
+            }
+        } catch (error) {
+            alert("Error placing node: " + error.message);
+            console.error(error);
+        }
+    }
+
+    function clearCanvas() {
+        if (confirm('Clear all nodes?')) {
+            editor.clearModuleSelected();
+        }
+    }
+
+    async function saveWorkflow() {
+        const name = document.getElementById('workflow_name').value;
+        const triggerType = document.getElementById('trigger_type').value;
+
+        if (!name || !triggerType) {
+            alert('Please provide a name and select a trigger type for the workflow.');
+            return;
+        }
+
+        const exportData = editor.export();
+        const data = {
+            id: document.getElementById("workflow-data-storage").getAttribute("data-id") || "",
+            name: name,
+            trigger_type: triggerType,
+            graph_data: exportData
+        };
+
+        try {
+            const response = await fetch("{% url 'save_workflow' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert('Workflow saved successfully!');
+                window.location.href = "{% url 'manage_workflows' %}";
+            } else {
+                alert('Error saving workflow: ' + result.message);
+            }
+        } catch (error) {
+            alert('An unexpected error occurred.');
+        }
+    }
+</script>
+{% endblock %}

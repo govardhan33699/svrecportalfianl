@@ -1,127 +1,362 @@
-{% extends 'main_app/base.html' %}
+{% extends 'main_app/erpnext_base.html' %}
 {% load static %}
+
 {% block page_title %}Student Details{% endblock page_title %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'manage_student' %}">Students</a></li>
+<li class="breadcrumb-item active">{{ student.admin.first_name }} {{ student.admin.last_name }}</li>
+{% endblock breadcrumb %}
+
+{% block custom_css %}
+<style>
+    .profile-hero {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 3px solid var(--primary);
+        object-fit: cover;
+        box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.1);
+        margin-bottom: 16px;
+    }
+
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 750;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .profile-sub {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .profile-badges {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+    }
+
+    .profile-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: var(--radius-pill);
+        font-size: 12.5px;
+        font-weight: 650;
+        background: var(--surface-raised);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+    }
+
+    .profile-badge i {
+        font-size: 11px;
+    }
+
+    .detail-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .detail-card .detail-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .detail-card .detail-header i {
+        color: var(--primary);
+        font-size: 14px;
+    }
+
+    .dark-mode .detail-card .detail-header {
+        border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        padding: 0;
+    }
+
+    .detail-item {
+        padding: 18px 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .detail-item:nth-last-child(-n+3) {
+        border-bottom: none;
+    }
+
+    .dark-mode .detail-item {
+        border-bottom-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .detail-item .detail-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-tertiary);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .detail-item .detail-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .detail-item.full-width {
+        grid-column: span 3;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    @media(max-width:768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-item.full-width {
+            grid-column: span 1;
+        }
+    }
+</style>
+{% endblock custom_css %}
+
 {% block content %}
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-4">
-                <!-- Profile Image -->
-                <div class="card card-primary card-outline">
-                    <div class="card-body box-profile">
-                        <div class="text-center">
-                            {% if student.admin.profile_pic %}
-                            <img class="profile-user-img img-fluid img-circle" src="{{ student.admin.profile_pic.url }}"
-                                onerror="this.onerror=null; this.src='{% static 'dist/img/default-avatar.png' %}'"
-                                alt="User profile picture">
-                            {% else %}
-                            <img class="profile-user-img img-fluid img-circle"
-                                src="{% static 'dist/img/default-avatar.png' %}" alt="User profile picture">
-                            {% endif %}
-                        </div>
+<!-- Action Buttons -->
+<div class="d-flex justify-content-end mb-3 action-bar">
+    <a href="{% url 'edit_student' student.id %}" class="btn btn-primary">
+        <i class="fas fa-edit"></i> Edit Profile
+    </a>
+    <a href="{% url 'admin_view_marks_memo' student.id %}" class="btn btn-primary">
+        <i class="fas fa-file-invoice"></i> View/Edit Marks Memo
+    </a>
+    <a href="{% url 'manage_student' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to List
+    </a>
+</div>
 
-                        <h3 class="profile-username text-center">
-                            {{ student.admin.first_name }} {{ student.admin.last_name }}
-                        </h3>
+<!-- Profile Hero -->
+<div class="profile-hero">
+    {% if student.admin.profile_pic %}
+    <img class="profile-avatar" src="{{ student.admin.profile_pic.url }}"
+        onerror="this.onerror=null; this.src='{% static 'dist/img/default-avatar.png' %}';" alt="Profile">
+    {% else %}
+    <img class="profile-avatar" src="{% static 'dist/img/default-avatar.png' %}" alt="Profile">
+    {% endif %}
+    <div class="profile-name">{{ student.admin.first_name }} {{ student.admin.last_name }}</div>
+    <div class="profile-sub">{{ student.course.name }} — {{ student.academic_year }}</div>
+    <div class="profile-badges">
+        <span class="profile-badge"><i class="fas fa-id-badge"></i> {{ student.roll_number }}</span>
+        <span class="profile-badge"><i class="fas fa-layer-group"></i> {{ student.get_section_display }}</span>
+        <span class="profile-badge"><i class="fas fa-bookmark"></i> Semester {{ student.semester.name }}</span>
+        <span class="profile-badge"><i class="fas fa-gavel"></i> {{ student.regulation.name|default:"N/A" }}</span>
+        <span class="profile-badge"><i class="fas fa-hashtag"></i> {{ student.admission_number }}</span>
+    </div>
+</div>
 
-                        <p class="text-muted text-center">{{ student.course.name }} ({{ student.academic_year }})</p>
-
-                        <ul class="list-group list-group-unbordered mb-3">
-                            <li class="list-group-item">
-                                <b>Roll Number</b> <a class="float-right">{{ student.roll_number }}</a>
-                            </li>
-                            <li class="list-group-item">
-                                <b>Section</b> <a class="float-right">{{ student.get_section_display }}</a>
-                            </li>
-                            <li class="list-group-item">
-                                <b>Semester</b> <a class="float-right">{{ student.get_semester_display }}</a>
-                            </li>
-                            <li class="list-group-item">
-                                <b>Regulation</b> <a class="float-right">{{ student.regulation.name|default:"N/A" }}</a>
-                            </li>
-                            <li class="list-group-item">
-                                <b>Admission No</b> <a class="float-right">{{ student.admission_number }}</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- /.card-body -->
-                </div>
-                <!-- /.card -->
-            </div>
-
-            <div class="col-md-8">
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">About Student</h3>
-                    </div>
-                    <!-- /.card-header -->
-                    <div class="card-body">
-                        <strong><i class="fas fa-envelope mr-1"></i> Email</strong>
-                        <p class="text-muted">{{ student.admin.email }}</p>
-                        <hr>
-
-                        <strong><i class="fas fa-venus-mars mr-1"></i> Gender</strong>
-                        <p class="text-muted">{{ student.admin.gender }}</p>
-                        <hr>
-
-                        <strong><i class="fas fa-map-marker-alt mr-1"></i> Address</strong>
-                        <p class="text-muted">{{ student.admin.address }}</p>
-                        <hr>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong><i class="fas fa-user-friends mr-1"></i> Father's Name</strong>
-                                <p class="text-muted">{{ student.father_name }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <strong><i class="fas fa-phone mr-1"></i> Parent Mobile</strong>
-                                <p class="text-muted">{{ student.parent_mobile_number }}</p>
-                            </div>
-                        </div>
-                        <hr>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong><i class="fas fa-user-friends mr-1"></i> Mother's Name</strong>
-                                <p class="text-muted">{{ student.mother_name }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <strong><i class="fas fa-phone mr-1"></i> Student Mobile</strong>
-                                <p class="text-muted">{{ student.mobile_number }}</p>
-                            </div>
-                        </div>
-                        <hr>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <strong><i class="fas fa-id-card mr-1"></i> Aadhar</strong>
-                                <p class="text-muted">{{ student.aadhar_number }}</p>
-                            </div>
-                            <div class="col-md-4">
-                                <strong><i class="fas fa-users mr-1"></i> Caste</strong>
-                                <p class="text-muted">{{ student.caste }}</p>
-                            </div>
-                            <div class="col-md-4">
-                                <strong><i class="fas fa-tint mr-1"></i> Blood Group</strong>
-                                <p class="text-muted">{{ student.blood_group }}</p>
-                            </div>
-                        </div>
-                        <hr>
-
-                        {% if student.apaar_id %}
-                        <strong><i class="fas fa-id-badge mr-1"></i> APAAR ID</strong>
-                        <p class="text-muted">{{ student.apaar_id }}</p>
-                        <hr>
-                        {% endif %}
-
-                        <a href="{% url 'edit_student' student.id %}" class="btn btn-info">Edit Profile</a>
-                        <a href="{% url 'manage_student' %}" class="btn btn-secondary">Back to List</a>
-                    </div>
-                    <!-- /.card-body -->
-                </div>
-            </div>
+<!-- Student Details -->
+<div class="detail-card">
+    <div class="detail-header"><i class="fas fa-user-circle"></i> Personal Information</div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-envelope"></i> Email</div>
+            <div class="detail-value">{{ student.admin.email }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-venus-mars"></i> Gender</div>
+            <div class="detail-value">{{ student.admin.get_gender_display }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-birthday-cake"></i> Date of Birth</div>
+            <div class="detail-value">{{ student.date_of_birth|date:"d M Y"|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-phone"></i> Student Mobile</div>
+            <div class="detail-value">{{ student.mobile_number|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-id-card"></i> Aadhar Number</div>
+            <div class="detail-value">{{ student.aadhar_number|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-tint"></i> Blood Group</div>
+            <div class="detail-value">{{ student.blood_group|default:"—" }}</div>
         </div>
     </div>
-</section>
+</div>
+
+<div class="detail-card">
+    <div class="detail-header"><i class="fas fa-users"></i> Family Information</div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-user"></i> Father's Name</div>
+            <div class="detail-value">{{ student.father_name|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-user"></i> Mother's Name</div>
+            <div class="detail-value">{{ student.mother_name|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-phone"></i> Parent Mobile</div>
+            <div class="detail-value">{{ student.parent_mobile_number|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-briefcase"></i> Father's Occupation</div>
+            <div class="detail-value">{{ student.father_occupation|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-briefcase"></i> Mother's Occupation</div>
+            <div class="detail-value">{{ student.mother_occupation|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-phone"></i> Mother's Mobile</div>
+            <div class="detail-value">{{ student.mother_mobile_number|default:"—" }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-header"><i class="fas fa-info-circle"></i> Additional Information</div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-users"></i> Caste</div>
+            <div class="detail-value">{{ student.caste|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-rupee-sign"></i> Annual Income</div>
+            <div class="detail-value">{{ student.annual_income|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-flag"></i> Nationality</div>
+            <div class="detail-value">{{ student.nationality|default:"Indian" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-praying-hands"></i> Religion</div>
+            <div class="detail-value">{{ student.religion|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-language"></i> Mother Tongue</div>
+            <div class="detail-value">{{ student.mother_tongue|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-door-open"></i> Admission Type</div>
+            <div class="detail-value">{{ student.get_admission_type_display|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-calendar-alt"></i> Admission Date</div>
+            <div class="detail-value">{{ student.admission_date|date:"d M Y"|default:"—" }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label"><i class="fas fa-id-badge"></i> APAAR ID</div>
+            <div class="detail-value">{{ student.apaar_id|default:"—" }}</div>
+        </div>
+        <div class="detail-item full-width">
+            <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Address</div>
+            <div class="detail-value">{{ student.admin.address|default:"—" }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Certificates Section -->
+<div class="detail-card">
+    <div class="detail-header" style="justify-content: space-between;">
+        <span><i class="fas fa-certificate"></i> Student Certificates</span>
+        <a href="{% url 'add_student_certificate' student.id %}" class="btn btn-primary btn-xs">
+            <i class="fas fa-plus"></i> Add Certificate
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size: 14px;">
+                <thead style="background: rgba(0,0,0,0.02);">
+                    <tr>
+                        <th style="padding-left: 24px;">Title</th>
+                        <th>Type</th>
+                        <th>Issued By</th>
+                        <th>Date</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for certificate in certificates %}
+                    <tr>
+                        <td style="padding-left: 24px; font-weight: 600;"> {{ certificate.title }}</td>
+                        <td><span class="badge badge-info">{{ certificate.certificate_type }}</span></td>
+                        <td>{{ certificate.issued_by }}</td>
+                        <td>{{ certificate.issue_date|date:"d M Y" }}</td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="{{ certificate.file.url }}" target="_blank" class="btn btn-default btn-sm"
+                                    title="View/Download">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <a href="{% url 'edit_student_certificate' student.id certificate.id %}"
+                                    class="btn btn-default btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'delete_student_certificate' student.id certificate.id %}"
+                                    class="btn btn-default btn-sm text-danger" title="Delete"
+                                    onclick="return confirm('Are you sure you want to delete this certificate?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No certificates added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="action-bar">
+    <a href="{% url 'edit_student' student.id %}" class="btn btn-info"><i class="fas fa-edit me-1"></i> Edit Profile</a>
+    <a href="{% url 'admin_view_marks_memo' student.id %}" class="btn btn-primary"><i
+            class="fas fa-file-invoice me-1"></i> View Marks Memo</a>
+    <a href="{% url 'admin_edit_marks_memo' student.id %}" class="btn btn-warning"><i class="fas fa-pen me-1"></i> Edit
+        Marks Memo</a>
+    <a href="{% url 'manage_student' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to
+        List</a>
+</div>
 {% endblock content %}

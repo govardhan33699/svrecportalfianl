@@ -39,6 +39,15 @@ class Session(models.Model):
         return "From " + str(self.start_year) + " to " + str(self.end_year)
 
 
+class Course(models.Model):
+    name = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
 class CustomUser(AbstractUser):
     USER_TYPE = ((1, "HOD"), (2, "Staff"), (3, "Student"))
     GENDER = [("M", "Male"), ("F", "Female")]
@@ -61,15 +70,29 @@ class CustomUser(AbstractUser):
         return  self.first_name + " " + self.last_name
 
 
+SEMESTER_CHOICES = [
+    ('1', '1-1'), ('2', '1-2'), ('3', '2-1'),
+    ('4', '2-2'), ('5', '3-1'), ('6', '3-2'),
+    ('7', '4-1'), ('8', '4-2'),
+]
+
+
+class Regulation(models.Model):
+    name = models.CharField(max_length=120)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Admin(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
 
 
-
-class Course(models.Model):
-    name = models.CharField(max_length=120)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -219,5 +242,21 @@ def save_user_profile(sender, instance, **kwargs):
         instance.staff.save()
     if instance.user_type == 3:
         instance.student.save()
+
+
+class AcademicCalendar(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES)
+    regulation = models.ForeignKey(Regulation, on_delete=models.CASCADE, null=True, blank=True)
+    commencement_date = models.DateField()
+    instruction_end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['session', 'semester']
+
+    def __str__(self):
+        return f"{self.session} - {self.get_semester_display()}"
 
 # todos

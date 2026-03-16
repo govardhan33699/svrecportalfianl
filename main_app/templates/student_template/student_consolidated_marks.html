@@ -1,0 +1,317 @@
+{% extends 'main_app/base.html' %} {% load static %} {% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    .memo-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .dark-mode .memo-container {
+        background: rgba(30, 30, 40, 0.95);
+    }
+
+    .memo-title {
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #1a1a2e;
+        letter-spacing: 0.5px;
+    }
+
+    .dark-mode .memo-title {
+        color: #eee;
+    }
+
+    .student-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: linear-gradient(135deg, #f8f9fa, #e8ecf1);
+        border-radius: 10px;
+    }
+
+    .dark-mode .student-info {
+        background: linear-gradient(135deg, #1e1e2e, #252538);
+    }
+
+    .info-left {
+        flex: 1;
+    }
+
+    .info-left p {
+        margin: 4px 0;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .dark-mode .info-left p {
+        color: #ccc;
+    }
+
+    .info-left strong {
+        display: inline-block;
+        min-width: 120px;
+        color: #1a1a2e;
+    }
+
+    .dark-mode .info-left strong {
+        color: #a5b4fc;
+    }
+
+    .info-right {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid #4285f4;
+        flex-shrink: 0;
+        margin-left: 20px;
+    }
+
+    .info-right img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .year-section {
+        margin-bottom: 24px;
+    }
+
+    .year-header {
+        background: linear-gradient(135deg, #1a73e8, #4285f4);
+        color: #fff;
+        text-align: center;
+        padding: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .sem-table-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid #dee2e6;
+        border-top: none;
+    }
+
+    .sem-half {
+        border-right: 2px solid #1a73e8;
+    }
+
+    .sem-half:last-child {
+        border-right: none;
+    }
+
+    .sem-header {
+        background: #e3eaf5;
+        text-align: center;
+        padding: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #1a73e8;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .dark-mode .sem-header {
+        background: rgba(26, 115, 232, 0.15);
+        color: #93b4f4;
+    }
+
+    .memo-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+
+    .memo-table th {
+        background: #f0f3f8;
+        padding: 5px 4px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.7rem;
+        border: 1px solid #dee2e6;
+        color: #333;
+        white-space: nowrap;
+    }
+
+    .dark-mode .memo-table th {
+        background: rgba(255, 255, 255, 0.05);
+        color: #ccc;
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .memo-table td {
+        padding: 4px 4px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+        vertical-align: middle;
+        color: #333;
+    }
+
+    .dark-mode .memo-table td {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #ccc;
+    }
+
+    .memo-table td.subject-name {
+        text-align: left;
+        padding-left: 6px;
+        font-size: 0.72rem;
+        white-space: normal;
+        word-break: break-word;
+        min-width: 120px;
+    }
+
+    .memo-table td.sno {
+        width: 30px;
+    }
+
+    .memo-table td.mark-cell {
+        width: 24px;
+        font-size: 0.68rem;
+        padding: 3px 2px;
+    }
+
+    .no-data {
+        color: #94a3b8;
+        text-align: center;
+        padding: 12px;
+        font-size: 0.8rem;
+    }
+
+    @media print {
+        .memo-container {
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .erpnext-sidebar,
+        .erpnext-navbar,
+        .sidebar-toggle-btn {
+            display: none !important;
+        }
+
+        .erpnext-main-content {
+            margin-left: 0 !important;
+        }
+    }
+
+    .print-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(135deg, #1a73e8, #4285f4);
+        color: #fff;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+        transition: all 0.2s;
+    }
+
+    .print-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4 no-print"> <a href="{% url 'student_home' %}" class="btn btn-outline-primary"> <i
+                class="fas fa-arrow-left me-2"></i>Back to Dashboard </a> </div>
+    <div class="memo-container"> <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print
+            Memo</button> <!-- College header banner -->
+        <div style="text-align:center; margin-bottom:8px;"> <img src="{% static 'image/college-header.jpg' %}"
+                alt="College Header" style="max-width: 100%; height: auto;"> </div>
+        <div class="memo-title">Marks Memo</div>
+        <div class="student-info">
+            <div class="info-left">
+                <p><strong>Regd. No.</strong>: {{ student.roll_number|default:"—" }}</p>
+                <p><strong>Name</strong>: {{ student.admin.first_name }} {{ student.admin.last_name }}</p>
+                <p><strong>Father Name</strong>: {{ student.father_name|default:"—" }}</p>
+                <p><strong>Branch</strong>: {{ student.course.name|default:"—" }}</p>
+                <p><strong>Regulation</strong>: {{ student.regulation.name|default:"—" }}</p>
+            </div>
+            <div class="info-right"> {% if student.admin.profile_pic %} <img src="{{ student.admin.profile_pic.url }}"
+                    alt="Photo"> {% else %} <div
+                    style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e3eaf5;">
+                    <i class="fas fa-user" style="font-size:2rem;color:#1362e2;"></i>
+                </div> {% endif %} </div>
+        </div> {% for yr_name, yr_data in years.items %} <div class="year-section">
+            <div class="year-header">{{ yr_name }}</div>
+            <div class="sem-table-wrapper">
+                <div class="sem-half">
+                    <div class="sem-header">{{ yr_data.sem1_label }}</div>
+                    <table class="memo-table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Subject</th>
+                                <th>IM</th>
+                                <th>EM</th>
+                                <th>TOTAL</th>
+                                <th>RS</th>
+                                <th>Cr.</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody> {% for sub in yr_data.sem1 %} <tr>
+                                <td class="sno">{{ forloop.counter }}</td>
+                                <td class="subject-name">{{ sub.name }}</td>
+                                <td class="mark-cell">{{ sub.im|floatformat:"-1" }}</td>
+                                <td class="mark-cell">{{ sub.em|floatformat:"-1"|default:"" }}</td>
+                                <td class="mark-cell">{{ sub.tot|floatformat:"-1" }}</td>
+                                <td class="mark-cell">{{ sub.status }}</td>
+                                <td class="mark-cell">{{ sub.cr|floatformat:"-1"|default:"" }}</td>
+                                <td class="mark-cell">{{ sub.grade }}</td>
+                            </tr> {% empty %} <tr>
+                                <td colspan="8" class="no-data">No subjects</td>
+                            </tr> {% endfor %} </tbody>
+                    </table>
+                </div>
+                <div class="sem-half">
+                    <div class="sem-header">{{ yr_data.sem2_label }}</div>
+                    <table class="memo-table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Subject</th>
+                                <th>IM</th>
+                                <th>EM</th>
+                                <th>TOTAL</th>
+                                <th>RS</th>
+                                <th>Cr.</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody> {% for sub in yr_data.sem2 %} <tr>
+                                <td class="sno">{{ forloop.counter }}</td>
+                                <td class="subject-name">{{ sub.name }}</td>
+                                <td class="mark-cell">{{ sub.im|floatformat:"-1" }}</td>
+                                <td class="mark-cell">{{ sub.em|floatformat:"-1"|default:"" }}</td>
+                                <td class="mark-cell">{{ sub.tot|floatformat:"-1" }}</td>
+                                <td class="mark-cell">{{ sub.status }}</td>
+                                <td class="mark-cell">{{ sub.cr|floatformat:"-1"|default:"" }}</td>
+                                <td class="mark-cell">{{ sub.grade }}</td>
+                            </tr> {% empty %} <tr>
+                                <td colspan="8" class="no-data">No subjects</td>
+                            </tr> {% endfor %} </tbody>
+                    </table>
+                </div>
+            </div>
+        </div> {% endfor %}
+    </div>
+</div> {% endblock content %}
