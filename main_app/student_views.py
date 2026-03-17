@@ -784,7 +784,7 @@ def student_change_password(request):
 def student_attendance_report(request):
     student = get_object_or_404(Student, admin=request.user)
     current_semester = student.semester
-    subjects = Subject.objects.filter(course=student.course, semester=current_semester)
+    subjects = Subject.objects.filter(course=student.course, semester=str(current_semester.id))
     
     # Pre-fetch Timetable to get correct faculty and period mapping for this section
     timetable = Timetable.objects.filter(

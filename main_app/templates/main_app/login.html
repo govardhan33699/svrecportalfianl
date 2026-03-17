@@ -31,13 +31,31 @@
         }
 
         body {
-            background: #e60a0a;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            margin: 0;
+            padding: 20px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Blurred Background Layer */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("{% static 'image/svrecbg.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(6px); /* Adds the slight blur */
+            transform: scale(1.05); /* Fixes white edges caused by blur filtering */
+            z-index: -1; /* Keeps it behind your login card */
         }
 
         .login-master-container {
@@ -74,7 +92,7 @@
         /* Two Column Body */
         .login-body {
             display: flex;
-            min-height: 380px;
+            min-height: auto; /* Shrinks layout to hug content tightly */
             position: relative;
         }
 
@@ -92,6 +110,8 @@
         /* Step Containers */
         .step-container {
             width: 100%;
+            max-width: 320px; /* Reduces width of input and button */
+            margin: 0 auto; /* Centers the container inside the <form> */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -159,6 +179,7 @@
             border: 1px solid #ddd;
             overflow: hidden;
             transition: border-color 0.3s;
+            position: relative; /* For absolutely positioned balanced icons */
         }
 
         .input-wrapper:focus-within {
@@ -166,11 +187,16 @@
         }
 
         .input-icon {
-            padding: 12px;
-            background: #e1e3e4;
-            color: #555;
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent !important; /* Removes offsetting gray box */
+            padding: 0;
+            color: #777;
             display: flex;
             align-items: center;
+            z-index: 2;
         }
 
         .input-wrapper input {
@@ -181,6 +207,7 @@
             font-size: 0.95rem;
             color: #444;
             outline: none;
+            text-align: center; /* Centers text inside input box */
         }
 
         .btn-next,
