@@ -31,7 +31,7 @@ DEBUG = True
 
 # ALLOWED_HOSTS = ['smswithdjango.herokuapp.com']
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
+CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
 
 
 # Application definition
