@@ -85,6 +85,7 @@
     <div class="container-fluid">
         <div class="row justify-content-center">
             <div class="col-md-11">
+                {% if request.user.user_type|slugify != '1' %}
                 <div class="marks-card">
                     <div class="section-title">
                         <i class="fas fa-edit"></i> Marks Entry
@@ -164,7 +165,9 @@
                         </div>
                     </form>
                 </div>
+                {% endif %}
 
+                {% if request.user.user_type|slugify != '1' %}
                 <!-- Bulk Actions Card -->
                 <div class="marks-card mt-4">
                     <div class="section-title">
@@ -206,6 +209,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -214,6 +218,7 @@
 
 {% block custom_js %}
 <script>
+    var user_type = "{{ request.user.user_type|slugify }}";
     $(document).ready(function () {
         // Sync hidden fields for bulk upload
         $(".sync-subject").val($("#subject").val());
@@ -283,7 +288,12 @@
                 if (!json_data || json_data.length < 1) {
                     $("#student_data").html("<div class='alert alert-info shadow-sm'>No students found for the given criteria. Please verify that the selected Academic Year, Branch, Semester, and Section match your students.</div>");
                 } else {
-                    var div_data = "<div class='table-responsive mt-3'><table class='table table-hover align-middle custom-table'><thead><tr class='bg-light'><th>Student Name</th><th>Roll Number</th><th style='width: 15%'>Objective (30)</th><th style='width: 15%'>Descriptive (10)</th><th style='width: 15%'>Assignment (5)</th><th style='width: 12%'>Total</th></tr></thead><tbody>";
+                    var div_data = "<div class='d-flex justify-content-between align-items-center mb-2'><div><span class='text-muted small'><i class='fas fa-info-circle me-1'></i> Existing marks are locked to prevent accidental overwrite.</span></div>";
+                    if (user_type === '2') {
+                        div_data += "<button type='button' id='unlock_all' class='btn btn-sm btn-outline-warning'><i class='fas fa-unlock me-1'></i> Unlock All for Editing</button>";
+                    }
+                    div_data += "</div>";
+                    div_data += "<div class='table-responsive'><table class='table table-hover align-middle custom-table'><thead><tr class='bg-light'><th>Student Name</th><th>Roll Number</th><th style='width: 15%'>Objective (30)</th><th style='width: 15%'>Descriptive (10)</th><th style='width: 15%'>Assignment (5)</th><th style='width: 12%'>Total</th></tr></thead><tbody>";
 
                     for (key in json_data) {
                         var studentId = json_data[key]['id'];
@@ -311,6 +321,19 @@
                 alert("Error in fetching students: " + error + "\nServer response: " + xhr.responseText);
                 $("#student_data").html("<div class='alert alert-danger'>Could not reach server. Details: " + error + "</div>");
             });
+        });
+
+        // Unlock All Action
+        $(document).on('click', '#unlock_all', function () {
+            if(confirm("Do you want to enable editing for existing marks?")) {
+                $('.mark-input').removeAttr('readonly');
+                $('.mark-input').css('background-color', '#ffffff');
+                $('.mark-input').css('cursor', 'text');
+                $(this).html('<i class="fas fa-lock-open me-1"></i> Editing Enabled').attr('class', 'btn btn-sm btn-warning').attr('disabled', true);
+                
+                // Optional: Remove lock badges
+                $('.badge-success .fa-lock').parent().remove();
+            }
         });
 
         // Auto-calculate total

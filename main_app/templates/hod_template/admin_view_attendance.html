@@ -179,6 +179,155 @@
         padding: 12px 15px !important;
         vertical-align: middle;
     }
+
+    /* Print Styles */
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 5mm;
+        }
+
+        /* Override erpnext-style.css: body { overflow: hidden } */
+        html,
+        body {
+            min-width: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+        }
+
+        /* Force hide sidebar - multiple selectors for max specificity */
+        .erpnext-sidebar,
+        aside.erpnext-sidebar,
+        aside {
+            display: none !important;
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            visibility: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+        }
+
+        /* Hide all other UI chrome */
+        .erpnext-navbar,
+        .no-print,
+        #filterForm,
+        .card-header,
+        .breadcrumb,
+        .page-title,
+        .dashboard-date,
+        .mesh-background,
+        .messages-container,
+        .sidebar-toggle-btn,
+        .college-banner,
+        .user-profile-mini,
+        .theme-toggle,
+        nav.erpnext-navbar {
+            display: none !important;
+        }
+
+        /* Override .master-glass-panel { position: fixed; overflow: hidden } */
+        .master-glass-panel {
+            position: static !important;
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            inset: auto !important;
+        }
+
+        /* Override inline style="overflow-y: auto; height: 100%" */
+        .master-glass-panel>div,
+        .master-glass-panel>.flex-grow-1,
+        .flex-grow-1 {
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+            min-height: 0 !important;
+        }
+
+        .erpnext-main,
+        .content-area,
+        .container-fluid,
+        section.content,
+        #main-content {
+            height: auto !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            width: 100% !important;
+        }
+
+        .attendance-container {
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            background: transparent !important;
+        }
+
+        .table-responsive-custom {
+            overflow: visible !important;
+            overflow-x: visible !important;
+            height: auto !important;
+        }
+
+        .print-only {
+            display: block !important;
+        }
+
+        /* Percentage indicator styling for print */
+        .pct-indicator {
+            background: transparent !important;
+            color: #000 !important;
+            padding: 0 !important;
+            font-weight: bold !important;
+        }
+
+        /* Table formatting — compact for A4 landscape */
+        .attendance-table {
+            border: 1px solid #000 !important;
+            font-size: 9px !important;
+            color: #000 !important;
+            border-collapse: collapse !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+
+        .attendance-table thead th {
+            background: #e9ecef !important;
+            color: #000 !important;
+            border: 1px solid #000 !important;
+            padding: 2px 1px !important;
+            font-weight: bold !important;
+            font-size: 7px !important;
+            white-space: nowrap !important;
+            text-align: center !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .attendance-table tbody td {
+            border: 1px solid #000 !important;
+            padding: 1px !important;
+            background: transparent !important;
+            color: #000 !important;
+            text-align: center !important;
+            font-size: 8px !important;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+    }
 </style>
 {% endblock custom_css %}
 
@@ -271,6 +420,8 @@
                             <button type="submit" class="btn btn-primary btn-action w-100">Show Data</button>
                             <button type="button" class="btn btn-danger btn-action w-100" onclick="window.print()">PDF
                                 Report</button>
+                            <button type="button" class="btn btn-success btn-action w-100" onclick="exportToExcel()"><i
+                                    class="fas fa-file-excel"></i> Excel Report</button>
                             <a href="{% url 'admin_view_attendance' %}"
                                 class="btn btn-light btn-action w-100 border">Reset</a>
                         </div>
@@ -318,6 +469,25 @@
         </form>
 
         {% if filters_applied %}
+        <!-- Print Header (hidden on screen, shown on print) -->
+        <div class="print-only" style="display: none; text-align: center; margin-bottom: 6px;">
+            <div style="font-size: 16px; font-weight: bold; font-family: 'Times New Roman', serif;">SVR ENGINEERING
+                COLLEGE</div>
+            <div style="font-size: 11px; font-weight: bold;">(AUTONOMOUS)</div>
+            <div style="font-size: 8px;">Approved by AICTE, New Delhi, 2(f) &amp; 12(B) Recognition by UGC Act, 1956
+            </div>
+            <div style="font-size: 8px;">Accredited by NBA, NAAC, ISO: 9001: 2015 Certified Instution</div>
+            <div style="font-size: 8px; font-style: italic;">Ayyalur Metta, NANDYAL Dist. - 518 502, A.P.</div>
+            <div style="font-size: 8px; font-style: italic; color: blue; margin-bottom: 4px;">ESTD : 2007</div>
+            <div style="font-size: 10px; font-weight: bold; text-align: left; margin-bottom: 1px;">
+                COURSE: {{ degree_name|default:"BTECH" }}
+            </div>
+            <div style="font-size: 9px; font-weight: bold; text-align: left;">
+                Attendance From: &nbsp; {{ from_date }} To {{ to_date }}
+            </div>
+        </div>
+
+        <!-- Data Table -->
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="attendance-container">
@@ -331,45 +501,47 @@
                     <div class="table-responsive-custom">
                         <table class="table attendance-table" id="attendanceTable">
                             <thead>
+                                <!-- Row 1: Short Code (Subject Name) -->
                                 <tr>
-                                    <th rowspan="2" style="width:50px;">SNo</th>
-                                    <th rowspan="2" style="width:130px;">Roll Number</th>
-                                    <th rowspan="2" style="width:220px;">Student Name</th>
+                                    <th rowspan="3" style="min-width:30px;">Sno</th>
+                                    <th rowspan="3" style="min-width:90px;">Roll No</th>
+                                    <th rowspan="3" style="min-width:150px;">Name</th>
                                     {% for subject in subjects %}
-                                    <th colspan="2">{{ subject.name }}</th>
+                                    <th>{{ subject.name }}</th>
                                     {% endfor %}
-                                    <th rowspan="2" style="width:60px;">TC</th>
-                                    <th rowspan="2" style="width:60px;">TA</th>
-                                    <th rowspan="2" style="width:70px;">%</th>
+                                    <th rowspan="3">T.C</th>
+                                    <th rowspan="3">T.A</th>
+                                    <th rowspan="3">E.A</th>
+                                    <th rowspan="3">%</th>
                                 </tr>
-                                <tr class="bg-dark">
+                                <!-- Row 2: Max Classes -->
+                                <tr>
                                     {% for subject in subjects %}
-                                    <th>Total</th>
-                                    <th>Pres.</th>
+                                    <th>{{ subject.max_classes|default:0 }}</th>
+                                    {% endfor %}
+                                </tr>
+                                <!-- Row 3: T.C / T.A label -->
+                                <tr>
+                                    {% for subject in subjects %}
+                                    <th>T.A</th>
                                     {% endfor %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for student in students_data %}
-                                <tr>
-                                    <td class="font-weight-bold">{{ forloop.counter }}</td>
-                                    <td style="text-align:left; font-weight:600;">{{ student.roll_number }}</td>
-                                    <td style="text-align:left;">{{ student.name|default:"N/A" }}</td>
+                                <tr {% if student.percentage < 65 %}style="background: #fde8e8 !important;"{% endif %}>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td style="text-align:left; white-space:nowrap;">{{ student.roll_number }}</td>
+                                    <td style="text-align:left; white-space:nowrap;">{{ student.name|default:"N/A" }}</td>
 
                                     {% for sd in student.subjects %}
-                                    <td>{{ sd.total }}</td>
-                                    <td class="font-weight-600 {% if sd.present > 0 %}text-success{% endif %}">
-                                        {{ sd.present }}
-                                    </td>
+                                    <td>{{ sd.present }}</td>
                                     {% endfor %}
 
-                                    <td class="bg-light">{{ student.total_classes }}</td>
-                                    <td class="bg-light">{{ student.total_attended }}</td>
-                                    <td>
-                                        <span class="pct-indicator pct-logic" data-pct="{{ student.percentage }}">
-                                            {{ student.percentage }}%
-                                        </span>
-                                    </td>
+                                    <td style="font-weight:bold;">{{ student.total_classes }}</td>
+                                    <td style="font-weight:bold;">{{ student.total_attended }}</td>
+                                    <td>{{ student.excused_absent }}</td>
+                                    <td style="font-weight:bold;">{{ student.percentage }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -389,6 +561,7 @@
                 </div>
             </div>
         </div>
+
         {% else %}
         <div class="row mt-4">
             <div class="col-md-12">
@@ -430,5 +603,19 @@
             }
         });
     });
+
+    function exportToExcel() {
+        var table = document.getElementById('attendanceTable');
+        if (!table) return alert("No data to export!");
+
+        // Load SheetJS dynamically
+        var script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+        script.onload = function () {
+            var wb = XLSX.utils.table_to_book(table, { sheet: "Attendance" });
+            XLSX.writeFile(wb, "Cumulative_Attendance_Report.xlsx");
+        };
+        document.head.appendChild(script);
+    }
 </script>
 {% endblock content %}

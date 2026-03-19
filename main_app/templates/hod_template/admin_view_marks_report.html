@@ -1,0 +1,399 @@
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    .filter-card {
+        height: 100%;
+        margin-bottom: 0px;
+    }
+
+    .filter-card label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .filter-card .form-control {
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        font-size: 13px;
+        padding: 8px 12px;
+        height: auto;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .marks-container {
+        border-radius: var(--radius-lg);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        overflow: hidden;
+        margin-top: 25px;
+    }
+
+    .table-responsive-custom {
+        overflow-x: auto;
+        overflow-y: visible;
+        max-height: none;
+        position: relative;
+    }
+
+    .attendance-table {
+        margin-bottom: 0;
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+
+    .attendance-table thead th {
+        background: #1a3c5e !important;
+        color: #fff !important;
+        text-align: center;
+        vertical-align: middle;
+        padding: 10px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .attendance-table tbody td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        background: transparent;
+        color: var(--text-primary);
+    }
+
+    .attendance-table tbody tr:hover td {
+        background: rgba(99, 102, 241, 0.05) !important;
+    }
+
+    .btn-action {
+        border-radius: var(--radius-pill);
+        padding: 10px 24px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Print Styles */
+    @media print {
+        @page { size: A4 landscape; margin: 5mm; }
+
+        /* Override erpnext-style.css: body { overflow: hidden } */
+        html, body {
+            min-width: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+        }
+
+        /* Force hide sidebar */
+        .erpnext-sidebar,
+        aside.erpnext-sidebar,
+        aside {
+            display: none !important;
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            visibility: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+        }
+
+        /* Hide all other UI chrome */
+        .erpnext-navbar, .no-print, #filterForm,
+        .card-header, .breadcrumb, .page-title, .dashboard-date,
+        .mesh-background, .messages-container,
+        .sidebar-toggle-btn, .college-banner, .user-profile-mini,
+        .theme-toggle, nav.erpnext-navbar {
+            display: none !important;
+        }
+
+        /* Override .master-glass-panel { position: fixed; overflow: hidden } */
+        .master-glass-panel {
+            position: static !important;
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            inset: auto !important;
+        }
+
+        /* Override inline style="overflow-y: auto; height: 100%" */
+        .master-glass-panel > div,
+        .master-glass-panel > .flex-grow-1,
+        .flex-grow-1 {
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+            min-height: 0 !important;
+        }
+
+        .erpnext-main, .content-area, .container-fluid, section.content, #main-content {
+            height: auto !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            width: 100% !important;
+        }
+
+        .marks-container {
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            background: transparent !important;
+        }
+
+        .table-responsive-custom {
+            overflow: visible !important;
+            overflow-x: visible !important;
+            height: auto !important;
+        }
+
+        .print-only { display: block !important; }
+
+        /* Table formatting — compact for A4 landscape */
+        .attendance-table {
+            border: 1px solid #000 !important;
+            font-size: 9px !important;
+            color: #000 !important;
+            border-collapse: collapse !important;
+            width: 100% !important;
+        }
+        .attendance-table thead th {
+            background: #e9ecef !important;
+            color: #000 !important;
+            border: 1px solid #000 !important;
+            padding: 4px 2px !important;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+        }
+        .attendance-table tbody td {
+            border: 1px solid #000 !important;
+            padding: 3px 2px !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        tr { page-break-inside: avoid; }
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+
+        <form method="GET" action="{% url 'admin_view_marks_report' %}" class="no-print" id="filterForm">
+            <div class="row g-4 d-flex align-items-stretch">
+                <!-- Select Details Column -->
+                <div class="col-md-9">
+                    <div class="card erpnext-card filter-card">
+                        <div class="card-header">
+                            <h5 class="card-title text-primary"><i class="fas fa-filter"></i> Select Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label>Branch</label>
+                                    <select name="course" class="form-control" required
+                                        data-value="{{ request.GET.course|default:'' }}">
+                                        <option value="">Select Branch</option>
+                                        {% for c in courses %}
+                                        <option value="{{ c.id }}">{{ c.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Session (Academic Year)</label>
+                                    <select name="session" class="form-control" required
+                                        data-value="{{ request.GET.session|default:'' }}">
+                                        <option value="">Select Session</option>
+                                        {% for s in sessions %}
+                                        <option value="{{ s.id }}">{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Exam Name</label>
+                                    <select name="exam_name" class="form-control" required
+                                        data-value="{{ request.GET.exam_name|default:'' }}">
+                                        <option value="">Select Exam</option>
+                                        {% for exam in exam_names %}
+                                        <option value="{{ exam }}">{{ exam }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Semester</label>
+                                    <select name="semester" class="form-control"
+                                        data-value="{{ request.GET.semester|default:'' }}">
+                                        <option value="">All</option>
+                                        {% for v, n in semesters %}
+                                        <option value="{{ v }}">{{ n }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Section</label>
+                                    <select name="section" class="form-control"
+                                        data-value="{{ request.GET.section|default:'' }}">
+                                        <option value="">All</option>
+                                        {% for v, n in sections %}
+                                        <option value="{{ v }}">{{ n }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Regulation</label>
+                                    <select name="regulation" class="form-control"
+                                        data-value="{{ request.GET.regulation|default:'' }}">
+                                        <option value="">All</option>
+                                        {% for r in regulations %}
+                                        <option value="{{ r.id }}">{{ r.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Column -->
+                <div class="col-md-3">
+                    <div class="card erpnext-card filter-card">
+                        <div class="card-header">
+                            <h5 class="card-title text-success"><i class="fas fa-play-circle"></i> Actions</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center gap-3">
+                            <button type="submit" class="btn btn-primary btn-action w-100">Show Data</button>
+                            <button type="button" class="btn btn-danger btn-action w-100" onclick="window.print()">Print
+                                Report</button>
+                            <a href="{% url 'admin_view_marks_report' %}"
+                                class="btn btn-light btn-action w-100 border">Reset</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        {% if filters_applied %}
+        <!-- Print Header -->
+        <div class="print-only" style="display: none; text-align: center; margin-bottom: 6px;">
+            <div style="font-size: 16px; font-weight: bold; font-family: 'Times New Roman', serif;">SVR ENGINEERING COLLEGE</div>
+            <div style="font-size: 11px; font-weight: bold;">(AUTONOMOUS)</div>
+            <div style="font-size: 8px;">Approved by AICTE, New Delhi, 2(f) &amp; 12(B) Recognition by UGC Act, 1956</div>
+            <div style="font-size: 8px;">Accredited by NBA, NAAC, ISO: 9001: 2015 Certified Instution</div>
+            <div style="font-size: 8px; font-style: italic;">Ayyalur Metta, NANDYAL Dist. - 518 502, A.P.</div>
+            <div style="font-size: 8px; font-style: italic; color: blue; margin-bottom: 6px;">ESTD : 2007</div>
+            <div style="font-size: 16px; font-weight: bold; margin-bottom: 6px;">{{ request.GET.exam_name|upper }} MARKS</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; border: 1px solid #000;">
+                <tr>
+                    <td style="border: 1px solid #000; padding: 6px; font-weight: bold; text-align: left;">Class: {{ selected_semester_name }}{% if selected_section != 'All' %}, SEC-{{ selected_section }}{% endif %}</td>
+                    <td style="border: 1px solid #000; padding: 6px; font-weight: bold; text-align: right;">ACADEMIC YEAR: {{ selected_session }}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <div class="marks-container">
+                    <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
+                        <h5 class="card-title m-0"><i class="fas fa-list-alt text-primary"></i> Marks Report</h5>
+                        <span class="badge bg-primary rounded-pill px-3 py-2">
+                            Exam: {{ request.GET.exam_name }}
+                        </span>
+                    </div>
+                    <div class="table-responsive-custom">
+                        <table class="table attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>SNo</th>
+                                    <th>Roll Number</th>
+                                    <th>Student Name</th>
+                                    {% for subject in subjects %}
+                                    <th>{{ subject.code|default:subject.name }}</th>
+                                    {% endfor %}
+                                    <th>TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students_data %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><strong>{{ student.roll_number }}</strong></td>
+                                    <td style="text-align:left;">{{ student.name }}</td>
+                                    {% for mark in student.marks_list %}
+                                    <td>{{ mark }}</td>
+                                    {% endfor %}
+                                    <td><strong>{{ student.total_marks }}</strong></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="100" class="py-5 text-center">
+                                        <div class="opacity-50">
+                                            <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+                                            <h5 class="text-muted">No marks data found for the selected criteria.</h5>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card erpnext-card">
+                    <div class="card-body text-center py-5">
+                        <div class="opacity-75">
+                            <i class="fas fa-file-invoice fa-4x text-primary mb-4 opacity-50"></i>
+                            <h4 class="font-weight-bold">Ready to View Marks?</h4>
+                            <p class="text-muted max-width-500 mx-auto">Select Branch, Session, and Exam Name from the
+                                filters above to load the report.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Restore select values
+        document.querySelectorAll('select.form-control').forEach(sel => {
+            const val = sel.getAttribute('data-value');
+            if (val) sel.value = val;
+        });
+    });
+</script>
+{% endblock content %}

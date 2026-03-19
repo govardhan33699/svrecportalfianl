@@ -82,7 +82,7 @@
 </div>
 
 <!-- Today's Absentees -->
-<div class="absentees-section">
+<div class="absentees-section" style="margin-bottom: 24px;">
     <div class="erpnext-card">
         <div class="card-header absentees-header">
             <h3 class="card-title" style="font-size:1rem; font-weight:700; display:flex; align-items:center; gap:10px;">
@@ -176,6 +176,224 @@
             </a>
         </div>
     </div>
+    <!-- Latest Updates Grid Section -->
+    <div class="erpnext-card" style="margin-bottom:28px;">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title" style="font-size:1rem; font-weight:700; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-bullhorn me-2"></i> Latest Updates
+            </h3>
+            <a href="{% url 'add_announcement' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> Add Notice
+            </a>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-4" style="font-size:0.85rem; margin-top:-8px;">Manage Circulars, Examinations and Placement Updates</p>
+
+            <div class="updates-grid-container">
+                <!-- News Card -->
+                <div class="update-grid-card news-card">
+                    <div class="ug-card-header bg-news">
+                        <span class="ug-title">News</span>
+                        <i class="fas fa-bullhorn ug-icon"></i>
+                    </div>
+                    <div class="ug-card-body">
+                        {% for item in news_announcements %}
+                        <div class="ug-item d-flex justify-content-between align-items-start">
+                            <div style="flex:1;">
+                                <div class="ug-date">{{ item.created_at|date:"d M Y"|upper }}</div>
+                                <div class="ug-item-title">{{ item.title }}</div>
+                            </div>
+                            <div class="ug-actions ml-2">
+                                <a href="{% url 'edit_announcement' item.id %}" class="text-primary btn-sm"><i class="fas fa-edit"></i></a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="ug-item-empty">No Recent News</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Examinations Card -->
+                <div class="update-grid-card exams-card">
+                    <div class="ug-card-header bg-exams">
+                        <span class="ug-title">Examinations</span>
+                        <i class="fas fa-file-invoice ug-icon"></i>
+                    </div>
+                    <div class="ug-card-body">
+                        {% for item in exam_announcements %}
+                        <div class="ug-item d-flex justify-content-between align-items-start">
+                            <div style="flex:1;">
+                                <div class="ug-date">{{ item.created_at|date:"d M Y"|upper }}</div>
+                                <div class="ug-item-title">{{ item.title }}</div>
+                            </div>
+                            <div class="ug-actions ml-2">
+                                <a href="{% url 'edit_announcement' item.id %}" class="text-primary btn-sm"><i class="fas fa-edit"></i></a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="ug-item-empty">No Exam Updates</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Announcements Card -->
+                <div class="update-grid-card placements-card">
+                    <div class="ug-card-header bg-placements">
+                        <span class="ug-title">Announcements</span>
+                        <i class="fas fa-bell ug-icon"></i>
+                    </div>
+                    <div class="ug-card-body">
+                        {% for item in placement_announcements %}
+                        <div class="ug-item d-flex justify-content-between align-items-start">
+                            <div style="flex:1;">
+                                <div class="ug-date">{{ item.created_at|date:"d M Y"|upper }}</div>
+                                <div class="ug-item-title">{{ item.title }}</div>
+                            </div>
+                            <div class="ug-actions ml-2">
+                                <a href="{% url 'edit_announcement' item.id %}" class="text-primary btn-sm"><i class="fas fa-edit"></i></a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="ug-item-empty">No Announcements</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<style>
+    /* --- Latest Updates Glass Grid --- */
+    .updates-grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .update-grid-card {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.04);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .update-grid-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08);
+    }
+
+    .ug-card-header {
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        background: rgba(255,255,255,0.1);
+    }
+
+    .ug-title {
+        font-weight: 800;
+        font-size: 1rem;
+        letter-spacing: 0.3px;
+    }
+
+    /* Colorized Titles & Icons */
+    .news-card .ug-title { color: #1d4ed8; }
+    .exams-card .ug-title { color: #047857; }
+    .placements-card .ug-title { color: #ea580c; }
+
+    .ug-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .news-card .ug-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .exams-card .ug-icon { background: linear-gradient(135deg, #10b981, #059669); }
+    .placements-card .ug-icon { background: linear-gradient(135deg, #f97316, #ea580c); }
+
+    .ug-card-body {
+        padding: 18px 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .ug-item {
+        padding-bottom: 14px;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+    }
+
+    .ug-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .ug-date {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .ug-item-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #1e293b;
+        line-height: 1.35;
+    }
+
+    .ug-item-desc {
+        font-size: 0.82rem;
+        color: #475569;
+        line-height: 1.4;
+        margin-top: 5px;
+    }
+
+    .ug-item-empty {
+        text-align: center;
+        padding: 40px 0;
+        color: #94a3b8;
+        font-size: 0.88rem;
+        font-style: italic;
+    }
+
+    /* Dark Mode compatibility updates */
+    .dark-mode .update-grid-card {
+        background: rgba(30,30,45,0.6);
+        border-color: rgba(255,255,255,0.08);
+    }
+    .dark-mode .ug-card-body {
+        background: rgba(0,0,0,0.1);
+    }
+    .dark-mode .ug-item-title {
+        color: #f1f5f9;
+    }
+    .dark-mode .ug-item-desc {
+        color: #94a3b8;
+    }
+    .dark-mode .ug-item {
+        border-bottom-color: rgba(255,255,255,0.06);
+    }
+    .dark-mode .news-card .ug-title { color: #60a5fa; }
+    .dark-mode .exams-card .ug-title { color: #34d399; }
+    .dark-mode .placements-card .ug-title { color: #fb923c; }
+</style>
+
 </div>
 {% endblock content %}
 

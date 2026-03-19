@@ -448,8 +448,11 @@ def staff_view_notification(request):
 
 
 def staff_add_result(request):
-    staff = get_object_or_404(Staff, admin=request.user)
-    subjects = Subject.objects.filter(staff=staff)
+    if request.user.user_type == '1': # Admin
+        subjects = Subject.objects.all()
+    else:
+        staff = get_object_or_404(Staff, admin=request.user)
+        subjects = Subject.objects.filter(staff=staff)
     courses = Course.objects.all()
     sections = Student.SECTION
     semesters = SEMESTER_CHOICES

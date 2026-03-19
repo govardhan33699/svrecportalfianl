@@ -417,9 +417,10 @@ class Announcement(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField(blank=True)
     CATEGORY_CHOICES = [
-        ('event', 'Events'),
+        ('news', 'News'),
         ('mid', 'Mid Exams'),
         ('sem', 'Semester Exams'),
+        ('placement', 'Placements'),
         ('holiday', 'Holidays'),
         ('other', 'Other'),
     ]

@@ -103,6 +103,99 @@ def student_home(request):
         due_date__gte=dt_date2.today()
     ).order_by('due_date')[:5]
 
+    # ── CGPA Overview Calculation ──
+    from django.db.models import Q
+    all_results = StudentResult.objects.filter(student=student).select_related('subject')
+    all_subjects = Subject.objects.filter(
+        course=student.course, show_in_marks=True
+    ).filter(
+        Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    ).order_by('order', 'name')
+
+    # Build marks lookup
+    marks_lookup = {}
+    for res in all_results:
+        if res.subject_id not in marks_lookup:
+            marks_lookup[res.subject_id] = {}
+        if res.exam_name:
+            marks_lookup[res.subject_id][res.exam_name] = res.total
+
+    grade_points_map = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
+    total_credits = 0.0
+    total_grade_points = 0.0
+    total_marks_sum = 0.0
+    total_sub_count = 0
+    total_backlogs = 0
+    semesters_with_data = 0
+
+    for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
+        sem_cr = 0.0
+        sem_gp = 0.0
+        sem_has_data = False
+        sem_subs = [sub for sub in all_subjects if (sub.semester or '1') == sem_key]
+        for sub in sem_subs:
+            res = all_results.filter(subject=sub).filter(Q(semester=sem_key) | Q(semester__isnull=True)).first()
+            if not res:
+                res = all_results.filter(subject=sub).first()
+
+            # Internal marks
+            if res and res.internal_marks:
+                im = res.internal_marks
+            else:
+                sub_marks = marks_lookup.get(sub.id, {})
+                int1 = float(sub_marks.get('Mid 1', sub_marks.get('INT-1', sub_marks.get('MID-1', 0))) or 0)
+                int2 = float(sub_marks.get('Mid 2', sub_marks.get('INT-2', sub_marks.get('MID-2', 0))) or 0)
+                m_max = max(int1, int2)
+                m_min = min(int1, int2)
+                im = round((0.8 * m_max) + (0.2 * m_min))
+
+            em = res.external_marks if res else ''
+            tot = im + (float(em) if em else 0)
+
+            if em == '' and im == 0:
+                continue
+
+            sem_has_data = True
+            status = 'P' if tot >= 40 else 'F'
+            if tot >= 90: grade = 'S'
+            elif tot >= 80: grade = 'A'
+            elif tot >= 70: grade = 'B'
+            elif tot >= 60: grade = 'C'
+            elif tot >= 50: grade = 'D'
+            elif tot >= 40: grade = 'E'
+            else: grade = 'F'
+
+            cr_val = float(sub.credits or 0)
+            gp_weight = grade_points_map.get(grade, 0)
+            sem_cr += cr_val
+            sem_gp += gp_weight * cr_val
+            total_marks_sum += tot
+            total_sub_count += 1
+            if status == 'F':
+                total_backlogs += 1
+
+        if sem_has_data:
+            semesters_with_data += 1
+            total_credits += sem_cr
+            total_grade_points += sem_gp
+
+    cgpa = round(total_grade_points / total_credits, 2) if total_credits > 0 else 0.0
+    overall_percentage = round((cgpa - 0.75) * 10, 2) if cgpa > 0 else 0.0
+    # Max marks per subject = 100 (IM + EM), so percentage = avg total
+    max_cgpa = 10.0
+
+    # Class awarded
+    if overall_percentage >= 70:
+        class_awarded = 'First Class with Distinction'
+    elif overall_percentage >= 60:
+        class_awarded = 'First Class'
+    elif overall_percentage >= 50:
+        class_awarded = 'Second Class'
+    elif overall_percentage >= 40:
+        class_awarded = 'Pass'
+    else:
+        class_awarded = 'N/A'
+
     context = {
         'page_title': 'Dashboard',
         'total_attendance': total_attendance,
@@ -117,7 +210,29 @@ def student_home(request):
         'today_name': today_name,
         'upcoming_assignments': upcoming_assignments,
         'greeting': get_greeting(),
+        # CGPA Overview
+        'cgpa': cgpa,
+        'overall_percentage': overall_percentage,
+        'total_backlogs': total_backlogs,
+        'class_awarded': class_awarded,
+        'total_semesters_with_data': semesters_with_data,
+        'total_credits': total_credits,
+        'max_cgpa': max_cgpa,
     }
+
+    # Grouped Announcements for Latest Updates Grid
+    context['news_announcements'] = Announcement.objects.filter(
+        category='news'
+    ).order_by('-created_at')[:5]
+    
+    context['exam_announcements'] = Announcement.objects.filter(
+        category__in=['mid', 'sem']
+    ).order_by('-created_at')[:5]
+    
+    context['placement_announcements'] = Announcement.objects.filter(
+        category__in=['event', 'holiday', 'other', 'placement']
+    ).order_by('-created_at')[:5]
+
     return render(request, 'student_template/erpnext_student_home.html', context)
 
 def get_greeting():
@@ -684,10 +799,14 @@ def student_view_timetable(request):
     # Get all periods
     periods = list(Period.objects.all().order_by('number'))
     
-    # Get timetable entries
-    timetable_entries = Timetable.objects.filter(
-        course=student.course, section=student.section
-    ).select_related('period', 'subject', 'staff', 'staff__admin')
+    # Get timetable entries matching student regulation
+    filters = {'course': student.course, 'section': student.section}
+    if student.regulation:
+        filters['subject__regulation'] = student.regulation
+        
+    timetable_entries = Timetable.objects.filter(**filters).select_related(
+        'period', 'subject', 'staff', 'staff__admin'
+    )
     
     from collections import defaultdict
     DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']

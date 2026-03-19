@@ -40,6 +40,10 @@
             background: rgba(0, 0, 0, 0.2) !important;
         }
 
+        .role-admin .page-title {
+            color: #ffffff !important;
+        }
+
         body {
             min-width: 1200px;
             overflow-x: auto;
@@ -194,10 +198,12 @@
                     <!-- College Banner -->
                     <div class="college-banner d-flex align-items-center">
                         <img src="{% static 'image/college_logo.jpg' %}" alt="Logo" class="banner-logo me-3">
-                        <div class="banner-text">
+                        <div class="banner-text" style="text-align: center;">
                             <h2 class="college-name m-0">SVR ENGINEERING COLLEGE</h2>
                             <p class="college-status m-0">(AUTONOMOUS)</p>
                         </div>
+                        <img src="{% static 'image/nba_logo.png' %}" alt="NBA Logo" style="height: 40px; margin-left: 20px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));">
+                        <img src="{% static 'image/naac_logo.png' %}" alt="NAAC Logo" style="height: 40px; margin-left: 10px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));">
                     </div>
                 </div>
 

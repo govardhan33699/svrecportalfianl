@@ -273,8 +273,7 @@
                 <!-- Instruction Period -->
                 <tr>
                     <td class="event-name">Instruction Period for the Semester</td>
-                    <td class="event-date">{{ calendar.commencement_date|date:"d-m-Y" }} to {{
-                        calendar.instruction_end_date|date:"d-m-Y" }}</td>
+                    <td class="event-date">{{ calendar.commencement_date|date:"d-m-Y" }} to {{ calendar.instruction_end_date|date:"d-m-Y" }}</td>
                     <td class="event-duration">
                         {% widthratio calendar.instruction_end_date|timeuntil:calendar.commencement_date 1 1 %}
                     </td>

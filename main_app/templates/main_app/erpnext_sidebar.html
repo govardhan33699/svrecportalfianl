@@ -273,6 +273,14 @@
         </a>
     </div>
     <div class="nav-item">
+        {% url 'admin_view_marks_report' as admin_view_marks_report %}
+        <a href="{{ admin_view_marks_report }}"
+            class="nav-link {% if admin_view_marks_report == request.path %}active{% endif %}">
+            <i class="nav-icon fas fa-file-invoice"></i>
+            <span class="nav-text">View Marks</span>
+        </a>
+    </div>
+    <div class="nav-item">
         {% url 'student_feedback_message' as student_feedback_message %}
         <a href="{{ student_feedback_message }}"
             class="nav-link {% if student_feedback_message == request.path %}active{% endif %}">
@@ -427,18 +435,18 @@
     <!-- Student Navigation -->
     <h6 class="nav-section-title">Main</h6>
     <div class="nav-item">
-        {% url 'student_home' as student_home %}
-        <a href="{{ student_home }}" class="nav-link {% if student_home == request.path %}active{% endif %}">
-            <i class="nav-icon fas fa-tachometer-alt"></i>
-            <span class="nav-text">Dashboard</span>
-        </a>
-    </div>
-    <div class="nav-item">
         {% url 'student_view_profile' as student_view_profile %}
         <a href="{{ student_view_profile }}"
             class="nav-link {% if student_view_profile == request.path %}active{% endif %}">
             <i class="fas fa-user-circle"></i>
             <span class="nav-text">Profile</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        {% url 'student_home' as student_home %}
+        <a href="{{ student_home }}" class="nav-link {% if student_home == request.path %}active{% endif %}">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <span class="nav-text">Dashboard</span>
         </a>
     </div>
 

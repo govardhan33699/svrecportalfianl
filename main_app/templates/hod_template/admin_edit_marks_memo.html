@@ -154,8 +154,7 @@
                     </thead>
                     <tbody> {% for item in subjects %} <tr>
                             <td>
-                                <div><strong>{{ item.subject.name }}</strong></div> <small class="text-muted">{{
-                                    item.subject.code|default:"No Code" }}</small>
+                                <div><strong>{{ item.subject.name }}</strong></div> <small class="text-muted">{{ item.subject.code|default:"No Code" }}</small>
                             </td>
                             <td style="text-align: center;"> <input type="number" step="0.5"
                                     name="im_{{ item.subject.id }}" value="{{ item.internal_marks|floatformat:" -1" }}"

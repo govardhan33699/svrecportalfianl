@@ -179,49 +179,53 @@
  {% if students %}
  <div class="table-responsive">
  <table class="table align-middle mb-0">
- <thead>
- <tr>
- <th class="ps-4">Profile</th>
- <th>Name</th>
- <th>Roll Number</th>
- <th>Email</th>
- <th>Course</th>
- <th>Regulation</th>
- <th>Section</th>
- <th class="text-end pe-4">Actions</th>
- </tr>
- </thead>
- <tbody>
- {% for student in students %}
- <tr>
- <td class="ps-4">
- {% if student.profile_pic %}
- <img class="student-avatar" src="{{ student.profile_pic.url }}" alt=""
- onerror="this.src='{% static 'dist/img/default-avatar.png' %}';">
- {% else %}
- <img class="student-avatar" src="{% static 'dist/img/default-avatar.png' %}" alt="">
- {% endif %}
- </td>
- <td class="student-name">{{ student.first_name }} {{ student.last_name }}</td>
- <td>{{ student.student.roll_number }}</td>
- <td><small>{{ student.email }}</small></td>
- <td><span class="badge-section">{{ student.student.course.name }}</span></td>
- <td>{{ student.student.regulation.name|default:"N/A" }}</td>
- <td>{{ student.student.get_section_display }}</td>
- <td class="text-end pe-4">
- <div class="action-btn-group">
- <a href="{% url 'view_student_detail' student.student.id %}"
- class="btn btn-primary btn-sm" title="View"><i class="fas fa-eye"></i></a>
- <a href="{% url 'edit_student' student.student.id %}" class="btn btn-info btn-sm"
- title="Edit"><i class="fas fa-edit"></i></a>
- <a href="{% url 'delete_student' student.student.id %}" class="btn btn-danger btn-sm"
- onclick="return confirm('Are you sure?')" title="Delete"><i
- class="fas fa-trash"></i></a>
- </div>
- </td>
- </tr>
- {% endfor %}
- </tbody>
+                <thead>
+                    <tr>
+                        <th class="ps-4">Profile</th>
+                        <th>Roll Number</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Regulation</th>
+                        <th>Year</th>
+                        <th>Semester</th>
+                        <th>Branch</th>
+                        <th>Section</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td class="ps-4">
+                            {% if student.profile_pic %}
+                            <img class="student-avatar" src="{{ student.profile_pic.url }}" alt=""
+                                onerror="this.src='{% static 'dist/img/default-avatar.png' %}';">
+                            {% else %}
+                            <img class="student-avatar" src="{% static 'dist/img/default-avatar.png' %}" alt="">
+                            {% endif %}
+                        </td>
+                        <td style="font-weight:600;">{{ student.student.roll_number }}</td>
+                        <td class="student-name">{{ student.first_name }} {{ student.last_name }}</td>
+                        <td><small>{{ student.email }}</small></td>
+                        <td>{{ student.student.regulation.name|default:"N/A" }}</td>
+                        <td>{{ student.student.academic_year.name|default:"N/A" }}</td>
+                        <td>{{ student.student.semester.name|default:"N/A" }}</td>
+                        <td><span class="badge-section">{{ student.student.course.name }}</span></td>
+                        <td>{{ student.student.get_section_display }}</td>
+                        <td class="text-end pe-4">
+                            <div class="action-btn-group">
+                                <a href="{% url 'view_student_detail' student.student.id %}"
+                                    class="btn btn-primary btn-sm" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'edit_student' student.student.id %}" class="btn btn-info btn-sm"
+                                    title="Edit"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'delete_student' student.student.id %}" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure?')" title="Delete"><i
+                                        class="fas fa-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
  </table>
  </div>
  {% else %}

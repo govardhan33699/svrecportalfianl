@@ -152,6 +152,20 @@ def admin_home(request):
 
     activities.sort(key=lambda x: x['time'], reverse=True)
     context['recent_activities'] = activities[:10]
+
+    # Grouped Announcements for Latest Updates Grid
+    context['news_announcements'] = Announcement.objects.filter(
+        category='news'
+    ).order_by('-created_at')[:5]
+    
+    context['exam_announcements'] = Announcement.objects.filter(
+        category__in=['mid', 'sem']
+    ).order_by('-created_at')[:5]
+    
+    context['placement_announcements'] = Announcement.objects.filter(
+        category__in=['event', 'holiday', 'other', 'placement']
+    ).order_by('-created_at')[:5]
+
     return render(request, 'hod_template/home_content.html', context)
 
 
@@ -1172,6 +1186,10 @@ def admin_view_attendance(request):
 
             if row['total_classes'] > 0:
                 row['percentage'] = round((row['total_attended'] / row['total_classes']) * 100, 2)
+                if float(row['percentage']).is_integer():
+                    row['percentage'] = int(row['percentage'])
+
+            row['excused_absent'] = row['total_classes'] - row['total_attended']
 
             # Summary calculation
             pct = row['percentage']
@@ -1187,6 +1205,25 @@ def admin_view_attendance(request):
             students_data.append(row)
             total_students += 1
 
+        # Compute max classes per subject (total attendance records for each subject)
+        for subject in subjects_list:
+            max_cls = Attendance.objects.filter(
+                subject=subject,
+                **att_filter
+            ).count()
+            subject.max_classes = max_cls
+
+    # Get descriptive names for selected filters for printing
+    selected_course = Course.objects.filter(id=course_id).first() if course_id else None
+    selected_session = Session.objects.filter(id=session_id).first() if session_id else None
+    selected_semester_name = next((n for v, n in semesters if v == semester), '') if semester else 'All'
+
+    # Get degree name from course
+    degree_name = ''
+    if selected_course and selected_course.degree:
+        degree_name = selected_course.degree.name
+
+    from datetime import date
     context = {
         'courses': courses,
         'sessions': sessions,
@@ -1198,10 +1235,106 @@ def admin_view_attendance(request):
         'summary': summary,
         'total_students': total_students,
         'filters_applied': filters_applied,
-        'page_title': 'View Attendance'
+        'page_title': 'View Attendance',
+        'selected_course': selected_course,
+        'selected_session': selected_session,
+        'selected_semester_name': selected_semester_name,
+        'selected_section': section if section else 'All',
+        'from_date': from_date or '',
+        'to_date': to_date or '',
+        'report_date': date.today().strftime('%d/%m/%Y'),
+        'degree_name': degree_name,
     }
 
     return render(request, "hod_template/admin_view_attendance.html", context)
+
+
+def admin_view_marks_report(request):
+    courses = Course.objects.all()
+    sessions = Session.objects.all()
+    sections = Student.SECTION
+    semesters = SEMESTER_CHOICES
+    regulations = Regulation.objects.all()
+
+    students_data = []
+    subjects_list = []
+    filters_applied = False
+
+    course_id = request.GET.get('course')
+    section = request.GET.get('section')
+    semester = request.GET.get('semester')
+    session_id = request.GET.get('session')
+    regulation_id = request.GET.get('regulation')
+    exam_name = request.GET.get('exam_name')
+
+    if course_id and session_id:
+        filters_applied = True
+        subjects_qs = Subject.objects.filter(course_id=course_id)
+        if semester:
+            subjects_qs = subjects_qs.filter(semester=semester)
+        if regulation_id:
+            subjects_qs = subjects_qs.filter(regulation_id=regulation_id)
+        subjects_list = list(subjects_qs)
+
+        student_qs = Student.objects.filter(course_id=course_id).select_related('admin', 'course', 'regulation')
+        if section:
+            student_qs = student_qs.filter(section=section)
+        if semester:
+            student_qs = student_qs.filter(semester=semester)
+        if regulation_id:
+            student_qs = student_qs.filter(regulation_id=regulation_id)
+
+        for student in student_qs:
+            row = {
+                'roll_number': student.roll_number or 'N/A',
+                'name': f"{student.admin.first_name} {student.admin.last_name}",
+                'marks_list': [],
+                'total_marks': 0,
+            }
+            for subject in subjects_list:
+                result = StudentResult.objects.filter(
+                    student=student,
+                    subject=subject,
+                    exam_name=exam_name
+                ).first()
+                mark = result.total if result else 0
+                if float(mark).is_integer():
+                    mark = int(mark)
+                row['marks_list'].append(mark)
+                if result:
+                    row['total_marks'] += result.total
+
+            if float(row['total_marks']).is_integer():
+                row['total_marks'] = int(row['total_marks'])
+            students_data.append(row)
+
+    # Get unique exam names for the filter dropdown
+    exam_names = StudentResult.objects.values_list('exam_name', flat=True).distinct()
+    exam_names = [e for e in exam_names if e]  # filter out None
+
+    # Get descriptive names for selected filters for printing
+    selected_course = Course.objects.filter(id=course_id).first() if course_id else None
+    selected_session = Session.objects.filter(id=session_id).first() if session_id else None
+    selected_semester_name = next((n for v, n in semesters if v == semester), '') if semester else 'All'
+
+    context = {
+        'courses': courses,
+        'sessions': sessions,
+        'sections': sections,
+        'semesters': semesters,
+        'regulations': regulations,
+        'exam_names': exam_names,
+        'subjects': subjects_list,
+        'students_data': students_data,
+        'filters_applied': filters_applied,
+        'page_title': 'View Marks Report',
+        'selected_course': selected_course,
+        'selected_session': selected_session,
+        'selected_semester_name': selected_semester_name,
+        'selected_section': section if section else 'All'
+    }
+
+    return render(request, "hod_template/admin_view_marks_report.html", context)
 
 
 @csrf_exempt
@@ -2159,3 +2292,113 @@ def admin_edit_marks_memo(request, student_id):
         'page_title': 'Edit Marks Memo'
     }
     return render(request, "hod_template/admin_edit_marks_memo.html", context)
+
+def admin_view_results_traditional(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    results = StudentResult.objects.filter(student=student).select_related('subject')
+
+    from django.db.models import Q
+    from collections import OrderedDict
+
+    # Get all subjects for the student's course and regulation
+    all_subjects = Subject.objects.filter(
+        course=student.course, show_in_marks=True
+    ).filter(
+        Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    ).order_by('order', 'name')
+
+    # Build marks lookup: {subject_id: {exam_name: total}}
+    marks_lookup = {}
+    for res in results:
+        if res.subject_id not in marks_lookup:
+            marks_lookup[res.subject_id] = {}
+        if res.exam_name:
+            marks_lookup[res.subject_id][res.exam_name] = res.total
+
+    # Organize subjects by semester
+    sem_subjects = {}
+    sem_stats = {}
+    for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
+        sem_subjects[sem_key] = []
+        sem_stats[sem_key] = {'cr': 0.0, 'gp': 0.0, 'tot': 0.0, 'sub_count': 0, 'backlogs': 0}
+
+    for sub in all_subjects:
+        sem = sub.semester or student.semester or '1'
+        if sem in sem_subjects:
+            res = results.filter(subject=sub).filter(Q(semester=sem) | Q(semester__isnull=True)).first()
+            if not res:
+                res = results.filter(subject=sub).first()
+            
+            if res and res.internal_marks:
+                im = res.internal_marks
+            else:
+                sub_marks = marks_lookup.get(sub.id, {})
+                int1 = float(sub_marks.get('Mid 1', sub_marks.get('INT-1', sub_marks.get('MID-1', 0))) or 0)
+                int2 = float(sub_marks.get('Mid 2', sub_marks.get('INT-2', sub_marks.get('MID-2', 0))) or 0)
+                m_max = max(int1, int2)
+                m_min = min(int1, int2)
+                im = round((0.8 * m_max) + (0.2 * m_min))
+
+            em = res.external_marks if res else ''
+            tot = im + (float(em) if em else 0)
+
+            if em == '' and im == 0:
+                status = ''
+                grade = ''
+            else:
+                status = 'Pass' if tot >= 40 else 'Fail'
+                if tot >= 90: grade = 'S'
+                elif tot >= 80: grade = 'A'
+                elif tot >= 70: grade = 'B'
+                elif tot >= 60: grade = 'C'
+                elif tot >= 50: grade = 'D'
+                elif tot >= 40: grade = 'E'
+                else: grade = 'F'
+                
+                grade_points = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
+                gp_weight = grade_points.get(grade, 0)
+                cr_val = float(sub.credits or 0)
+                
+                sem_stats[sem]['cr'] += cr_val
+                sem_stats[sem]['gp'] += gp_weight * cr_val
+                sem_stats[sem]['tot'] += tot
+                sem_stats[sem]['sub_count'] += 1
+                if status == 'Fail':
+                    sem_stats[sem]['backlogs'] += 1
+
+            sem_subjects[sem].append({
+                'name': sub.name,
+                'code': sub.code or '',
+                'im': im,
+                'em': em,
+                'tot': tot,
+                'status': status,
+                'grade': grade,
+                'cr': sub.credits or '',
+            })
+
+    for sk in sem_stats:
+        s = sem_stats[sk]
+        s['sgpa'] = round(s['gp'] / s['cr'], 2) if s['cr'] > 0 else 0.00
+        s['percentage'] = round(s['tot'] / s['sub_count'], 1) if s['sub_count'] > 0 else 0.0
+
+    semester_labels_short = {
+        '1': '1-1 Sem', '2': '1-2 Sem', '3': '2-1 Sem', '4': '2-2 Sem',
+        '5': '3-1 Sem', '6': '3-2 Sem', '7': '4-1 Sem', '8': '4-2 Sem'
+    }
+
+    semester_labels = {
+        '1': 'I B.Tech. I Sem.', '2': 'I B.Tech. II Sem.', '3': 'II B.Tech. I Sem.', '4': 'II B.Tech. II Sem.',
+        '5': 'III B.Tech. I Sem.', '6': 'III B.Tech. II Sem.', '7': 'IV B.Tech. I Sem.', '8': 'IV B.Tech. II Sem.',
+    }
+
+    context = {
+        'student': student,
+        'sem_subjects': sem_subjects,
+        'sem_stats': sem_stats,
+        'semester_labels_short': semester_labels_short,
+        'semester_labels': semester_labels,
+        'page_title': 'Sem-wise Results',
+    }
+    return render(request, "student_template/student_view_results_traditional.html", context)
+
