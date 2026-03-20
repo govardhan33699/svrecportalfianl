@@ -1,1 +1,483 @@
-{% extends 'main_app/erpnext_base.html' %} {% load static %} {% block custom_css %}   <style>       .invalid{         font-style: italic;         font-weight: bold;         color: red;       }       .valid{         font-style: italic;         font-weight: bold;         color: green;       }   </style> {% endblock custom_css %} {% block page_title %}{{page_title}}{% endblock page_title %}  {% block content %}  <section class="content">     <div class="container-fluid">         <div class="row">             <div class="col-md-12">                 <!-- general form elements -->                 <div class="card card-dark">                     <div class="card-header">                         <h3 class="card-title">{{page_title}}</h3>                     </div>                      {% include "main_app/form_template.html" with messages=messages  form=form button_text="Add Student"%}                 </div>                 <!-- /.card -->              </div>         </div>     </div> </section> {% endblock content %} {% block custom_js %} <script>     function validateEmail(email) {         const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;         return re.test(String(email).toLowerCase());     }     $(document).ready(function(){         $("#id_email").keyup(function(){                          var email = $(this).val()             if (validateEmail(email)){             $.ajax({                 url: "{% url 'check_email_availability' %}",                 type: 'POST',                 data:{email:email}             }).done(function(response){                 if (response == "True"){                     $(".email_error").remove()                     $("<span class='invalid email_error'>Email Address Already Exist</span>").insertAfter("#id_email");                 }                 else{                     $(".email_error").remove()                      $("<span class='valid email_error'>Email Address Available</span>").insertAfter("#id_email");                 }             }).fail(function(response){                 $("<span class='alert alert-warning'>Server Could Not Process This</span>").insertAfter("#id_email");             })         }         })     }); </script> {% endblock custom_js %}
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+
+{% block custom_css %}
+<style>
+    /* Sleek Multi-Step Styles */
+    .card-registration {
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        border: none;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+
+    .card-registration .card-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 25px 35px;
+        border: none;
+    }
+
+    .card-registration .card-title {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        font-size: 1.5rem;
+    }
+
+    /* Tabs Styling */
+    .nav-pills-custom {
+        background: #f4f5f7;
+        border-radius: 14px;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .nav-pills-custom .nav-link {
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #64748b;
+        padding: 12px 20px;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .nav-pills-custom .nav-link:hover {
+        background: rgba(0,0,0,0.03);
+        color: #334155;
+    }
+
+    .nav-pills-custom .nav-link.active {
+        background: white;
+        color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+    }
+
+    /* Form Layouts */
+    .form-label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 11px 16px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.92rem;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .invalid {
+        font-size: 0.8rem;
+        color: #ef4444;
+        font-weight: 500;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .valid {
+        font-size: 0.8rem;
+        color: #10b981;
+        font-weight: 500;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .tab-pane {
+        padding-top: 25px;
+    }
+
+    /* Buttons */
+    .btn-step {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: transform 0.2s;
+    }
+
+    .btn-step:active {
+        transform: scale(0.98);
+    }
+
+    .btn-next {
+        background: #4f46e5;
+        color: white;
+        border: none;
+    }
+
+    .btn-next:hover {
+        background: #4338ca;
+        color: white;
+    }
+
+    .btn-prev {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+    }
+
+    .btn-prev:hover {
+        background: #e2e8f0;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-md-12">
+                <div class="card card-registration mb-5">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title m-0">New Student Registration</h3>
+                        <span class="badge bg-white text-primary" id="stepIndicator">Step 1 of 5</span>
+                    </div>
+
+                    <form role="form" method="POST" enctype="multipart/form-data" id="studentForm">
+                        {% csrf_token %}
+                        <div class="card-body p-4 p-md-5">
+
+                            <!-- Messages (General Errors) -->
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger mb-4">
+                                {{ form.non_field_errors }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Nav Tabs Header -->
+                            <ul class="nav nav-pills nav-pills-custom nav-justified mb-4" id="studentFormTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="basic-info-tab" data-bs-toggle="pill" data-bs-target="#basic-info" type="button" role="tab">Basic Info</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="admission-tab" data-bs-toggle="pill" data-bs-target="#admission" type="button" role="tab">Admission & CET</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="address-tab" data-bs-toggle="pill" data-bs-target="#address-pane" type="button" role="tab">Address</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="parents-tab" data-bs-toggle="pill" data-bs-target="#parents" type="button" role="tab">Parents</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="financial-tab" data-bs-toggle="pill" data-bs-target="#financial" type="button" role="tab">Financial</button>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="studentFormContent">
+
+                                <!-- 1. Basic Info -->
+                                <div class="tab-pane fade show active" id="basic-info" role="tabpanel">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.academic_year.label }}</label>
+                                            {{ form.academic_year }}
+                                            {{ form.academic_year.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.semester.label }}</label>
+                                            {{ form.semester }}
+                                            {{ form.semester.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.course.label }}</label>
+                                            {{ form.course }}
+                                            {{ form.course.errors }}
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.session.label }}</label>
+                                            {{ form.session }}
+                                            {{ form.session.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.regulation.label }}</label>
+                                            {{ form.regulation }}
+                                            {{ form.regulation.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.section.label }}</label>
+                                            {{ form.section }}
+                                            {{ form.section.errors }}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.full_name.label }}</label>
+                                            {{ form.full_name }}
+                                            {{ form.full_name.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.roll_number.label }}</label>
+                                            {{ form.roll_number }}
+                                            {{ form.roll_number.errors }}
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.date_of_birth.label }}</label>
+                                            {{ form.date_of_birth }}
+                                            {{ form.date_of_birth.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.gender.label }}</label>
+                                            {{ form.gender }}
+                                            {{ form.gender.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.profile_pic.label }}</label>
+                                            {{ form.profile_pic }}
+                                            {{ form.profile_pic.errors }}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.email.label }}</label>
+                                            {{ form.email }}
+                                            <span id="email_status"></span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.password.label }}</label>
+                                            {{ form.password }}
+                                            {{ form.password.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Admission & CET -->
+                                <div class="tab-pane fade" id="admission" role="tabpanel">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.admission_number.label }}</label>
+                                            {{ form.admission_number }}
+                                            {{ form.admission_number.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.admission_date.label }}</label>
+                                            {{ form.admission_date }}
+                                            {{ form.admission_date.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.admission_type.label }}</label>
+                                            {{ form.admission_type }}
+                                            {{ form.admission_type.errors }}
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.aadhar_number.label }}</label>
+                                            {{ form.aadhar_number }}
+                                            {{ form.aadhar_number.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.apaar_id.label }}</label>
+                                            {{ form.apaar_id }}
+                                            {{ form.apaar_id.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.caste.label }}</label>
+                                            {{ form.caste }}
+                                            {{ form.caste.errors }}
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.nationality.label }}</label>
+                                            {{ form.nationality }}
+                                            {{ form.nationality.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.religion.label }}</label>
+                                            {{ form.religion }}
+                                            {{ form.religion.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.mother_tongue.label }}</label>
+                                            {{ form.mother_tongue }}
+                                            {{ form.mother_tongue.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Address -->
+                                <div class="tab-pane fade" id="address-pane" role="tabpanel">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label">{{ form.address.label }}</label>
+                                            {{ form.address }}
+                                            {{ form.address.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Parents -->
+                                <div class="tab-pane fade" id="parents" role="tabpanel">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.father_name.label }}</label>
+                                            {{ form.father_name }}
+                                            {{ form.father_name.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.father_occupation.label }}</label>
+                                            {{ form.father_occupation }}
+                                            {{ form.father_occupation.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Parent Mobile Number (Father)</label>
+                                            {{ form.parent_mobile_number }}
+                                            {{ form.parent_mobile_number.errors }}
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.mother_name.label }}</label>
+                                            {{ form.mother_name }}
+                                            {{ form.mother_name.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.mother_occupation.label }}</label>
+                                            {{ form.mother_occupation }}
+                                            {{ form.mother_occupation.errors }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">{{ form.mother_mobile_number.label }}</label>
+                                            {{ form.mother_mobile_number }}
+                                            {{ form.mother_mobile_number.errors }}
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">Student Mobile Number</label>
+                                            {{ form.mobile_number }}
+                                            {{ form.mobile_number.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Financial -->
+                                <div class="tab-pane fade" id="financial" role="tabpanel">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.annual_income.label }}</label>
+                                            {{ form.annual_income }}
+                                            {{ form.annual_income.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div> <!-- End Tab Content -->
+
+                        </div> <!-- End Card Body -->
+
+                        <div class="card-footer border-top-0 d-flex justify-content-between p-4 p-md-5 bg-transparent">
+                            <button type="button" class="btn btn-step btn-prev" id="prevBtn" onclick="prevTab()" style="display:none;">
+                                <i class="fas fa-arrow-left me-2"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-step btn-next ms-auto" id="nextBtn" onclick="nextTab()">
+                                Next Step <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="submit" class="btn btn-step btn-success ms-auto" id="submitBtn" style="display:none; background: #10b981; border: none;">
+                                <i class="fas fa-check-circle me-2"></i> Register Student
+                            </button>
+                        </div>
+
+                    </form>
+                </div> <!-- End Card -->
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    // Step indicator update
+    const stepsCount = 5;
+    function updateStepIndicator() {
+        const activeTab = document.querySelector('.nav-link.active');
+        const activeIndex = Array.from(activeTab.parentElement.parentElement.children).indexOf(activeTab.parentElement) + 1;
+        document.getElementById('stepIndicator').innerText = `Step ${activeIndex} of ${stepsCount}`;
+    }
+
+    function nextTab() {
+        const triggerEl = document.querySelector('#studentFormTabs .nav-link.active');
+        const nextListItem = triggerEl.parentElement.nextElementSibling;
+        if (nextListItem) {
+            const nextButton = nextListItem.querySelector('button');
+            const bsTab = new bootstrap.Tab(nextButton);
+            bsTab.show();
+        }
+    }
+
+    function prevTab() {
+        const triggerEl = document.querySelector('#studentFormTabs .nav-link.active');
+        const prevListItem = triggerEl.parentElement.previousElementSibling;
+        if (prevListItem) {
+            const prevButton = prevListItem.querySelector('button');
+            const bsTab = new bootstrap.Tab(prevButton);
+            bsTab.show();
+        }
+    }
+
+    document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(tabEl => {
+        tabEl.addEventListener('shown.bs.tab', function (event) {
+            const activeTab = event.target;
+            const listItems = Array.from(activeTab.parentElement.parentElement.children);
+            const activeIndex = listItems.indexOf(activeTab.parentElement);
+
+            // Toggle Previous Button
+            if (activeIndex === 0) {
+                document.getElementById('prevBtn').style.display = 'none';
+            } else {
+                document.getElementById('prevBtn').style.display = 'block';
+            }
+
+            // Toggle Next / Submit Button
+            if (activeIndex === listItems.length - 1) {
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'block';
+            } else {
+                document.getElementById('nextBtn').style.display = 'block';
+                document.getElementById('submitBtn').style.display = 'none';
+            }
+
+            updateStepIndicator();
+        });
+    });
+
+    // Email Availability Check (Retained from original)
+    function validateEmail(email) {
+        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+
+    $(document).ready(function(){
+        $("#id_email").keyup(function(){
+            var email = $(this).val();
+            if (validateEmail(email)){
+                $.ajax({
+                    url: "{% url 'check_email_availability' %}",
+                    type: 'POST',
+                    data: { email: email, csrfmiddlewaretoken: '{{ csrf_token }}' }
+                }).done(function(response){
+                    $(".email_error").remove();
+                    if (response == "True"){
+                        $("<span class='invalid email_error'>Email Address Already Exists</span>").insertAfter("#id_email");
+                    } else {
+                        $("<span class='valid email_error'>Email Address Available</span>").insertAfter("#id_email");
+                    }
+                }).fail(function(){
+                    $(".email_error").remove();
+                    $("<span class='invalid email_error'>Error checking availability</span>").insertAfter("#id_email");
+                });
+            }
+        });
+    });
+</script>
+{% endblock custom_js %}

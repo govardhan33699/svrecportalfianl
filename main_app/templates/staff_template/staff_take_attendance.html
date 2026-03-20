@@ -4,6 +4,53 @@
 
 {% block custom_css %}
 <style>
+    /* ── Redesigned Success Modal Gauge ──────────── */
+    #attendanceSuccessModal {
+        z-index: 9999 !important;
+    }
+    
+    .glass-stat-pill {
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        backdrop-filter: blur(10px);
+    }
+    .glass-stat-pill.present {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+    .glass-stat-pill.absent {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .absent-card-list {
+        background: rgba(248, 250, 252, 0.8);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    .dark-mode .absent-card-list {
+        background: rgba(30, 41, 59, 0.5);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes pulse-ring {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .success-pulse {
+        animation: pulse-ring 2s infinite ease-in-out;
+    }
     /* ── Filter Bar ─────────────────────────────── */
     .filter-bar {
         display: flex;
@@ -622,14 +669,61 @@
 
     </div>
 </section>
+
+<!-- Attendance Success Modal -->
+<div class="modal fade" id="attendanceSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15); overflow: hidden; pointer-events: auto;">
+            <div class="modal-body text-center p-4">
+                <!-- Header Icon with Pulse -->
+                <div style="position: relative; width: 60px; height: 60px; margin: 0 auto 15px;">
+                    <div class="success-pulse" style="position: absolute; inset: 0; background: rgba(16, 185, 129, 0.15); border-radius: 50%;"></div>
+                    <div style="position: absolute; inset: 5px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+
+                <h5 style="font-weight: 800; color: #0f172a; margin-bottom: 2px; letter-spacing: -0.5px;">Attendance Submitted!</h5>
+                <p id="modal_class_title" style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 20px;">Class Information</p>
+                <!-- Glossy Stats Pills -->
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <div class="glass-stat-pill present">
+                        <i class="fas fa-user-check"></i> <span id="modal_present_count">0</span> Present
+                    </div>
+                    <div class="glass-stat-pill absent">
+                        <i class="fas fa-user-times"></i> <span id="modal_absent_count">0</span> Absent
+                    </div>
+                </div>
+
+                <!-- Absent List Section -->
+                <div class="absent-card-list text-start">
+                    <h6 style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 5px;">
+                        <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%;"></span> Absent List
+                    </h6>
+                    <ul id="modal_absent_list" style="list-style: none; padding: 0; margin: 0; font-size: 12px; color: #334155;">
+                        <!-- JS populated -->
+                    </ul>
+                    <div id="modal_no_absentees" style="font-size: 12px; color: #94a3b8; text-align: center; display: none; padding: 10px;">
+                        <i class="fas fa-circle-check me-1" style="color: #10b981;"></i> Perfect Attendance!
+                    </div>
+                </div>
+
+                <button type="button" class="btn w-100 mt-3" onclick="closeSuccessModal()" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: white; border: none; border-radius: 14px; padding: 12px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); transition: transform 0.2s; cursor: pointer !important; pointer-events: auto !important;">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block custom_js %}
 <script>
+    var selected_period = null;
+    var selected_subject = null;
+    var selected_section = null;
+
     $(document).ready(function () {
-        var selected_period = null;
-        var selected_subject = null;
-        var selected_section = null;
+        // Fix Stacking Context for Custom Modal: Move to body root
+        $('#attendanceSuccessModal').appendTo('body');
 
         function loadGrid() {
             var date = $("#attendance_date").val();
@@ -824,25 +918,74 @@
                 }
             }).done(function (response) {
                 if (response === 'OK') {
-                    alert("Attendance saved successfully!");
-                    loadGrid();
-                    $("#student_list_container").hide();
-                    selected_period = null;
-                    selected_subject = null;
+                    // 1. Calculate stats
+                    var total = $(".student-chk").length;
+                    var present = $(".student-chk:checked").length;
+                    var absent = total - present;
+
+                    // 2. Fetch Absent Students
+                    var absentHtml = "";
+                    $(".student-chk:not(:checked)").each(function() {
+                        var card = $(this).closest('.student-card');
+                        var name = card.find('.student-name').text();
+                        var roll = card.find('.student-roll').text();
+                        absentHtml += '<li style="margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">' +
+                                      '<span style="color: #ef4444; font-weight: bold; font-size: 14px;">•</span> ' +
+                                      '<span>' + name + ' <span style="color: #94a3b8; font-size: 11px;">(' + roll + ')</span></span>' +
+                                      '</li>';
+                    });
+
+                    // 3. Populate Modal
+                    $("#modal_present_count").text(present);
+                    $("#modal_absent_count").text(absent);
+                    $("#modal_absent_list").html(absentHtml);
+                    $("#modal_absent_list").html(absentHtml);
+
+                    if (absent === 0) {
+                        $("#modal_no_absentees").show();
+                    } else {
+                        $("#modal_no_absentees").hide();
+                    }
+
+                    // Set Title
+                    var cardData = $(".selected");
+                    var classTitle = cardData.data('name') + " — Period " + cardData.data('period');
+                    $("#modal_class_title").text(classTitle);
+
+                    // 4. Show Modal (Fail-Safe Singleton)
+                    var modalEl = document.getElementById('attendanceSuccessModal');
+                    var successModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    successModal.show();
+
                 } else if (response === 'ALREADY_TAKEN') {
-                    alert("Attendance has already been taken for this period. The page will refresh to reflect the latest status.");
+                    console.log("Attendance has already been taken for this period.");
                     loadGrid();
                     $("#student_list_container").hide();
                 } else {
-                    alert("Error: " + response);
+                    console.log("Error: " + response);
                 }
                 btn.removeAttr("disabled").html('<i class="fas fa-save"></i> Save Attendance');
             }).fail(function () {
-                alert("Error saving attendance.");
+                console.log("Error saving attendance.");
+                btn.removeAttr("disabled").html('<i class="fas fa-save"></i> Save Attendance');
                 btn.removeAttr("disabled").html('<i class="fas fa-save"></i> Save Attendance');
             });
         });
     });
+
+    // Explicit close function with brute force cleanup (Fixes stuck UI)
+    function closeSuccessModal() {
+        var myModalEl = document.getElementById('attendanceSuccessModal');
+        $(myModalEl).removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css({ 'overflow': '', 'padding-right': '' });
+
+        if (typeof loadGrid === 'function') loadGrid();
+        $("#student_list_container").hide();
+        
+        selected_period = null;
+        selected_subject = null;
+    }
 
     function toggleStudent(card) {
         var chk = $(card).find('.student-chk');

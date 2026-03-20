@@ -880,22 +880,44 @@ def student_submit_assignment(request, assignment_id):
 
 
 def student_change_password(request):
+    user = request.user
     if request.method == 'POST':
         form = StudentChangePasswordForm(request.POST)
         if form.is_valid():
             new_password = form.cleaned_data.get('new_password')
-            user = request.user
-            user.set_password(new_password)
-            user.save()
-            messages.success(request, "Password Changed Successfully! Please login again.")
-            return redirect(reverse('login_page'))
+            
+            email = form.cleaned_data.get('email')
+            
+            # Check if email is already taken by someone else
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            if User.objects.filter(email=email).exclude(id=user.id).exists():
+                messages.error(request, "Email is already taken. Please choose another one.")
+                context = {'form': form, 'page_title': 'Change Password'}
+                return render(request, "student_template/student_change_password.html", context)
+                
+            user.email = email
+            
+            if new_password:
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, "Profile & Password Updated Successfully! Please login again.")
+                return redirect(reverse('login_page'))
+            else:
+                user.save()
+                # Update session to maintain login if password didn't change (optional but good)
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, user)
+                messages.success(request, "Profile Updated Successfully!")
         else:
-            messages.error(request, "Passwords do not match")
+            messages.error(request, "Invalid form submission or passwords do not match")
     else:
-        form = StudentChangePasswordForm()
+        form = StudentChangePasswordForm(initial={
+            'email': user.email
+        })
     context = {
         'form': form,
-        'page_title': 'Change Password'
+        'page_title': 'Update Profile'
     }
     return render(request, "student_template/student_change_password.html", context)
 
@@ -932,7 +954,12 @@ def student_attendance_report(request):
     total_attended = 0
     
     for subject in subjects:
-        attendance_count = Attendance.objects.filter(subject=subject, session=student.session, semester=current_semester).count()
+        attendance_count = AttendanceReport.objects.filter(
+            attendance__subject=subject, 
+            attendance__session=student.session,
+            attendance__semester=current_semester,
+            student=student
+        ).count()
         present_count = AttendanceReport.objects.filter(
             attendance__subject=subject, 
             attendance__session=student.session,

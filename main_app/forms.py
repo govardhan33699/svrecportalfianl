@@ -377,8 +377,10 @@ class AssignmentSubmissionForm(FormSettings):
 
 
 class StudentChangePasswordForm(forms.Form):
-    new_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter new password'}))
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm new password'}))
+    email = forms.EmailField(label="Email (Username)", widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email'}))
+    
+    new_password = forms.CharField(required=False, label="New Password (optional)", widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter new password to change'}))
+    confirm_password = forms.CharField(required=False, label="Confirm Password", widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm new password'}))
 
     def clean(self):
         cleaned_data = super().clean()

@@ -92,9 +92,9 @@
                         <div class="sd-gauge-ring">
                             <svg viewBox="0 0 120 120" class="sd-gauge-svg">
                                 <circle cx="60" cy="60" r="52" class="sd-gauge-bg" />
-                                <circle cx="60" cy="60" r="52" class="sd-gauge-fill sd-gauge-cgpa" 
-                                    stroke-dasharray="326.73" stroke-dashoffset="326.73" 
-                                    data-value="{{ cgpa }}" data-max="{{ max_cgpa }}" />
+                                <circle cx="60" cy="60" r="52" class="sd-gauge-fill sd-gauge-cgpa"
+                                    stroke-dasharray="326.73" stroke-dashoffset="326.73" data-value="{{ cgpa }}"
+                                    data-max="{{ max_cgpa }}" />
                             </svg>
                             <div class="sd-gauge-label">
                                 <span class="sd-gauge-value">{{ cgpa }}</span>
@@ -106,8 +106,8 @@
                         <div class="sd-gauge-ring">
                             <svg viewBox="0 0 120 120" class="sd-gauge-svg">
                                 <circle cx="60" cy="60" r="52" class="sd-gauge-bg" />
-                                <circle cx="60" cy="60" r="52" class="sd-gauge-fill sd-gauge-percent" 
-                                    stroke-dasharray="326.73" stroke-dashoffset="326.73" 
+                                <circle cx="60" cy="60" r="52" class="sd-gauge-fill sd-gauge-percent"
+                                    stroke-dasharray="326.73" stroke-dashoffset="326.73"
                                     data-value="{{ overall_percentage }}" data-max="100" />
                             </svg>
                             <div class="sd-gauge-label">
@@ -120,7 +120,8 @@
                 <!-- Right: Backlogs -->
                 <div class="sd-cgpa-backlogs">
                     <div class="sd-info-card-header">TOTAL BACKLOGS</div>
-                    <div class="sd-info-card-value {% if total_backlogs > 0 %}sd-val-danger{% else %}sd-val-success{% endif %}">
+                    <div
+                        class="sd-info-card-value {% if total_backlogs > 0 %}sd-val-danger{% else %}sd-val-success{% endif %}">
                         {{ total_backlogs }}
                     </div>
                 </div>
@@ -171,7 +172,8 @@
         <i class="fas fa-bullhorn"></i>
         <span>Latest Updates</span>
     </div>
-    <p class="sd-section-subtitle text-muted mb-4" style="font-size:0.85rem; margin-top:-12px;">Stay informed with Circulars, Examinations and Placement Updates</p>
+    <p class="sd-section-subtitle text-muted mb-4" style="font-size:0.85rem; margin-top:-12px;">Stay informed with
+        Circulars, Examinations and Placement Updates</p>
 
     <div class="updates-grid-container">
         <!-- News Card -->
@@ -251,7 +253,8 @@
     .sd-hero-bg {
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, #6366f1 0%, #1990b8 40%, #525058 70%, #5c5b61 100%);
+        background: linear-gradient(135deg, #040914 0%, #0c0f1a 50%, #00020a 100%);
+        /* Deep Blue to Black Ink */
         background-size: 200% 200%;
         animation: sd-gradient-shift 100s ease infinite;
         z-index: 0;
@@ -583,16 +586,17 @@
         border: 1px solid rgba(255, 255, 255, 0.4);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
         margin-bottom: 5px;
-        overflow: hidden; /* Clips absolute blue header edges to rounded frame */
+        overflow: hidden;
+        /* Clips absolute blue header edges to rounded frame */
     }
 
     .sd-table-wrapper-no-scroll.sd-glass-card {
-        background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 100%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 100%);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.5);
+        border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 22px;
-        box-shadow: 0 8px 32px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.4);
+        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
     .sd-tt-table {
@@ -678,9 +682,9 @@
         border: 2px dashed rgba(0, 0, 0, 0.05);
     }
 
-    .dark-mode .sd-table-wrapper {
-        background: rgba(30, 30, 45, 0.75);
-        border-color: rgba(255, 255, 255, 0.08);
+    .dark-mode .sd-table-wrapper-no-scroll.sd-glass-card {
+        background: linear-gradient(135deg, rgba(2, 6, 23, 0.7) 0%, rgba(0, 2, 10, 0.9) 100%);
+        border-color: rgba(255, 255, 255, 0.05);
     }
 
     .dark-mode .sd-tt-table th,
@@ -689,8 +693,9 @@
     }
 
     .dark-mode .sd-tt-table thead th {
-        background: rgba(15, 23, 42, 0.6);
-        color: #f1f5f9;
+        background: #040914 !important;
+        /* Extremely dark headers */
+        color: #ffffff !important;
     }
 
     .dark-mode .sd-th-period {
@@ -1050,7 +1055,7 @@
         flex: 1;
         text-align: center;
         padding: 16px 20px;
-        border-left: 1px solid rgba(0,0,0,0.08);
+        border-left: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .sd-cgpa-split .sd-cgpa-gauge-card {
@@ -1069,20 +1074,21 @@
         .sd-cgpa-split {
             flex-direction: column;
         }
+
         .sd-cgpa-backlogs {
             border-left: none;
-            border-top: 1px solid rgba(0,0,0,0.08);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
     }
 
     .sd-cgpa-gauge-card {
-        background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 100%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 100%);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.5);
+        border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 22px;
         padding: 28px 20px;
-        box-shadow: 0 8px 32px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.4);
+        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         margin-bottom: 16px;
     }
 
@@ -1122,11 +1128,12 @@
         fill: none;
         stroke-width: 10;
         stroke-linecap: round;
-        transition: stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1);
+        transition: stroke-dashoffset 1.5s cubic-bezier(.4, 0, .2, 1);
     }
 
     .sd-gauge-cgpa {
-        stroke: #ef4444; /* default red, overridden by JS */
+        stroke: #ef4444;
+        /* default red, overridden by JS */
     }
 
     .sd-gauge-percent {
@@ -1166,13 +1173,13 @@
     }
 
     .sd-cgpa-info-card {
-        background: rgba(255,255,255,0.75);
+        background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.4);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         border-radius: 20px;
         padding: 22px 20px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
         text-align: center;
     }
 
@@ -1207,13 +1214,13 @@
 
     /* Summary Card */
     .sd-cgpa-summary-card {
-        background: rgba(255,255,255,0.75);
+        background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.4);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         border-radius: 20px;
         padding: 22px 24px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
     }
 
     .sd-summary-rows {
@@ -1226,7 +1233,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 10px 0;
-        border-bottom: 1px solid rgba(0,0,0,0.06);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     }
 
     .sd-summary-row:last-child {
@@ -1249,12 +1256,12 @@
     .dark-mode .sd-cgpa-gauge-card,
     .dark-mode .sd-cgpa-info-card,
     .dark-mode .sd-cgpa-summary-card {
-        background: rgba(30,30,40,0.75);
-        border-color: rgba(255,255,255,0.08);
+        background: rgba(30, 30, 40, 0.75);
+        border-color: rgba(255, 255, 255, 0.08);
     }
 
     .dark-mode .sd-gauge-bg {
-        stroke: rgba(255,255,255,0.1);
+        stroke: rgba(255, 255, 255, 0.1);
     }
 
     .dark-mode .sd-gauge-value {
@@ -1278,17 +1285,19 @@
     }
 
     .dark-mode .sd-summary-row {
-        border-bottom-color: rgba(255,255,255,0.06);
+        border-bottom-color: rgba(255, 255, 255, 0.06);
     }
 
     @media (max-width: 480px) {
         .sd-cgpa-info-grid {
             grid-template-columns: 1fr;
         }
+
         .sd-cgpa-gauges {
             gap: 28px;
         }
     }
+
     /* --- Latest Updates Glass Grid --- */
     .updates-grid-container {
         display: grid;
@@ -1321,7 +1330,7 @@
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
     }
 
     .ug-title {
@@ -1331,9 +1340,17 @@
     }
 
     /* Colorized Titles & Icons */
-    .news-card .ug-title { color: #1d4ed8; }
-    .exams-card .ug-title { color: #047857; }
-    .placements-card .ug-title { color: #ea580c; }
+    .news-card .ug-title {
+        color: #1d4ed8;
+    }
+
+    .exams-card .ug-title {
+        color: #047857;
+    }
+
+    .placements-card .ug-title {
+        color: #ea580c;
+    }
 
     .ug-icon {
         width: 38px;
@@ -1346,9 +1363,17 @@
         color: #fff;
     }
 
-    .news-card .ug-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .exams-card .ug-icon { background: linear-gradient(135deg, #10b981, #059669); }
-    .placements-card .ug-icon { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .news-card .ug-icon {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .exams-card .ug-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .placements-card .ug-icon {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+    }
 
     .ug-card-body {
         padding: 18px 20px;
@@ -1400,24 +1425,37 @@
 
     /* Dark Mode compatibility updates */
     .dark-mode .update-grid-card {
-        background: rgba(30,30,45,0.6);
-        border-color: rgba(255,255,255,0.08);
+        background: rgba(30, 30, 45, 0.6);
+        border-color: rgba(255, 255, 255, 0.08);
     }
+
     .dark-mode .ug-card-body {
-        background: rgba(0,0,0,0.1);
+        background: rgba(0, 0, 0, 0.1);
     }
+
     .dark-mode .ug-item-title {
         color: #f1f5f9;
     }
+
     .dark-mode .ug-item-desc {
         color: #94a3b8;
     }
+
     .dark-mode .ug-item {
-        border-bottom-color: rgba(255,255,255,0.06);
+        border-bottom-color: rgba(255, 255, 255, 0.06);
     }
-    .dark-mode .news-card .ug-title { color: #60a5fa; }
-    .dark-mode .exams-card .ug-title { color: #34d399; }
-    .dark-mode .placements-card .ug-title { color: #fb923c; }
+
+    .dark-mode .news-card .ug-title {
+        color: #60a5fa;
+    }
+
+    .dark-mode .exams-card .ug-title {
+        color: #34d399;
+    }
+
+    .dark-mode .placements-card .ug-title {
+        color: #fb923c;
+    }
 </style> {% endblock custom_css %} {% block custom_js %}
 <script>   $(document).ready(function () {
         // Animate attendance ring
@@ -1448,7 +1486,7 @@
         }
 
         // Animate CGPA gauges with dynamic colors
-        document.querySelectorAll('.sd-gauge-fill').forEach(function(el) {
+        document.querySelectorAll('.sd-gauge-fill').forEach(function (el) {
             var val = parseFloat(el.getAttribute('data-value')) || 0;
             var max = parseFloat(el.getAttribute('data-max')) || 100;
             var circumference = 326.73;

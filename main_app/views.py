@@ -33,7 +33,14 @@ def doLogin(request, **kwargs):
         #Authenticate
         user = EmailBackend.authenticate(request, username=request.POST.get('email'), password=request.POST.get('password'))
         if user != None:
+            # Capture the true last login before Django's login() updates it
+            previous_last_login = user.last_login
+
             login(request, user)
+            
+            # Store in session
+            if previous_last_login:
+                request.session['previous_login'] = previous_last_login.strftime("%d %b %Y, %I:%M %p")
             
             # Handle "Remember Me" functionality
             remember_me = request.POST.get('remember')

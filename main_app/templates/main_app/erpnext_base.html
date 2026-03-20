@@ -13,6 +13,8 @@
 
     <!-- ERPNext Style CSS -->
     <link rel="stylesheet" href="{% static 'dist/css/erpnext-style.css' %}?v={% now 'U' %}">
+    <!-- Standalone Theme Toggle Fix -->
+    <link rel="stylesheet" href="{% static 'dist/css/theme-toggle-fix.css' %}?v={% now 'U' %}">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
@@ -26,6 +28,57 @@
     {% block custom_css %}{% endblock %}
 
     <style>
+        /* Force Absolute Black in Dark Mode to bypass any caching headers */
+        .dark-mode {
+            --glass-bg: rgba(0, 0, 0, 0.95) !important;
+            --glass-bg-hover: rgba(10, 10, 10, 0.98) !important;
+            --surface: rgba(0, 0, 0, 0.8) !important;
+            --surface-raised: rgba(0, 0, 0, 0.9) !important;
+            --glass-border: rgba(255, 255, 255, 0.04) !important;
+            --text-primary: #ffffff !important;
+        }
+
+        .dark-mode .main-header,
+        .dark-mode .erpnext-navbar {
+            background: rgba(255, 255, 255, 0.06) !important; /* White glass tint over black */
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .dark-mode .mesh-background {
+            background-color: #000000 !important;
+            background-image: none !important;
+        }
+
+        .dark-mode .erpnext-sidebar {
+            background: #000000 !important;
+        }
+
+        .dark-mode .card,
+        .dark-mode .update-grid-card,
+        .dark-mode .sd-table-wrapper-no-scroll,
+        .dark-mode .sd-cgpa-info-card,
+        .dark-mode .sd-cgpa-gauge-card {
+            background: rgba(30, 30, 36, 0.45) !important; /* Smooth dark-slate transparency */
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: 20px !important; /* Smooth rounded corners */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .dark-mode .master-glass-panel {
+            background: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .dark-mode table,
+        .dark-mode th,
+        .dark-mode td,
+        .dark-mode .text-primary {
+            color: #ffffff !important;
+        }
         body {
             min-width: 1200px;
             overflow-x: auto;
@@ -74,8 +127,12 @@
                     <label class="theme-toggle" for="theme-switch">
                         <input type="checkbox" id="theme-switch" />
                         <span class="slider">
-                            <i class="fas fa-sun icon-light"></i>
-                            <i class="fas fa-moon icon-dark"></i>
+                            <i class="far fa-sun track-icon-left"></i>
+                            <i class="far fa-moon track-icon-right"></i>
+                            <span class="slider-circle">
+                                <i class="far fa-sun icon-circle-sun"></i>
+                                <i class="far fa-moon icon-circle-moon"></i>
+                            </span>
                         </span>
                     </label>
                     <div class="user-profile-mini">

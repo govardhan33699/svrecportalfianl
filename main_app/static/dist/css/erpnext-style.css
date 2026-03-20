@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    iOS 26 Frosted Glass Design System  â€”  College ERP
    ============================================================ */
 
@@ -49,18 +49,18 @@
 
 /* â”€â”€ Dark Mode Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dark-mode {
-  --glass-bg: rgba(15, 23, 42, 0.72);
-  --glass-bg-hover: rgba(30, 30, 50, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(0, 0, 0, 0.92); /* Deeper solid black container */
+  --glass-bg-hover: rgba(10, 10, 15, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.04);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-  --surface: rgba(255, 255, 255, 0.03);
-  --surface-raised: rgba(255, 255, 255, 0.06);
+  --surface: rgba(0, 0, 0, 0.6);
+  --surface-raised: rgba(0, 0, 0, 0.8);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
-  --primary: #3b82f6;
+  --text-primary: #ffffff; /* absolute white text */
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --primary: #2563eb; /* Deeper Indigo so it contrasts against black nodes */
   --primary-light: #60a5fa;
   --primary-dark: #1d4ed8;
 }
@@ -130,13 +130,33 @@ body,
 }
 
 .dark-mode .mesh-background {
-  background-color: #0f172a;
-  /* Midnight Navy for Dark Mode */
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(59, 130, 246, 0.35) 0, transparent 65%),
-    radial-gradient(ellipse at 100% 10%, rgba(15, 23, 42, 0.55) 0, transparent 55%),
-    radial-gradient(ellipse at 70% 100%, rgba(59, 130, 246, 0.25) 0, transparent 50%);
-  filter: saturate(1.4);
+  background-color: #000000 !important; /* Pure Black static layout */
+  background-image: none !important; /* Destroy blue gradients completely */
+  filter: none;
+}
+
+/* Master Glass Panel Tuning for Dark Mode */
+.dark-mode .master-glass-panel {
+  background: rgba(15, 23, 42, 0.45) !important; /* Deeper transparency for ambient contrast */
+}
+
+/* High-Contrast White Fonts for Tables and Headers in Dark Mode */
+.dark-mode table,
+.dark-mode th,
+.dark-mode td {
+  color: #ffffff !important;
+}
+
+.dark-mode .sd-section-title,
+.dark-mode .card-header,
+.dark-mode .table thead th {
+  color: #ffffff !important;
+}
+
+/* Ensure sub-headings/labels aren't washed out but remain highly legible */
+.dark-mode .text-muted,
+.dark-mode .sd-ring-text {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* â”€â”€ Master Frosted Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -1325,63 +1345,90 @@ body,
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: #f1f5f9; /* Light silver/grey track */
   border-radius: 32px;
   transition: 0.35s var(--ease-smooth);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(15, 23, 42, 0.1); /* Subtle outline */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); /* Slight depth */
 }
 
-.theme-toggle .slider:before {
-  position: absolute;
-  content: "";
-  height: 24px;
-  width: 24px;
-  left: 3px;
-  bottom: 3px;
-  background: #fff;
-  border-radius: 50%;
-  z-index: 1;
-  transition: 0.35s var(--ease-spring);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.theme-toggle input:checked+.slider {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.theme-toggle input:checked+.slider:before {
-  transform: translateX(34px);
-}
-
-.theme-toggle .slider .icon-light,
-.theme-toggle .slider .icon-dark {
+/* Track Icons (Resting on the capsule) */
+.theme-toggle .slider .track-icon-left,
+.theme-toggle .slider .track-icon-right {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 14px;
-  z-index: 0;
-  transition: opacity 0.3s;
+  font-size: 13px;
+  color: #94a3b8; /* Subtle Outline Moon Color from Image */
+  z-index: 1;
 }
 
-.theme-toggle .slider .icon-light {
-  left: 7px;
+.theme-toggle .slider .track-icon-left {
+  left: 9px;
+  opacity: 0.2; /* Hide or make faint in Light mode, or just style as image */
+}
+
+.theme-toggle .slider .track-icon-right {
+  right: 11px;
+}
+
+.theme-toggle .slider-circle {
+  position: absolute;
+  height: 26px; /* 26px inside 32px track feels full/luxurious */
+  width: 26px;
+  left: 3px;
+  bottom: 2px;
+  background: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%); /* Orange/Yellow sun handle */
+  border-radius: 50%;
+  z-index: 10;
+  transition: 0.35s var(--ease-spring);
+  box-shadow: 0 4px 6px rgba(234, 88, 12, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle .slider-circle i {
+  position: absolute; /* Stack on top of each other */
+  font-size: 14px !important;
+  color: #ffffff !important; /* White Icon inside Circle */
+  transition: opacity 0.25s;
+}
+
+.theme-toggle .slider-circle .icon-circle-sun {
   opacity: 1;
-  color: #f59e0b;
 }
 
-.theme-toggle .slider .icon-dark {
-  right: 7px;
-  opacity: 0;
-  color: #fff;
-}
-
-.theme-toggle input:checked+.slider .icon-light {
+.theme-toggle .slider-circle .icon-circle-moon {
   opacity: 0;
 }
 
-.theme-toggle input:checked+.slider .icon-dark {
+.theme-toggle input:checked + .slider {
+  background: #1e1b4b; /* Deep night track */
+}
+
+.theme-toggle input:checked + .slider .slider-circle {
+  transform: translateX(34px);
+  background: linear-gradient(135deg, #6366f1 0%, #312e81 100%); /* Indigo/Midnight Handle */
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+}
+
+.theme-toggle input:checked + .slider .slider-circle .icon-circle-sun {
+  opacity: 0;
+}
+
+.theme-toggle input:checked + .slider .slider-circle .icon-circle-moon {
   opacity: 1;
+}
+
+/* Adjust static background track opacity in checked state */
+.theme-toggle input:checked + .slider .track-icon-right {
+  opacity: 0.2;
+}
+
+.theme-toggle input:checked + .slider .track-icon-left {
+  opacity: 0.8;
+  color: #fbbf24; /* Make left icons glow as a star/sun in dark track */
 }
 
 .theme-toggle:hover .slider {
@@ -1400,37 +1447,7 @@ body,
   background: var(--primary);
 }
 
-@media (max-width: 768px) {
-  .theme-toggle {
-    width: 56px;
-    height: 28px;
-    margin-left: 8px;
-  }
-
-  .theme-toggle .slider:before {
-    height: 20px;
-    width: 20px;
-    left: 3px;
-    bottom: 3px;
-  }
-
-  .theme-toggle input:checked+.slider:before {
-    transform: translateX(28px);
-  }
-
-  .theme-toggle .slider .icon-light,
-  .theme-toggle .slider .icon-dark {
-    font-size: 12px;
-  }
-
-  .theme-toggle .slider .icon-light {
-    left: 5px;
-  }
-
-  .theme-toggle .slider .icon-dark {
-    right: 5px;
-  }
-}
+/* Removed media queries for toggle classes to prevent offset collisions on smaller viewports */
 
 /* â”€â”€ Card Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .card-tools .btn-tool {
@@ -1957,5 +1974,4 @@ body,
 
 .dark-mode .card-header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
 }
