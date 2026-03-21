@@ -25,16 +25,17 @@ def staff_home(request):
     staff = get_object_or_404(Staff, admin=request.user)
     total_students = Student.objects.filter(course=staff.course).count()
     total_leave = LeaveReportStaff.objects.filter(staff=staff).count()
-    subjects = Subject.objects.filter(staff=staff)
+    from django.db.models import Count
+    subjects = Subject.objects.filter(staff=staff).annotate(attendance_count=Count('attendance'))
     total_subject = subjects.count()
     attendance_list = Attendance.objects.filter(subject__in=subjects)
     total_attendance = attendance_list.count()
     attendance_list = []
     subject_list = []
     for subject in subjects:
-        attendance_count = Attendance.objects.filter(subject=subject).count()
         subject_list.append(subject.name)
-        attendance_list.append(attendance_count)
+        attendance_list.append(subject.attendance_count)
+
     context = {
         'page_title': 'Staff Panel - ' + str(staff.admin.first_name) + ' ' + str(staff.admin.last_name[0]) + '' + ' (' + str(staff.course) + ')',
         'total_students': total_students,
@@ -55,9 +56,10 @@ def staff_home(request):
     context['timetable_today'] = timetable_today
 
     # Recent Activities for Staff
-    recent_attendance = Attendance.objects.filter(subject__staff=staff).order_by("-created_at")[:3]
-    recent_marks = StudentResult.objects.filter(subject__staff=staff).order_by("-updated_at")[:3]
+    recent_attendance = Attendance.objects.filter(subject__staff=staff).select_related('subject').order_by("-created_at")[:3]
+    recent_marks = StudentResult.objects.filter(subject__staff=staff).select_related('student__admin', 'subject').order_by("-updated_at")[:3]
     recent_leaves = LeaveReportStaff.objects.filter(staff=staff).order_by("-created_at")[:3]
+
 
     activities = []
     for att in recent_attendance:

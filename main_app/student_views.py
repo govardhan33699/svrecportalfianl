@@ -26,10 +26,23 @@ from .forms import (
 
 def student_home(request):
     student = get_object_or_404(Student, admin=request.user)
-    current_semester = student.semester
+    import re
+    current_semester_obj = student.semester
+    if current_semester_obj:
+        current_semester = str(current_semester_obj)
+        sem_name = current_semester_obj.name
+        match = re.search(r'(\d+)-(\d+)', sem_name)
+        if match:
+            subject_semester = str((int(match.group(1)) - 1) * 2 + int(match.group(2)))
+        else:
+            subject_semester = sem_name
+    else:
+        current_semester = '1'
+        subject_semester = '1'
+
     current_session = student.session
 
-    total_subject = Subject.objects.filter(course=student.course, semester=current_semester).count()
+    total_subject = Subject.objects.filter(course=student.course, semester=subject_semester).count()
     total_attendance = AttendanceReport.objects.filter(
         student=student, attendance__semester=current_semester, attendance__session=current_session
     ).count()
@@ -45,16 +58,26 @@ def student_home(request):
     subject_name = []
     data_present = []
     data_absent = []
-    subjects = Subject.objects.filter(course=student.course, semester=current_semester)
+    subjects = Subject.objects.filter(course=student.course, semester=subject_semester)
+
+    from django.db.models import Count, Q
+    attendance_stats = AttendanceReport.objects.filter(
+        student=student,
+        attendance__semester=current_semester,
+        attendance__session=current_session
+    ).values('attendance__subject').annotate(
+        present=Count('id', filter=Q(status=True)),
+        absent=Count('id', filter=Q(status=False))
+    )
+    
+    stats_lookup = {item['attendance__subject']: item for item in attendance_stats}
+
     for subject in subjects:
-        attendance = Attendance.objects.filter(subject=subject, semester=current_semester, session=current_session)
-        present_count = AttendanceReport.objects.filter(
-            attendance__in=attendance, status=True, student=student).count()
-        absent_count = AttendanceReport.objects.filter(
-            attendance__in=attendance, status=False, student=student).count()
+        stats = stats_lookup.get(subject.id, {'present': 0, 'absent': 0})
         subject_name.append(subject.name)
-        data_present.append(present_count)
-        data_absent.append(absent_count)
+        data_present.append(stats['present'])
+        data_absent.append(stats['absent'])
+
     # Timetable for today
     from datetime import date as dt_date
     today_name = dt_date.today().strftime('%A')
@@ -65,9 +88,10 @@ def student_home(request):
     # Recent Activities for Student
     recent_attendance = AttendanceReport.objects.filter(
         student=student, attendance__semester=current_semester, attendance__session=current_session
-    ).order_by("-updated_at")[:3]
-    recent_marks = StudentResult.objects.filter(student=student).order_by("-updated_at")[:3]
+    ).select_related('attendance__subject').order_by("-updated_at")[:3]
+    recent_marks = StudentResult.objects.filter(student=student).select_related('subject').order_by("-updated_at")[:3]
     recent_leaves = LeaveReportStudent.objects.filter(student=student).order_by("-created_at")[:3]
+
 
     activities = []
     for att in recent_attendance:
@@ -122,6 +146,7 @@ def student_home(request):
 
     grade_points_map = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
     total_credits = 0.0
+    total_earned_credits = 0.0
     total_grade_points = 0.0
     total_marks_sum = 0.0
     total_sub_count = 0
@@ -173,6 +198,8 @@ def student_home(request):
             total_sub_count += 1
             if status == 'F':
                 total_backlogs += 1
+            else:
+                total_earned_credits += cr_val
 
         if sem_has_data:
             semesters_with_data += 1
@@ -217,6 +244,7 @@ def student_home(request):
         'class_awarded': class_awarded,
         'total_semesters_with_data': semesters_with_data,
         'total_credits': total_credits,
+        'total_earned_credits': total_earned_credits,
         'max_cgpa': max_cgpa,
     }
 
@@ -924,8 +952,24 @@ def student_change_password(request):
 
 def student_attendance_report(request):
     student = get_object_or_404(Student, admin=request.user)
-    current_semester = student.semester
-    subjects = Subject.objects.filter(course=student.course, semester=str(current_semester.id))
+    import re
+    current_semester_obj = student.semester
+    if current_semester_obj:
+        current_semester = str(current_semester_obj)
+        sem_name = current_semester_obj.name
+        match = re.search(r'(\d+)-(\d+)', sem_name)
+        if match:
+            subject_semester = str((int(match.group(1)) - 1) * 2 + int(match.group(2)))
+        else:
+            subject_semester = sem_name
+    else:
+        current_semester = '1'
+        subject_semester = '1'
+        
+    subjects = Subject.objects.filter(course=student.course, semester=subject_semester)
+
+
+
     
     # Pre-fetch Timetable to get correct faculty and period mapping for this section
     timetable = Timetable.objects.filter(

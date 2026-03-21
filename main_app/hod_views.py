@@ -26,7 +26,8 @@ from .models import (
 def admin_home(request):
     total_staff = Staff.objects.all().count()
     total_students = Student.objects.all().count()
-    subjects = Subject.objects.all()
+    from django.db.models import Count
+    subjects = Subject.objects.annotate(attendance_count=Count('attendance'))
     total_subject = subjects.count()
     total_course = Course.objects.all().count()
     attendance_list = Attendance.objects.filter(subject__in=subjects)
@@ -34,61 +35,57 @@ def admin_home(request):
     attendance_list = []
     subject_list = []
     for subject in subjects:
-        attendance_count = Attendance.objects.filter(subject=subject).count()
         subject_list.append(subject.name[:7])
-        attendance_list.append(attendance_count)
+        attendance_list.append(subject.attendance_count)
+
 
     # Total Subjects and students in Each Course
-    course_all = Course.objects.all()
-    course_name_list = []
-    subject_count_list = []
-    student_count_list_in_course = []
-
-    for course in course_all:
-        subjects = Subject.objects.filter(course_id=course.id).count()
-        students = Student.objects.filter(course_id=course.id).count()
-        course_name_list.append(course.name)
-        subject_count_list.append(subjects)
-        student_count_list_in_course.append(students)
+    from django.db.models import Count, Q
     
-    subject_all = Subject.objects.all()
-    subject_list = []
-    student_count_list_in_subject = []
-    for subject in subject_all:
-        course = Course.objects.get(id=subject.course.id)
-        student_count = Student.objects.filter(course_id=course.id).count()
-        subject_list.append(subject.name)
-        student_count_list_in_subject.append(student_count)
+    # 1. Total Subjects and students in Each Course (Optimized)
+    course_stats = Course.objects.annotate(
+        subject_count=Count('subject', distinct=True),
+        student_count=Count('student', distinct=True)
+    )
+    course_name_list = [c.name for c in course_stats]
+    subject_count_list = [c.subject_count for c in course_stats]
+    student_count_list_in_course = [c.student_count for c in course_stats]
+    
+    # Map for fast lookup
+    course_student_counts = {c.id: c.student_count for c in course_stats}
+    
+    subject_all = subjects  # Use already fetched subjects from line 29
+    subject_list = [s.name for s in subject_all]
+    student_count_list_in_subject = [course_student_counts.get(s.course_id, 0) for s in subject_all]
+
+    # 2. Student attendance stats (Optimized to avoid N+1 query loops)
+    students_with_stats = Student.objects.annotate(
+        present_count=Count('attendancereport', filter=Q(attendancereport__status=True), distinct=True),
+        absent_count=Count('attendancereport', filter=Q(attendancereport__status=False), distinct=True),
+        leave_count=Count('leavereportstudent', filter=Q(leavereportstudent__status=1), distinct=True)
+    ).select_related('admin')
+    
+    student_attendance_present_list = [s.present_count for s in students_with_stats]
+    student_attendance_leave_list = [s.leave_count + s.absent_count for s in students_with_stats]
+    student_name_list = [s.admin.first_name for s in students_with_stats]
 
 
-    # For Students
-    student_attendance_present_list=[]
-    student_attendance_leave_list=[]
-    student_name_list=[]
-
-    students = Student.objects.all()
-    for student in students:
-        
-        attendance = AttendanceReport.objects.filter(student_id=student.id, status=True).count()
-        absent = AttendanceReport.objects.filter(student_id=student.id, status=False).count()
-        leave = LeaveReportStudent.objects.filter(student_id=student.id, status=1).count()
-        student_attendance_present_list.append(attendance)
-        student_attendance_leave_list.append(leave+absent)
-        student_name_list.append(student.admin.first_name)
-
-    # Today's Absentees
+    # Today's Absentees (Optimized)
     today = date.today()
-    today_attendance = Attendance.objects.filter(date=today)
+    today_absentees_reports = AttendanceReport.objects.filter(
+
+        attendance__date=today, status=False
+    ).select_related('student__admin', 'student__course', 'attendance__subject')
+    
     today_absentees = []
-    for att in today_attendance:
-        absent_reports = AttendanceReport.objects.filter(attendance=att, status=False)
-        for report in absent_reports:
-            today_absentees.append({
-                'student_name': report.student.admin.first_name + ' ' + report.student.admin.last_name,
-                'roll_number': report.student.roll_number or 'N/A',
-                'course': report.student.course.name if report.student.course else 'N/A',
-                'subject': att.subject.name,
-            })
+    for report in today_absentees_reports:
+        today_absentees.append({
+            'student_name': report.student.admin.first_name + ' ' + report.student.admin.last_name,
+            'roll_number': report.student.roll_number or 'N/A',
+            'course': report.student.course.name if report.student.course else 'N/A',
+            'subject': report.attendance.subject.name,
+        })
+
 
     context = {
         'page_title': "Administrative Dashboard",
@@ -111,10 +108,11 @@ def admin_home(request):
     }
 
     # Recent Activities
-    recent_students = Student.objects.all().order_by("-admin__created_at")[:3]
-    recent_staff = Staff.objects.all().order_by("-admin__created_at")[:3]
+    recent_students = Student.objects.all().select_related('admin').order_by("-admin__created_at")[:3]
+    recent_staff = Staff.objects.all().select_related('admin').order_by("-admin__created_at")[:3]
     recent_internships = Internship.objects.all().order_by("-created_at")[:3]
     recent_student_leaves = LeaveReportStudent.objects.filter(status=0).order_by("-created_at")[:3]
+
 
     activities = []
     for s in recent_students:
@@ -547,7 +545,11 @@ def manage_student(request):
     course_id = request.GET.get('course')
     regulation_id = request.GET.get('regulation')
 
-    students = CustomUser.objects.filter(user_type=3)
+    students = CustomUser.objects.filter(user_type=3).select_related(
+        'student', 'student__course', 'student__semester', 'student__regulation', 'student__academic_year'
+    )
+
+
 
     if enrollment_number:
         students = students.filter(student__roll_number__icontains=enrollment_number)
@@ -2091,16 +2093,23 @@ def delete_calendar(request, calendar_id):
 def admin_view_marks_memo(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     results = StudentResult.objects.filter(student=student).select_related('subject')
+    results_lookup = {res.subject_id: res for res in results}
+
 
     from django.db.models import Q
     from collections import OrderedDict
 
-    # Get all subjects for the student's course and regulation
-    all_subjects = Subject.objects.filter(
+    # Get all subjects for the student's course and regulation + any subject they have results for
+    default_subjects = Subject.objects.filter(
         course=student.course, show_in_marks=True
     ).filter(
         Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    )
+    result_subject_ids = StudentResult.objects.filter(student=student).values_list('subject_id', flat=True).distinct()
+    all_subjects = Subject.objects.filter(
+        Q(id__in=default_subjects) | Q(id__in=result_subject_ids)
     ).order_by('semester', 'order', 'name')
+
 
     # Build marks lookup: {subject_id: {exam_name: total}}
     marks_lookup = {}
@@ -2122,7 +2131,9 @@ def admin_view_marks_memo(request, student_id):
         sem_subjects[sem_key] = []
 
     for sub in all_subjects:
-        sem = sub.semester or '1'
+        res = results_lookup.get(sub.id)
+        sem = res.semester if res and res.semester else (sub.semester or '1')
+
         if sem in sem_subjects:
             sub_marks = marks_lookup.get(sub.id, {})
             # IM calculation
@@ -2205,12 +2216,17 @@ def admin_edit_marks_memo(request, student_id):
     from django.db.models import Q
     from collections import OrderedDict
     
-    # Get all subjects for student
-    all_subjects = Subject.objects.filter(
+    # Get all subjects for student + any subject they have results for
+    default_subjects = Subject.objects.filter(
         course=student.course, show_in_marks=True
     ).filter(
         Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    )
+    result_subject_ids = StudentResult.objects.filter(student=student).values_list('subject_id', flat=True).distinct()
+    all_subjects = Subject.objects.filter(
+        Q(id__in=default_subjects) | Q(id__in=result_subject_ids)
     ).order_by('semester', 'order', 'name')
+
 
     if request.method == 'POST':
         for sub in all_subjects:
@@ -2268,29 +2284,36 @@ def admin_edit_marks_memo(request, student_id):
     # Organize data for editing
     sem_data = OrderedDict()
     semester_choices_dict = dict(SEMESTER_CHOICES)
+    results = StudentResult.objects.filter(student=student).select_related('subject')
+    results_lookup = {res.subject_id: res for res in results}
     
     for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
         sem_name = semester_choices_dict.get(sem_key, f"Semester {sem_key}")
-        subs = all_subjects.filter(semester=sem_key)
+        sem_data[sem_name] = []
         
-        sem_subs = []
-        for s in subs:
-            res = StudentResult.objects.filter(student=student, subject=s).first()
-            sem_subs.append({
+    for s in all_subjects:
+        res = results_lookup.get(s.id)
+        sem = res.semester if res and res.semester else (s.semester or '1')
+        sem_name = semester_choices_dict.get(sem, f"Semester {sem}")
+        if sem_name in sem_data:
+            sem_data[sem_name].append({
                 'subject': s,
                 'internal_marks': res.internal_marks if res else 0,
                 'external_marks': res.external_marks if res else 0,
                 'credits': s.credits
             })
-        
-        if sem_subs:
-            sem_data[sem_name] = sem_subs
+            
+    # Remove empty sem sections
+    sem_data = OrderedDict((k, v) for k, v in sem_data.items() if v)
+
 
     context = {
         'student': student,
         'sem_data': sem_data,
+        'all_available_subjects': Subject.objects.filter(show_in_marks=True).order_by('name'),
         'page_title': 'Edit Marks Memo'
     }
+
     return render(request, "hod_template/admin_edit_marks_memo.html", context)
 
 def admin_view_results_traditional(request, student_id):
@@ -2401,4 +2424,39 @@ def admin_view_results_traditional(request, student_id):
         'page_title': 'Sem-wise Results',
     }
     return render(request, "student_template/student_view_results_traditional.html", context)
+
+
+def admin_add_marks_memo_subject(request, student_id):
+    if request.method == 'POST':
+        subject_id = request.POST.get('subject')
+        semester = request.POST.get('semester')
+        if subject_id and semester:
+            student = get_object_or_404(Student, id=student_id)
+            subject = get_object_or_404(Subject, id=subject_id)
+            # Create a StudentResult entry or update if exists
+            res, created = StudentResult.objects.get_or_create(
+                student=student,
+                subject=subject,
+                exam_name='FINAL_EXTERNAL',
+                defaults={'semester': semester}
+            )
+            if created:
+                messages.success(request, f"Subject {subject.name} added to Marks Memo.")
+            else:
+                messages.info(request, f"Subject {subject.name} already exists in Marks Memo.")
+        else:
+            messages.error(request, "Invalid data.")
+    return redirect(reverse('admin_edit_marks_memo', args=[student_id]))
+
+def admin_delete_marks_memo_subject(request, student_id, subject_id):
+    student = get_object_or_404(Student, id=student_id)
+    subject = get_object_or_404(Subject, id=subject_id)
+    # Delete results for this student and subject
+    deleted_count, _ = StudentResult.objects.filter(student=student, subject=subject).delete()
+    if deleted_count > 0:
+        messages.success(request, f"Subject {subject.name} removed from Marks Memo.")
+    else:
+        messages.warning(request, f"No results found for {subject.name}.")
+    return redirect(reverse('admin_edit_marks_memo', args=[student_id]))
+
 

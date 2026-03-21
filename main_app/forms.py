@@ -93,7 +93,8 @@ class StudentForm(CustomUserForm):
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
         self.fields['course'].empty_label = "Select Course"
-        self.fields['session'].empty_label = "Select Session"
+        self.fields['session'].empty_label = "Select Academic Year"
+
         self.fields['regulation'].empty_label = "Select Regulation"
         
         # Add blank choices to ChoiceFields
@@ -183,16 +184,37 @@ class SubjectForm(FormSettings):
 
 
 class SessionForm(FormSettings):
+    start_year = forms.IntegerField(label="Start Year", min_value=1900, max_value=2100)
+    end_year = forms.IntegerField(label="End Year", min_value=1900, max_value=2100)
+
     def __init__(self, *args, **kwargs):
         super(SessionForm, self).__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            if self.instance.start_year:
+                try:
+                    self.fields['start_year'].initial = self.instance.start_year.year
+                except AttributeError:
+                    pass
+            if self.instance.end_year:
+                try:
+                    self.fields['end_year'].initial = self.instance.end_year.year
+                except AttributeError:
+                    pass
+
+    def clean_start_year(self):
+        year = self.cleaned_data.get('start_year')
+        from datetime import date
+        return date(year, 1, 1)
+
+    def clean_end_year(self):
+        year = self.cleaned_data.get('end_year')
+        from datetime import date
+        return date(year, 1, 1)
 
     class Meta:
         model = Session
-        fields = '__all__'
-        widgets = {
-            'start_year': DateInput(attrs={'type': 'date'}),
-            'end_year': DateInput(attrs={'type': 'date'}),
-        }
+        fields = ['start_year', 'end_year']
+
 
 
 class RegulationForm(FormSettings):
@@ -201,7 +223,8 @@ class RegulationForm(FormSettings):
 
     class Meta:
         model = Regulation
-        fields = ['name', 'course', 'session', 'semester']
+        fields = ['name', 'course', 'session']
+
 
 
 class LeaveReportStaffForm(FormSettings):

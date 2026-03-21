@@ -34,7 +34,8 @@ class Session(models.Model):
     end_year = models.DateField()
 
     def __str__(self):
-        return "From " + str(self.start_year) + " to " + str(self.end_year)
+        return f"{self.start_year.year} - {self.end_year.year}"
+
 
 
 class Degree(models.Model):
@@ -107,8 +108,9 @@ SEMESTER_CHOICES = [
 class Regulation(models.Model):
     name = models.CharField(max_length=120)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True)
-    semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES, null=True, blank=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Academic Year")
+
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -137,7 +139,8 @@ class Book(models.Model):
 class Student(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.DO_NOTHING, null=True, blank=False)
-    session = models.ForeignKey(Session, on_delete=models.DO_NOTHING, null=True)
+    session = models.ForeignKey(Session, on_delete=models.DO_NOTHING, null=True, verbose_name="Academic Year")
+
     regulation = models.ForeignKey(Regulation, on_delete=models.DO_NOTHING, null=True, blank=True)
     SECTION = [("A", "Section A"), ("B", "Section B"), ("C", "Section C")]
     BLOOD_GROUP_CHOICES = [
@@ -254,7 +257,8 @@ class Subject(models.Model):
 
 
 class Attendance(models.Model):
-    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, verbose_name="Academic Year")
+
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     period = models.ForeignKey('Period', on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField()
@@ -447,7 +451,8 @@ class Internship(models.Model):
 
 
 class AcademicCalendar(models.Model):
-    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, verbose_name="Academic Year")
+
     semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES)
     regulation = models.ForeignKey(Regulation, on_delete=models.CASCADE, null=True, blank=True)
     commencement_date = models.DateField()

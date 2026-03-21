@@ -201,14 +201,16 @@ body,
   box-shadow: 1px 0 20px rgba(0, 0, 0, 0.04) !important;
   overflow-y: auto !important;
   z-index: 1020;
-  transition: transform var(--duration-slow) var(--ease-smooth),
-    width var(--duration-slow) var(--ease-smooth),
-    padding var(--duration-slow) var(--ease-smooth);
+  transition: transform var(--duration-fast) var(--ease-smooth),
+    width var(--duration-fast) var(--ease-smooth),
+    padding var(--duration-fast) var(--ease-smooth);
+
 }
 
 .sidebar-collapsed .erpnext-sidebar {
   transform: translateX(-100%);
   width: 0 !important;
+  min-width: 0 !important;
   overflow: hidden !important;
   padding: 0 !important;
   border-right: none !important;
@@ -1550,7 +1552,8 @@ body,
     bottom: 0;
     width: 280px !important;
     transform: translateX(-100%);
-    transition: transform var(--duration-slow) var(--ease-smooth);
+    transition: transform var(--duration-fast) var(--ease-smooth);
+
     z-index: 99999 !important;
     background: rgba(255, 255, 255, 0.97) !important;
     box-shadow: 20px 0 60px rgba(0, 0, 0, 0.15) !important;
