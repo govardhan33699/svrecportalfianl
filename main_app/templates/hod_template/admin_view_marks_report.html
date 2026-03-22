@@ -230,10 +230,12 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label>Session (Academic Year)</label>
+                                    <label>Academic Year</label>
+
                                     <select name="session" class="form-control" required
                                         data-value="{{ request.GET.session|default:'' }}">
-                                        <option value="">Select Session</option>
+                                        <option value="">Select Academic Year</option>
+
                                         {% for s in sessions %}
                                         <option value="{{ s.id }}">{{ s }}</option>
                                         {% endfor %}
@@ -376,7 +378,8 @@
                         <div class="opacity-75">
                             <i class="fas fa-file-invoice fa-4x text-primary mb-4 opacity-50"></i>
                             <h4 class="font-weight-bold">Ready to View Marks?</h4>
-                            <p class="text-muted max-width-500 mx-auto">Select Branch, Session, and Exam Name from the
+                            <p class="text-muted max-width-500 mx-auto">Select Branch, Academic Year, and Exam Name from the
+
                                 filters above to load the report.</p>
                         </div>
                     </div>

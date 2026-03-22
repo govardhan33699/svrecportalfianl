@@ -2,6 +2,10 @@
 {% load static %}
 
 {% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block page_header %}
+<i class="fas fa-user-graduate me-2"></i> {{ page_title }}
+{% endblock page_header %}
+
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'manage_student' %}">Students</a></li>
@@ -117,7 +121,6 @@
 
 {% block content %}
 <div class="manage-header">
- <h2><i class="fas fa-user-graduate"></i> {{ page_title }}</h2>
  <div class="header-actions">
  <a href="{% url 'import_student' %}" class="btn btn-secondary btn-sm"><i class="fas fa-file-import"></i>
  Import</a>

@@ -150,6 +150,8 @@
                             <th style="text-align: center;">External Marks (EM)</th>
                             <th style="text-align: center;">Credits (Cr)</th>
                             <th style="text-align: center;">Order</th>
+                            <th style="text-align: center;">Actions</th>
+
                         </tr>
                     </thead>
                     <tbody> {% for item in subjects %} <tr>
@@ -166,11 +168,72 @@
                                     name="cr_{{ item.subject.id }}" value="{{ item.credits|floatformat:" -1" }}"
                                     class="mark-input"> </td>
                             <td style="text-align: center;"> <input type="number" name="order_{{ item.subject.id }}" value="{{ item.subject.order|default:1 }}" class="mark-input" style="width: 60px;"> </td>
+                            <td style="text-align: center;">
+                                <a href="{% url 'admin_delete_marks_memo_subject' student.id item.subject.id %}" class="btn btn-outline-danger btn-xs" title="Remove Subject" onclick="return confirm('Are you sure you want to remove this subject from the marks memo?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+
                         </tr> {% endfor %} </tbody>
                 </table>
-            </div> {% endfor %} <div class="footer-actions"> <a href="{% url 'admin_view_marks_memo' student.id %}"
-                    class="btn btn-secondary"><i class="fas fa-times mr-1"></i> Cancel</a> <button type="submit"
-                    class="btn-save"><i class="fas fa-save mr-1"></i> Save Changes</button> </div>
+            </div> 
+            {% endfor %}
+            <div class="footer-actions">
+
+                 <div>
+                     <a href="{% url 'admin_view_marks_memo' student.id %}" class="btn btn-secondary"><i class="fas fa-times mr-1"></i> Cancel</a>
+                     <button type="button" class="btn btn-info ml-2" data-toggle="modal" data-target="#addSubjectModal">
+                         <i class="fas fa-plus mr-1"></i> Add Subject
+                     </button>
+                 </div>
+                 <button type="submit" class="btn-save"><i class="fas fa-save mr-1"></i> Save Changes</button>
+             </div>
+
         </form>
     </div>
-</div> {% endblock content %}
+<!-- Add Subject Modal -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1" role="dialog" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSubjectModalLabel">Add Subject to Marks Memo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'admin_add_marks_memo_subject' student.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Select Subject</label>
+                        <select name="subject" class="form-control select2" style="width: 100%;" required>
+                            <option value="">-- Choose Subject --</option>
+                            {% for sub in all_available_subjects %}
+                                <option value="{{ sub.id }}">{{ sub.name }} ({{ sub.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Semester Time</label>
+                        <select name="semester" class="form-control" required>
+                            <option value="1">1-1</option>
+                            <option value="2">1-2</option>
+                            <option value="3">2-1</option>
+                            <option value="4">2-2</option>
+                            <option value="5">3-1</option>
+                            <option value="6">3-2</option>
+                            <option value="7">4-1</option>
+                            <option value="8">4-2</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</div> {% endblock content %}

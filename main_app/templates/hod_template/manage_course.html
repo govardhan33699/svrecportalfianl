@@ -1,11 +1,14 @@
-{% extends 'main_app/erpnext_base.html' %} {% load static %} {% block page_title %}{{ page_title }}{% endblock page_title %}  {% block breadcrumb %}
+{% extends 'main_app/erpnext_base.html' %} {% load static %} {% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block page_header %}
+<i class="fas fa-graduation-cap me-2"></i> {{ page_title }}
+{% endblock page_header %}
+  {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'manage_course' %}">Branches</a></li>
 <li class="breadcrumb-item active">Manage</li>
 {% endblock breadcrumb %}
 
 {% block content %}
 <div class="manage-header">
-    <h2><i class="fas fa-graduation-cap"></i> {{ page_title }}</h2>
     <a href="{% url 'add_course' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Branch</a>
 </div>
 

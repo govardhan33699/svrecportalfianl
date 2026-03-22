@@ -23,7 +23,7 @@
                     </svg>
                     <div class="sd-ring-label">
                         <span class="sd-ring-value">{{ percent_present }}%</span>
-                        <span class="sd-ring-text">Present</span>
+                        <span class="sd-ring-text">Attendance</span>
                     </div>
                 </div>
             </div>
@@ -119,7 +119,14 @@
                 </div>
                 <!-- Right: Backlogs -->
                 <div class="sd-cgpa-backlogs">
-                    <div class="sd-info-card-header">TOTAL BACKLOGS</div>
+                    <div class="sd-info-card-header">CREDITS</div>
+                    <div class="sd-info-card-value" style="color: #1abe22 !important; font-size: 1.5rem !important;">
+                        {{ total_earned_credits|floatformat:"-1" }}/{{ total_credits|floatformat:"-1" }}
+                    </div>
+
+                    <div class="sd-info-card-header"
+                        style="margin-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 12px;">BACKLOGS
+                    </div>
                     <div
                         class="sd-info-card-value {% if total_backlogs > 0 %}sd-val-danger{% else %}sd-val-success{% endif %}">
                         {{ total_backlogs }}
@@ -135,35 +142,29 @@
         <span>Quick Actions</span>
     </div>
     <div class="sd-bento-grid">
-        <a href="{% url 'student_attendance_report' %}" class="sd-bento-item sd-bento-purple">
+        <a href="{% url 'student_attendance_report' %}" class="sd-bento-item">
             <div class="sd-bento-icon"><i class="fas fa-clipboard-list"></i></div>
             <div class="sd-bento-label">Attendance Report</div>
-            <div class="sd-bento-arrow"><i class="fas fa-arrow-right"></i></div>
         </a>
-        <a href="{% url 'student_view_result' %}" class="sd-bento-item sd-bento-green">
+        <a href="{% url 'student_view_result' %}" class="sd-bento-item">
             <div class="sd-bento-icon"><i class="fas fa-chart-bar"></i></div>
             <div class="sd-bento-label">View Marks</div>
-            <div class="sd-bento-arrow"><i class="fas fa-arrow-right"></i></div>
         </a>
-        <a href="{% url 'student_apply_leave' %}" class="sd-bento-item sd-bento-amber">
+        <a href="{% url 'student_apply_leave' %}" class="sd-bento-item">
             <div class="sd-bento-icon"><i class="fas fa-calendar-plus"></i></div>
             <div class="sd-bento-label">Apply for Leave</div>
-            <div class="sd-bento-arrow"><i class="fas fa-arrow-right"></i></div>
         </a>
-        <a href="{% url 'student_view_material' %}" class="sd-bento-item sd-bento-cyan">
+        <a href="{% url 'student_view_material' %}" class="sd-bento-item">
             <div class="sd-bento-icon"><i class="fas fa-file-alt"></i></div>
             <div class="sd-bento-label">Study Materials</div>
-            <div class="sd-bento-arrow"><i class="fas fa-arrow-right"></i></div>
         </a>
-        <a href="{% url 'student_view_timetable' %}" class="sd-bento-item sd-bento-rose">
+        <a href="{% url 'student_view_timetable' %}" class="sd-bento-item">
             <div class="sd-bento-icon"><i class="fas fa-clock"></i></div>
             <div class="sd-bento-label">Timetable</div>
-            <div class="sd-bento-arrow"><i class="fas fa-arrow-right"></i></div>
         </a>
-        <a href="{% url 'student_view_assignments' %}" class="sd-bento-item sd-bento-indigo">
-            <div class="sd-bento-icon"><i class="fas fa-file-alt"></i></div>
+        <a href="{% url 'student_view_assignments' %}" class="sd-bento-item">
+            <div class="sd-bento-icon"><i class="fas fa-th-list"></i></div>
             <div class="sd-bento-label">Assignments</div>
-            <div class="sd-bento-arrow"><i class="fas fa-arrow-right"></i></div>
         </a>
     </div>
 
@@ -253,7 +254,7 @@
     .sd-hero-bg {
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, #040914 0%, #0c0f1a 50%, #00020a 100%);
+        background: linear-gradient(135deg, #000309 0%, #0e1101 50%, #000109 100%);
         /* Deep Blue to Black Ink */
         background-size: 200% 200%;
         animation: sd-gradient-shift 100s ease infinite;
@@ -406,12 +407,16 @@
         padding: 24px 20px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
         text-decoration: none !important;
         overflow: hidden;
-        transition: transform 0.35s cubic-bezier(.4, 0, .2, 1), box-shadow 0.35s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         cursor: pointer;
-        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        text-align: center;
     }
 
     .sd-bento-item:hover {
@@ -425,19 +430,30 @@
     }
 
     .sd-bento-icon {
-        width: 46px;
-        height: 46px;
+        width: 50px;
+        height: 50px;
         border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 1.35rem;
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #6366f1 !important;
+        margin-bottom: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .sd-bento-item:hover .sd-bento-icon {
+        background: #6366f1 !important;
+        color: #fff !important;
+        transform: scale(1.1);
     }
 
     .sd-bento-label {
-        font-weight: 700;
-        font-size: 0.95rem;
+        font-weight: 500;
+        font-size: 0.9rem;
         line-height: 1.3;
+        color: var(--text-primary) !important;
     }
 
     .sd-bento-arrow {
@@ -949,7 +965,7 @@
 
     /* --- Dark Mode --- */
     .dark-mode .sd-hero-bg {
-        background: linear-gradient(135deg, #312e81 0%, #4c1d95 40%, #5b21b6 70%, #6d28d9 100%);
+        background: linear-gradient(135deg, #78787d 0%, #94919a 40%, #bbb8c1 100%);
     }
 
     .dark-mode .sd-section-title {
@@ -1055,7 +1071,7 @@
         flex: 1;
         text-align: center;
         padding: 16px 20px;
-        border-left: 1px solid rgba(0, 0, 0, 0.08);
+        border-left: 1px solid rgba(18, 17, 17, 0.08);
     }
 
     .sd-cgpa-split .sd-cgpa-gauge-card {

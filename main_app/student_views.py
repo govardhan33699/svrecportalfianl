@@ -42,19 +42,21 @@ def student_home(request):
 
     current_session = student.session
 
-    total_subject = Subject.objects.filter(course=student.course, semester=subject_semester).count()
+    subjects = Subject.objects.filter(course=student.course, semester=subject_semester)
+    total_subject = subjects.count()
     total_attendance = AttendanceReport.objects.filter(
-        student=student, attendance__semester=current_semester, attendance__session=current_session
+        student=student, attendance__semester=current_semester, attendance__session=current_session, attendance__subject__in=subjects
     ).count()
     total_present = AttendanceReport.objects.filter(
-        student=student, status=True, attendance__semester=current_semester, attendance__session=current_session
+        student=student, status=True, attendance__semester=current_semester, attendance__session=current_session, attendance__subject__in=subjects
     ).count()
 
     if total_attendance == 0:  # Don't divide. DivisionByZero
         percent_absent = percent_present = 0
     else:
-        percent_present = math.floor((total_present/total_attendance) * 100)
-        percent_absent = math.ceil(100 - percent_present)
+        # Match report total decimal rounding calculation
+        percent_present = round((total_present / total_attendance) * 100, 1)
+        percent_absent = round(100 - percent_present, 1)
     subject_name = []
     data_present = []
     data_absent = []

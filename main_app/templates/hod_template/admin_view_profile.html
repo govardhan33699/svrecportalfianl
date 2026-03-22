@@ -5,8 +5,8 @@
 {% block custom_css %}
 <style>
     :root {
-        --glass-bg: rgba(255, 255, 255, 0.85);
-        --glass-border: rgba(255, 255, 255, 0.4);
+        --glass-bg: rgba(255, 255, 255, 0.45);
+        --glass-border: rgba(255, 255, 255, 0.45);
         --corporate-blue: #1a73e8;
         --accent-dark: #0d47a1;
     }
@@ -26,7 +26,8 @@
     /* Gradient Banner */
     .profile-banner-bg {
         height: 180px; /* Taller to fit Avatar and Button stacked */
-        background: linear-gradient(135deg, var(--corporate-blue), var(--accent-dark));
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
         position: relative;
         display: flex;
         justify-content: space-between;
@@ -68,13 +69,13 @@
     .profile-name {
         font-size: 28px;
         font-weight: 800;
-        color: #ffffff; /* White text for Blue contrast */
+        color: #1e293b; /* Dark text for Glass contrast */
         margin-bottom: 5px;
         text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .profile-title {
-        color: rgba(255, 255, 255, 0.9); /* Subtitle white opacity */
+        color: #64748b; /* Subtitle color */
         font-weight: 500;
         font-size: 16px;
         letter-spacing: 0.5px;
@@ -90,8 +91,10 @@
     }
 
     .detail-item {
-        background: #ffffff;
-        border: 1px solid #f1f5f9;
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.45);
         border-radius: 16px;
         padding: 20px;
         display: flex;

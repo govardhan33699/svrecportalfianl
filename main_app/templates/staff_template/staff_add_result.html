@@ -5,12 +5,14 @@
 {% block custom_css %}
 <style>
     .marks-card {
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        background: #fff;
+        background: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.04) !important;
         padding: 30px;
-        margin-bottom: 20px;
-        border: 1px solid #e1e4e8;
+        margin-bottom: 24px;
     }
 
     .form-label {
@@ -98,7 +100,8 @@
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Academic Year:*</label>
                                 <select name="session" id="session" class="form-control" required>
-                                    <option value="">Select Session</option>
+                                    <option value="">Select Academic Year</option>
+
                                     {% for session in sessions %}
                                     <option value="{{session.id}}">{{session}}</option>
                                     {% endfor %}
@@ -187,10 +190,9 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label d-flex justify-content-between align-items-center">
                                 <span>Step 2: Upload Marks</span>
-                                <a href="{% url 'download_generic_template' %}" class="small text-decoration-none">
-                                    <i class="fas fa-file-download"></i> Firstly, Download Excel Template
-                                </a>
+
                             </label>
+                            <p class="text-muted small">ㅤ</p>
                             <form action="{% url 'import_marks_excel' %}" method="POST" enctype="multipart/form-data"
                                 id="bulk_upload_form">
                                 {% csrf_token %}
@@ -307,7 +309,7 @@
                         div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='objective_" + studentId + "' value='" + marks['objective'] + "' min='0' max='30' " + isLocked + "></td>";
                         div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='descriptive_" + studentId + "' value='" + marks['descriptive'] + "' min='0' max='10' " + isLocked + "></td>";
                         div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='assignment_" + studentId + "' value='" + marks['assignment'] + "' min='0' max='5' " + isLocked + "></td>";
-                        div_data += "<td><div class='d-flex align-items-center'><input type='number' class='form-control fw-bold bg-light total-field border-0 text-center' id='total_" + studentId + "' name='total_" + studentId + "' value='" + marks['total'] + "' readonly style='width: 70px;'>" + lockBadge + "</div></td>";
+                        div_data += "<td><div class='d-flex align-items-center'><input type='text' class='form-control fw-bold bg-light total-field border-0 text-center' id='total_" + studentId + "' name='total_" + studentId + "' value='" + marks['total'] + "' readonly style='width: 85px; padding: 0.5rem 4px;'>" + lockBadge + "</div></td>";
                         div_data += "<input type='hidden' name='student_ids[]' value='" + studentId + "'>";
                         div_data += "</tr>";
                     }
@@ -325,12 +327,12 @@
 
         // Unlock All Action
         $(document).on('click', '#unlock_all', function () {
-            if(confirm("Do you want to enable editing for existing marks?")) {
+            if (confirm("Do you want to enable editing for existing marks?")) {
                 $('.mark-input').removeAttr('readonly');
                 $('.mark-input').css('background-color', '#ffffff');
                 $('.mark-input').css('cursor', 'text');
                 $(this).html('<i class="fas fa-lock-open me-1"></i> Editing Enabled').attr('class', 'btn btn-sm btn-warning').attr('disabled', true);
-                
+
                 // Optional: Remove lock badges
                 $('.badge-success .fa-lock').parent().remove();
             }

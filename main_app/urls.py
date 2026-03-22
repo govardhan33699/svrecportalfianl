@@ -68,6 +68,9 @@ urlpatterns = [
     path("student/view/<int:student_id>/", hod_views.view_student_detail, name='view_student_detail'),
     path("student/view/<int:student_id>/marks-memo/", hod_views.admin_view_marks_memo, name='admin_view_marks_memo'),
     path("student/view/<int:student_id>/edit-memo/", hod_views.admin_edit_marks_memo, name='admin_edit_marks_memo'),
+    path("student/view/<int:student_id>/add-memo-subject/", hod_views.admin_add_marks_memo_subject, name='admin_add_marks_memo_subject'),
+    path("student/view/<int:student_id>/delete-memo-subject/<int:subject_id>/", hod_views.admin_delete_marks_memo_subject, name='admin_delete_marks_memo_subject'),
+
     path("student/view/<int:student_id>/results-traditional/", hod_views.admin_view_results_traditional, name='admin_view_results_traditional'),
     path("student/import/", hod_views.import_student, name='import_student'),
     path("course/manage/", hod_views.manage_degree, name='manage_degree'),

@@ -6,7 +6,7 @@
     /* Sleek Multi-Step Styles */
     .card-registration {
         border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
         border: none;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.95);
@@ -45,7 +45,7 @@
     }
 
     .nav-pills-custom .nav-link:hover {
-        background: rgba(0,0,0,0.03);
+        background: rgba(0, 0, 0, 0.03);
         color: #334155;
     }
 
@@ -63,7 +63,8 @@
         margin-bottom: 8px;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
         border-radius: 10px;
         padding: 11px 16px;
         border: 1px solid #e2e8f0;
@@ -71,7 +72,8 @@
         transition: border-color 0.2s;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
         border-color: #4f46e5;
         box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
@@ -157,21 +159,27 @@
                             {% endif %}
 
                             <!-- Nav Tabs Header -->
-                            <ul class="nav nav-pills nav-pills-custom nav-justified mb-4" id="studentFormTabs" role="tablist">
+                            <ul class="nav nav-pills nav-pills-custom nav-justified mb-4" id="studentFormTabs"
+                                role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="basic-info-tab" data-bs-toggle="pill" data-bs-target="#basic-info" type="button" role="tab">Basic Info</button>
+                                    <button class="nav-link active" id="basic-info-tab" data-bs-toggle="pill"
+                                        data-bs-target="#basic-info" type="button" role="tab">Basic Info</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="admission-tab" data-bs-toggle="pill" data-bs-target="#admission" type="button" role="tab">Admission & CET</button>
+                                    <button class="nav-link" id="admission-tab" data-bs-toggle="pill"
+                                        data-bs-target="#admission" type="button" role="tab">Admission & CET</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="address-tab" data-bs-toggle="pill" data-bs-target="#address-pane" type="button" role="tab">Address</button>
+                                    <button class="nav-link" id="address-tab" data-bs-toggle="pill"
+                                        data-bs-target="#address-pane" type="button" role="tab">Address</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="parents-tab" data-bs-toggle="pill" data-bs-target="#parents" type="button" role="tab">Parents</button>
+                                    <button class="nav-link" id="parents-tab" data-bs-toggle="pill"
+                                        data-bs-target="#parents" type="button" role="tab">Contact</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="financial-tab" data-bs-toggle="pill" data-bs-target="#financial" type="button" role="tab">Financial</button>
+                                    <button class="nav-link" id="financial-tab" data-bs-toggle="pill"
+                                        data-bs-target="#financial" type="button" role="tab">Financial</button>
                                 </li>
                             </ul>
 
@@ -376,13 +384,16 @@
                         </div> <!-- End Card Body -->
 
                         <div class="card-footer border-top-0 d-flex justify-content-between p-4 p-md-5 bg-transparent">
-                            <button type="button" class="btn btn-step btn-prev" id="prevBtn" onclick="prevTab()" style="display:none;">
+                            <button type="button" class="btn btn-step btn-prev" id="prevBtn" onclick="prevTab()"
+                                style="display:none;">
                                 <i class="fas fa-arrow-left me-2"></i> Previous
                             </button>
-                            <button type="button" class="btn btn-step btn-next ms-auto" id="nextBtn" onclick="nextTab()">
+                            <button type="button" class="btn btn-step btn-next ms-auto" id="nextBtn"
+                                onclick="nextTab()">
                                 Next Step <i class="fas fa-arrow-right ms-2"></i>
                             </button>
-                            <button type="submit" class="btn btn-step btn-success ms-auto" id="submitBtn" style="display:none; background: #10b981; border: none;">
+                            <button type="submit" class="btn btn-step btn-success ms-auto" id="submitBtn"
+                                style="display:none; background: #10b981; border: none;">
                                 <i class="fas fa-check-circle me-2"></i> Register Student
                             </button>
                         </div>
@@ -457,22 +468,22 @@
         return re.test(String(email).toLowerCase());
     }
 
-    $(document).ready(function(){
-        $("#id_email").keyup(function(){
+    $(document).ready(function () {
+        $("#id_email").keyup(function () {
             var email = $(this).val();
-            if (validateEmail(email)){
+            if (validateEmail(email)) {
                 $.ajax({
                     url: "{% url 'check_email_availability' %}",
                     type: 'POST',
                     data: { email: email, csrfmiddlewaretoken: '{{ csrf_token }}' }
-                }).done(function(response){
+                }).done(function (response) {
                     $(".email_error").remove();
-                    if (response == "True"){
+                    if (response == "True") {
                         $("<span class='invalid email_error'>Email Address Already Exists</span>").insertAfter("#id_email");
                     } else {
                         $("<span class='valid email_error'>Email Address Available</span>").insertAfter("#id_email");
                     }
-                }).fail(function(){
+                }).fail(function () {
                     $(".email_error").remove();
                     $("<span class='invalid email_error'>Error checking availability</span>").insertAfter("#id_email");
                 });

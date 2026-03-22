@@ -1,1 +1,23 @@
-﻿{% extends 'main_app/base.html' %} {% load static %} {% block page_title %}{{page_title}}{% endblock page_title %}  {% block content %} <section class="content">     <div class="container-fluid">         <div class="row">             <div class="col-md-12">                 <div class="card card-dark">                     <div class="card-header">                         <h3 class="card-title">{{page_title}}</h3>                     </div>                     <div class="card-body">                         {% include "main_app/form_template.html" with messages=messages form=form button_text="Add Timetable Entry" %}                     </div>                 </div>             </div>         </div>     </div> </section> {% endblock content %}
+{% extends 'main_app/base.html' %} {% load static %} {% block page_title %}{{page_title}}{% endblock page_title %}  {% block content %}
+<style>
+    .card {
+        background: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 20px !important;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important;
+    }
+    .card-header {
+        background: rgba(0, 0, 0, 0.03) !important;
+        color: #1a202c !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+    .form-control {
+        background: rgba(255, 255, 255, 0.7) !important;
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        border-radius: 10px !important;
+    }
+</style>
+<section class="content">     <div class="container-fluid">         <div class="row">             <div class="col-md-12">                 <div class="card card-dark">                     <div class="card-header">                         <h3 class="card-title">{{page_title}}</h3>                     </div>                     <div class="card-body">                         {% include "main_app/form_template.html" with messages=messages form=form button_text="Add Timetable Entry" %}                     </div>                 </div>             </div>         </div>     </div> </section> {% endblock content %}

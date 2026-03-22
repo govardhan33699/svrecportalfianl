@@ -20,16 +20,16 @@
     }
 
     .glass-timetable-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(40px) saturate(1.8);
-        -webkit-backdrop-filter: blur(40px) saturate(1.8);
-        border: 1px solid var(--glass-border);
-        border-radius: 28px;
-        box-shadow: 0 20px 50px var(--glass-shadow);
+        background: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
         overflow: hidden;
-        margin: 0 auto 2rem auto; /* Centers the card */
-        max-width: 1050px; /* Reduces width from absolute screen edges */
-        animation: panelIn 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        margin: 0 auto 2rem auto;
+        max-width: 1000px; /* Expands slightly more to fit P7 safely on all desktop layouts */
+        animation: panelIn 0.6s ease forwards;
     }
 
     .timetable-header {
@@ -55,18 +55,23 @@
     }
 
     .timetable-table th {
-        background: #1a73e8 !important;
-        color: #ffffff !important;
+        background: rgba(0, 0, 0, 0.04) !important;
+        color: #1a202c !important;
         text-transform: uppercase;
         font-size: 0.7rem;
-        letter-spacing: 1px;
-        padding: 0.8rem 0.3rem !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        letter-spacing: 0.5px;
+        padding: 0.6rem 0.2rem !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
         vertical-align: middle;
     }
 
-    .dark-mode .timetable-table th {
-        background: rgba(255, 255, 255, 0.01);
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .timetable-table {
+        min-width: 820px !important; /* Forces scrollbar instead of squishing columns */
     }
 
     .timetable-table td {
@@ -74,45 +79,36 @@
         padding: 0.2rem !important;
         vertical-align: middle;
         position: relative;
-        min-width: 100px;
+        min-width: 85px !important; /* Shrunk width to save row space */
         height: 60px;
     }
 
     .day-cell {
-        background: #ffffff !important;
-        color: #000000 !important;
-        font-weight: 800;
+        background: rgba(0, 0, 0, 0.02) !important;
+        color: #1a202c !important;
+        font-weight: 700;
         font-size: 0.7rem;
-        letter-spacing: 1px;
-    }
-
-    .dark-mode .day-cell {
-        background: #ffffff !important;
-        color: #000000 !important;
     }
 
     /* Subject Card inside cell */
     .subject-pill {
-        border-radius: 8px;
-        padding: 0.4rem 0.2rem;
+        border-radius: 6px;
+        padding: 0.3rem 0.15rem;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        color: white;
-        transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: var(--accent-blue);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        background: rgba(255, 255, 255, 0.45) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     }
 
-    /* Alternate color based on entry ID or loop */
     .subject-pill.alt-color {
-        background: var(--accent-navy);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        background: rgba(255, 255, 255, 0.25) !important;
     }
 
     .subject-pill:hover {
@@ -123,21 +119,21 @@
     }
 
     .subject-name {
-        font-weight: 700;
+        font-weight: 600;
         font-size: 0.65rem;
         line-height: 1.1;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.15rem;
         text-align: center;
-        color: white;
+        color: #1e293b;
     }
 
     .staff-name {
         font-size: 0.55rem;
-        opacity: 0.9;
-        font-weight: 600;
-        background: rgba(255, 255, 255, 0.15);
-        padding: 1px 6px;
-        border-radius: 4px;
+        font-weight: 500;
+        background: rgba(0, 0, 0, 0.03);
+        color: #64748b;
+        padding: 1px 4px;
+        border-radius: 3px;
         white-space: nowrap;
         max-width: 95%;
         overflow: hidden;
@@ -176,7 +172,7 @@
                 <table class="table timetable-table text-center">
                     <thead>
                         <tr>
-                            <th class="day-cell" style="width: 120px;">DAY</th>
+                            <th class="day-cell" style="width: 80px !important;">DAY</th>
                             {% for period in periods %}
                             <th>
                                 <div class="mb-1">PERIOD {{period.number}}</div>

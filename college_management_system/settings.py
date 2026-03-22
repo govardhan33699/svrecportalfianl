@@ -170,9 +170,9 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'shivagovardhanreddy1234@gmail.com') 
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', 'sshswdwuwaokhghd')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', 'rvmjdxyqvxixnfdc')
 EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = "College Management System <admin@admin.com>"
+DEFAULT_FROM_EMAIL = 'shivagovardhanreddy1234@gmail.com'
 
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
