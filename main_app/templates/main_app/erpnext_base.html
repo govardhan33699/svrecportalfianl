@@ -235,6 +235,12 @@
                 $item.toggleClass('open');
             });
         });
+
+        // Disable Right Click context menu Custom alert
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            alert('Sorry ! Right Click No Access.');
+        });
     </script>
 
     {% block custom_js %}{% endblock %}
