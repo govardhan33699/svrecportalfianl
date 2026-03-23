@@ -84,7 +84,15 @@ def admin_home(request):
             'roll_number': report.student.roll_number or 'N/A',
             'course': report.student.course.name if report.student.course else 'N/A',
             'subject': report.attendance.subject.name,
+            'section': report.student.get_section_display() if hasattr(report.student, 'get_section_display') else 'N/A',
+            'semester': report.student.semester if hasattr(report.student, 'semester') and report.student.semester else 'N/A',
+            'period_number': report.attendance.period.number if report.attendance.period else 'N/A',
+            'period_time': f"P{report.attendance.period.number} · {report.attendance.period.start_time.strftime('%I:%M')}-{report.attendance.period.end_time.strftime('%I:%M')}" if report.attendance.period else 'N/A',
         })
+
+    absent_count = len(today_absentees)
+    present_count = total_students - absent_count
+    attendance_rate = round((present_count / total_students * 100), 1) if total_students > 0 else 0
 
 
     context = {
@@ -102,6 +110,9 @@ def admin_home(request):
         "student_count_list_in_course": student_count_list_in_course,
         "course_name_list": course_name_list,
         "today_absentees": today_absentees,
+        "absent_count": absent_count,
+        "present_count": present_count,
+        "attendance_rate": attendance_rate,
         "today_date": today,
         "total_internships": Internship.objects.all().count(),
         "total_degrees": Degree.objects.all().count(),
@@ -296,6 +307,45 @@ def manage_degree(request):
         'page_title': 'Manage Course'
     }
     return render(request, 'hod_template/manage_degree.html', context)
+
+
+def manage_course_combined(request):
+    degrees = Degree.objects.all()
+    years = AcademicLevel.objects.all()
+    semesters = AcademicSemester.objects.all()
+    courses = Course.objects.all().select_related('degree')
+    sessions = Session.objects.all()
+    
+    regulations = Regulation.objects.all().select_related('course', 'session').order_by('-created_at')
+    calendars = AcademicCalendar.objects.all().select_related('session', 'regulation').prefetch_related('events').order_by('-session__start_year')
+    timetables_count = Timetable.objects.count()
+
+    from collections import OrderedDict
+    grouped_calendars = OrderedDict()
+    for cal in calendars:
+        if not cal.session:
+            continue
+        session_key = cal.session_id
+        if session_key not in grouped_calendars:
+            grouped_calendars[session_key] = {
+                'session': f"{cal.session.start_year.year} - {cal.session.end_year.year}",
+                'calendars': []
+            }
+        grouped_calendars[session_key]['calendars'].append(cal)
+    
+    context = {
+        'degrees': degrees,
+        'years': years,
+        'semesters': semesters,
+        'courses': courses,
+        'sessions': sessions,
+        'regulations': regulations,
+        'grouped_calendars': grouped_calendars,
+        'timetables_count': timetables_count,
+        'calendars_count': calendars.count(),
+        'page_title': 'Course Management'
+    }
+    return render(request, 'hod_template/manage_course_combined.html', context)
 
 
 def edit_degree(request, degree_id):
@@ -579,10 +629,113 @@ def manage_student(request):
 def view_student_detail(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     certificates = StudentCertificate.objects.filter(student=student).order_by('-issue_date')
+
+    # ── CGPA Overview Calculation (Reused from student_views.py) ──
+    from django.db.models import Q
+    from .models import Subject, StudentResult
+    all_results = StudentResult.objects.filter(student=student).select_related('subject')
+    all_subjects = Subject.objects.filter(
+        course=student.course, show_in_marks=True
+    ).filter(
+        Q(regulation=student.regulation) | Q(regulation__isnull=True)
+    ).order_by('order', 'name')
+
+    marks_lookup = {}
+    for res in all_results:
+        if res.subject_id not in marks_lookup:
+            marks_lookup[res.subject_id] = {}
+        if res.exam_name:
+            marks_lookup[res.subject_id][res.exam_name] = res.total
+
+    grade_points_map = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
+    total_credits = 0.0
+    total_earned_credits = 0.0
+    total_grade_points = 0.0
+    total_marks_sum = 0.0
+    total_sub_count = 0
+    total_backlogs = 0
+    semesters_with_data = 0
+
+    for sem_key in ['1', '2', '3', '4', '5', '6', '7', '8']:
+        sem_cr = 0.0
+        sem_gp = 0.0
+        sem_has_data = False
+        sem_subs = [sub for sub in all_subjects if (sub.semester or '1') == sem_key]
+        for sub in sem_subs:
+            res = all_results.filter(subject=sub).filter(Q(semester=sem_key) | Q(semester__isnull=True)).first()
+            if not res:
+                res = all_results.filter(subject=sub).first()
+
+            if res and res.internal_marks:
+                im = res.internal_marks
+            else:
+                sub_marks = marks_lookup.get(sub.id, {})
+                int1 = float(sub_marks.get('Mid 1', sub_marks.get('INT-1', sub_marks.get('MID-1', 0))) or 0)
+                int2 = float(sub_marks.get('Mid 2', sub_marks.get('INT-2', sub_marks.get('MID-2', 0))) or 0)
+                m_max = max(int1, int2)
+                m_min = min(int1, int2)
+                im = round((0.8 * m_max) + (0.2 * m_min))
+
+            em = res.external_marks if res else ''
+            tot = im + (float(em) if em else 0)
+
+            if em == '' and im == 0:
+                continue
+
+            sem_has_data = True
+            status = 'P' if tot >= 40 else 'F'
+            if tot >= 90: grade = 'S'
+            elif tot >= 80: grade = 'A'
+            elif tot >= 70: grade = 'B'
+            elif tot >= 60: grade = 'C'
+            elif tot >= 50: grade = 'D'
+            elif tot >= 40: grade = 'E'
+            else: grade = 'F'
+
+            cr_val = float(sub.credits or 0)
+            gp_weight = grade_points_map.get(grade, 0)
+            sem_cr += cr_val
+            sem_gp += gp_weight * cr_val
+            total_marks_sum += tot
+            total_sub_count += 1
+            if status == 'F':
+                total_backlogs += 1
+            else:
+                total_earned_credits += cr_val
+
+        if sem_has_data:
+            semesters_with_data += 1
+            total_credits += sem_cr
+            total_grade_points += sem_gp
+
+    cgpa = round(total_grade_points / total_credits, 2) if total_credits > 0 else 0.0
+    overall_percentage = round((cgpa - 0.75) * 10, 2) if cgpa > 0 else 0.0
+    max_cgpa = 10.0
+
+    if overall_percentage >= 70:
+        class_awarded = 'First Class with Distinction'
+    elif overall_percentage >= 60:
+        class_awarded = 'First Class'
+    elif overall_percentage >= 50:
+        class_awarded = 'Second Class'
+    elif overall_percentage >= 40:
+        class_awarded = 'Pass'
+    else:
+        class_awarded = 'N/A'
+
     context = {
         'student': student,
         'certificates': certificates,
-        'page_title': 'View Student Details'
+        'page_title': 'View Student Details',
+        # CGPA Overview
+        'cgpa': cgpa,
+        'overall_percentage': overall_percentage,
+        'total_backlogs': total_backlogs,
+        'class_awarded': class_awarded,
+        'total_semesters_with_data': semesters_with_data,
+        'total_credits': total_credits,
+        'total_earned_credits': total_earned_credits,
+        'max_cgpa': max_cgpa,
     }
     return render(request, "hod_template/view_student_detail.html", context)
 

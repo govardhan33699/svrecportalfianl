@@ -73,6 +73,7 @@ urlpatterns = [
 
     path("student/view/<int:student_id>/results-traditional/", hod_views.admin_view_results_traditional, name='admin_view_results_traditional'),
     path("student/import/", hod_views.import_student, name='import_student'),
+    path("course_management/", hod_views.manage_course_combined, name='manage_course_combined'),
     path("course/manage/", hod_views.manage_degree, name='manage_degree'),
     path("academic_level/manage/", hod_views.manage_year, name='manage_year'),
     path("academic_semester/manage/", hod_views.manage_semester, name='manage_semester'),

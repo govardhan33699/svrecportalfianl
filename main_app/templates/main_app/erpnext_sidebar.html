@@ -36,7 +36,7 @@
     <div class="nav-item">
         {% url 'admin_home' as admin_home %}
         <a href="{{ admin_home }}" class="nav-link {% if admin_home == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📊</span>
+            <span class="nav-icon-emoji"><i class="fas fa-tachometer-alt"></i></span>
             <span class="nav-text">Dashboard</span>
         </a>
     </div>
@@ -50,135 +50,19 @@
         </a>
     </div>
 
-    <h6 class="nav-section-title">COURSE</h6>
+    <h6 class="nav-section-title">COURSE MANAGEMENT</h6>
     <div class="nav-item">
-        {% url 'manage_degree' as manage_degree %}
-        <a href="{{ manage_degree }}"
-            class="nav-link {% if manage_degree == request.path or 'edit_degree' in request.path or 'add_degree' in request.path %}active{% endif %}">
+        {% url 'manage_course_combined' as manage_course_combined %}
+        <a href="{{ manage_course_combined }}"
+            class="nav-link {% if manage_course_combined == request.path %}active{% endif %}">
             <span class="nav-icon-emoji">📘</span>
-            <span class="nav-text">Course</span>
+            <span class="nav-text">Course Management</span>
         </a>
     </div>
 
-    <div class="nav-item">
-        {% url 'manage_year' as manage_year %}
-        <a href="{{ manage_year }}"
-            class="nav-link {% if manage_year == request.path or 'academic_level' in request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📅</span>
-            <span class="nav-text">Year</span>
-        </a>
-    </div>
 
-    <div class="nav-item">
-        {% url 'manage_semester' as manage_semester %}
-        <a href="{{ manage_semester }}"
-            class="nav-link {% if manage_semester == request.path or 'academic_semester' in request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📚</span>
-            <span class="nav-text">Semester</span>
-        </a>
-    </div>
 
-    <div class="nav-item">
-        {% url 'manage_course' as manage_course %}
-        <a href="{{ manage_course }}"
-            class="nav-link {% if manage_course == request.path or 'edit_course' in request.path or 'add_course' in request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🌿</span>
-            <span class="nav-text">Branch</span>
-        </a>
-    </div>
 
-    <div class="nav-item has-submenu {% if 'regulation' in request.path %}open{% endif %}">
-        <a href="#" class="nav-link">
-            <span class="nav-icon-emoji">📋</span>
-            <span class="nav-text">Regulation</span>
-            <i class="nav-arrow fas fa-chevron-right"></i>
-        </a>
-        <div class="nav-submenu">
-            <div class="nav-item">
-                {% url 'add_regulation' as add_regulation %}
-                <a href="{{ add_regulation }}"
-                    class="nav-link {% if add_regulation == request.path %}active{% endif %}">
-                    <span class="nav-text">Add Regulation</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                {% url 'manage_regulation' as manage_regulation %}
-                <a href="{{ manage_regulation }}"
-                    class="nav-link {% if manage_regulation == request.path or 'edit_regulation' in request.path %}active{% endif %}">
-                    <span class="nav-text">Manage Regulation</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="nav-item has-submenu {% if 'session' in request.path %}open{% endif %}">
-        <a href="#" class="nav-link">
-            <span class="nav-icon-emoji">📅</span>
-            <span class="nav-text">Academic Year</span>
-            <i class="nav-arrow fas fa-chevron-right"></i>
-        </a>
-        <div class="nav-submenu">
-            <div class="nav-item">
-                {% url 'add_session' as add_session %}
-                <a href="{{ add_session }}" class="nav-link {% if add_session == request.path %}active{% endif %}">
-                    <span class="nav-text">Add Academic Year</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                {% url 'manage_session' as manage_session %}
-                <a href="{{ manage_session }}"
-                    class="nav-link {% if manage_session == request.path or 'edit_session' in request.path %}active{% endif %}">
-                    <span class="nav-text">Manage Academic Year</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="nav-item has-submenu {% if 'calendar' in request.path %}open{% endif %}">
-        <a href="#" class="nav-link">
-            <span class="nav-icon-emoji">🗓️</span>
-            <span class="nav-text">Academic Calendar</span>
-            <i class="nav-arrow fas fa-chevron-right"></i>
-        </a>
-        <div class="nav-submenu">
-            <div class="nav-item">
-                {% url 'add_calendar' as add_calendar %}
-                <a href="{{ add_calendar }}" class="nav-link {% if add_calendar == request.path %}active{% endif %}">
-                    <span class="nav-text">Add Entry</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                {% url 'manage_calendar' as manage_calendar %}
-                <a href="{{ manage_calendar }}"
-                    class="nav-link {% if manage_calendar == request.path or 'calendar/edit' in request.path %}active{% endif %}">
-                    <span class="nav-text">Manage Calendar</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="nav-item has-submenu {% if 'timetable' in request.path or 'period' in request.path %}open{% endif %}">
-        <a href="#" class="nav-link">
-            <span class="nav-icon-emoji">🕒</span>
-            <span class="nav-text">Time Table</span>
-            <i class="nav-arrow fas fa-chevron-right"></i>
-        </a>
-        <div class="nav-submenu">
-            <div class="nav-item">
-                {% url 'add_timetable' as add_timetable %}
-                <a href="{{ add_timetable }}" class="nav-link {% if add_timetable == request.path %}active{% endif %}">
-                    <span class="nav-text">Add Entry</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                {% url 'manage_timetable' as manage_timetable %}
-                <a href="{{ manage_timetable }}"
-                    class="nav-link {% if manage_timetable == request.path or 'edit_timetable' in request.path %}active{% endif %}">
-                    <span class="nav-text">Manage Timetable</span>
-                </a>
-            </div>
-        </div>
-    </div>
 
     <h6 class="nav-section-title">User Management</h6>
     <div class="nav-item">
@@ -337,7 +221,7 @@
     <div class="nav-item">
         {% url 'staff_home' as staff_home %}
         <a href="{{ staff_home }}" class="nav-link {% if staff_home == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📊</span>
+            <span class="nav-icon-emoji"><i class="fas fa-tachometer-alt"></i></span>
             <span class="nav-text">Dashboard</span>
         </a>
     </div>
@@ -462,7 +346,7 @@
     <div class="nav-item">
         {% url 'student_home' as student_home %}
         <a href="{{ student_home }}" class="nav-link {% if student_home == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📊</span>
+            <span class="nav-icon-emoji"><i class="fas fa-tachometer-alt"></i></span>
             <span class="nav-text">Dashboard</span>
         </a>
     </div>
@@ -592,7 +476,8 @@
     <div class="nav-section-bottom border-top mt-auto pt-3">
         <div class="nav-item">
             <a href="{% url 'user_logout' %}" class="nav-link text-danger logout-link">
-                <span class="nav-icon-emoji"><i class="fas fa-sign-out-alt" style="color: #ff6b6b; font-size: 1.1rem;"></i></span>
+                <span class="nav-icon-emoji"><i class="fas fa-sign-out-alt"
+                        style="color: #ff6b6b; font-size: 1.1rem;"></i></span>
                 <span class="nav-text" style="font-weight: 700; color: #ff6b6b !important;">Sign Out</span>
             </a>
         </div>
