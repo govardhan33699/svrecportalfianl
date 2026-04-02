@@ -4,14 +4,15 @@
 
 /* â”€â”€ Design Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
-  /* Palette */
-  --primary: #3b82f6;
-  --primary-light: #60a5fa;
-  --primary-dark: #2563eb;
-  --success: #3b82f6;
-  --danger: #0f172a;
-  --warning: #3b82f6;
-  --info: #60a5fa;
+  /* Palette - Luminous Emerald */
+  --primary: #2563eb; /* Vibrant Blue */
+  --primary-light: #60a5fa; /* Soft Sky */
+  --primary-dark: #1e40af; /* Deep Blue */
+  --primary-glow: rgba(37, 99, 235, 0.4);
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #34d399;
   --accent: #0f172a;
 
   /* Glass â€” iOS 26 deep frosted panels */
@@ -31,7 +32,7 @@
   --text-tertiary: #94a3b8;
 
   /* Layout */
-  --sidebar-width: 280px;
+  --sidebar-width: 110px;
   --radius-xs: 10px;
   --radius-sm: 14px;
   --radius-md: 20px;
@@ -57,12 +58,12 @@
   --surface: rgba(0, 0, 0, 0.6);
   --surface-raised: rgba(0, 0, 0, 0.8);
 
-  --text-primary: #ffffff; /* absolute white text */
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
-  --primary: #2563eb; /* Deeper Indigo so it contrasts against black nodes */
-  --primary-light: #60a5fa;
-  --primary-dark: #1d4ed8;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --primary: #f8fafc; /* Neutral White/Slate Accent */
+  --primary-light: #ffffff;
+  --primary-dark: #cbd5e1;
 }
 
 /* â”€â”€ Global Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -118,15 +119,7 @@ body,
   inset: 0;
   z-index: -2;
   background-color: #f8fafc;
-  /* Reverted to light */
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 65%),
-    radial-gradient(ellipse at 100% 0%, rgba(87, 92, 122, 0.334) 0, transparent 55%),
-    radial-gradient(ellipse at 80% 100%, rgb(59, 110, 185) 0, transparent 60%),
-    radial-gradient(ellipse at 20% 80%, rgba(15, 23, 42, 0.277) 0, transparent 55%);
-  filter: saturate(1.2);
-  will-change: filter;
-  transform: translateZ(0);
+  background-image: none;
 }
 
 .dark-mode .mesh-background {
@@ -174,8 +167,7 @@ body,
 }
 
 .dark-mode .master-glass-panel {
-  background: rgba(10, 10, 25, 0.15);
-  /* Increased transparency */
+  background: rgba(15, 23, 42, 0.15);
 }
 
 @keyframes panelIn {
@@ -200,7 +192,7 @@ body,
   position: relative !important;
   display: flex;
   flex-direction: column;
-  padding: 20px 0 !important;
+  padding: 0 0 !important;
   margin: 0 !important;
   border-radius: 0 !important;
   border-right: 1px solid var(--glass-border) !important;
@@ -230,12 +222,12 @@ body,
 }
 
 .erpnext-sidebar .sidebar-user {
-  padding: 0 20px 16px;
+  padding: 0 8px 6px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  margin-bottom: 16px;
+  margin-bottom: 2px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .erpnext-sidebar .sidebar-user-avatar {
@@ -255,8 +247,8 @@ body,
 
 .erpnext-sidebar .sidebar-user-info h6 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -281,14 +273,14 @@ body,
 
 /* Section titles */
 .nav-section {
-  padding: 12px 0;
+  padding: 2px 0;
 }
 
 .erpnext-sidebar .nav-section-title,
 .nav-section-title {
-  padding: 0 20px 6px;
-  margin: 8px 0 2px;
-  font-size: 10.5px;
+  padding: 0 8px 1px;
+  margin: 2px 0 0px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.2px;
@@ -304,13 +296,13 @@ body,
 
 /* Nav items */
 .nav-item {
-  margin: 1px 0;
+  margin: 0;
 }
 
 .erpnext-sidebar .nav-link {
-  width: calc(100% - 16px);
-  margin: 2px 8px;
-  padding: 10px 12px !important;
+  width: 100%;
+  margin: 0;
+  padding: 4px 4px 4px 8px !important;
   border-radius: var(--radius-sm) !important;
   display: flex;
   align-items: center;
@@ -358,7 +350,7 @@ body,
 .erpnext-sidebar .nav-link.active {
   background: var(--primary) !important;
   color: #fff !important;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
   border-color: transparent !important;
 }
 
@@ -409,7 +401,7 @@ body,
 .dark-mode .erpnext-sidebar .nav-link.active {
   background: var(--primary) !important;
   color: #fff !important;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
 }
 
 /* â”€â”€ Top Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -856,7 +848,7 @@ body,
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-dark), #4338ca);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4) !important;
   transform: translateY(-2px) !important;
 }
 
@@ -939,7 +931,7 @@ body,
 }
 
 .dark-mode .btn-primary {
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
 }
 
 .dark-mode .btn-success {
@@ -1466,6 +1458,18 @@ body,
 }
 
 /* â”€â”€ Badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.erpnext-sidebar .nav-text {
+  font-size: 12.5px !important;
+  font-weight: 550 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.erpnext-sidebar .nav-section-title {
+  font-size: 11px !important;
+}
+
 .badge {
   display: inline-block !important;
   padding: 0.3em 0.6em !important;

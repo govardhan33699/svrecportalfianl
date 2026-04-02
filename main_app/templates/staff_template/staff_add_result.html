@@ -79,14 +79,28 @@
         padding: 12px 15px;
         border-bottom: 1px solid #edf2f7;
     }
+
+    .table-bordered td,
+    .table-bordered th {
+        border: 1px solid #000 !important;
+    }
 </style>
 {% endblock custom_css %}
 
 {% block content %}
-<section class="content mt-4 pt-4">
+<section class="content mt-2">
     <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-md-11">
+        <!-- Fullscreen Top Action Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{% if request.user.user_type|slugify == '1' %}{% url 'admin_home' %}{% else %}{% url 'staff_home' %}{% endif %}"
+                class="btn btn-primary shadow-sm px-4" style="border-radius: 20px;">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+            <h5 class="mb-0 text-muted fw-bold"><i class="fas fa-file-signature me-2"></i>{{ page_title }}</h5>
+        </div>
+
+        <div class="row w-100 mx-0">
+            <div class="col-12 px-0">
                 {% if request.user.user_type|slugify != '1' %}
                 <div class="marks-card">
                     <div class="section-title">
@@ -222,6 +236,10 @@
 <script>
     var user_type = "{{ request.user.user_type|slugify }}";
     $(document).ready(function () {
+        // Enforce Fullscreen Mode for Marks Entry
+        $("body").addClass("no-sidebar");
+        $(".erpnext-navbar").hide();
+
         // Sync hidden fields for bulk upload
         $(".sync-subject").val($("#subject").val());
         $(".sync-exam").val($("#exam_name").val());
@@ -287,15 +305,87 @@
             }).done(function (response) {
                 console.log("Success response:", response);
                 var json_data = response;
+                var exam_name = $("#exam_name").val();
+
                 if (!json_data || json_data.length < 1) {
-                    $("#student_data").html("<div class='alert alert-info shadow-sm'>No students found for the given criteria. Please verify that the selected Academic Year, Branch, Semester, and Section match your students.</div>");
-                } else {
-                    var div_data = "<div class='d-flex justify-content-between align-items-center mb-2'><div><span class='text-muted small'><i class='fas fa-info-circle me-1'></i> Existing marks are locked to prevent accidental overwrite.</span></div>";
-                    if (user_type === '2') {
-                        div_data += "<button type='button' id='unlock_all' class='btn btn-sm btn-outline-warning'><i class='fas fa-unlock me-1'></i> Unlock All for Editing</button>";
+                    $("#student_data").html("<div class='alert alert-info shadow-sm'>No students found for the given criteria.</div>");
+                    return;
+                }
+
+                var div_data = "<div class='d-flex justify-content-between align-items-center mb-2'><div><span class='text-muted small'><i class='fas fa-info-circle me-1'></i> Existing marks are locked to prevent accidental overwrite.</span></div>";
+                if (exam_name === "Final Internal") {
+                    var export_url = "{% url 'export_final_internal' %}?subject=" + subject + "&session=" + session + "&section=" + section + "&semester=" + semester;
+                    div_data += "<a href='" + export_url + "' class='btn btn-sm btn-primary shadow-sm px-3'><i class='fas fa-file-excel me-1'></i> Print to Excel</a>";
+                }
+                div_data += "</div>";
+
+                if (exam_name === "Final Internal") {
+                    // EXCEL STYLE BREAKDOWN TABLE - 100% WIDTH MATCH
+                    div_data += "<div class='table-responsive'><table class='table table-bordered align-middle text-center mb-0' style='font-size: 0.72rem; border: 1px solid #000; width: 100%; border-collapse: collapse;'>";
+                    div_data += "<thead style='background: #f1f5f9;'><tr>";
+                    div_data += "<th rowspan='2' class='align-middle border-dark' style='width: 35px;'>S.#</th>";
+                    div_data += "<th rowspan='2' class='align-middle border-dark' style='width: 100px;'>ROLL NO</th>";
+                    div_data += "<th rowspan='2' class='align-middle border-dark' style='text-align: left; min-width: 220px;'>STUDENT FULL NAME</th>";
+                    div_data += "<th colspan='5' class='bg-light py-1 border-dark' style='font-size: 0.78rem;'>MID-I</th>";
+                    div_data += "<th colspan='5' class='bg-light py-1 border-dark' style='font-size: 0.78rem;'>MID-II</th>";
+                    div_data += "<th rowspan='2' class='align-middle border-dark' style='width: 55px;'>80%</th>";
+                    div_data += "<th rowspan='2' class='align-middle border-dark' style='width: 55px;'>20%</th>";
+                    div_data += "<th rowspan='2' class='align-middle border-dark' style='width: 65px;'>TOTAL</th>";
+                    div_data += "<th rowspan='2' class='align-middle bg-dark text-white border-dark' style='width: 80px;'>Round Off</th>";
+                    div_data += "</tr><tr>";
+                    // MID 1 SUBHEADERS
+                    div_data += "<th class='border-dark py-1' style='width: 45px;'>Obj</th><th class='border-dark py-1' style='width: 45px;'>Dis</th><th class='border-dark py-1' style='width: 45px;'>Asgn</th><th class='border-dark py-1 font-italic text-muted' style='width: 60px; font-size: 0.65rem;'>O+D+A</th><th class='fw-bold border-dark py-1' style='width: 45px;'>Tot</th>";
+                    // MID 2 SUBHEADERS
+                    div_data += "<th class='border-dark py-1' style='width: 45px;'>Obj</th><th class='border-dark py-1' style='width: 45px;'>Dis</th><th class='border-dark py-1' style='width: 45px;'>Asgn</th><th class='border-dark py-1 font-italic text-muted' style='width: 60px; font-size: 0.65rem;'>O+D+A</th><th class='fw-bold border-dark py-1' style='width: 45px;'>Tot</th>";
+                    div_data += "</tr></thead><tbody>";
+
+                    function fmt(val) {
+                        if (val === undefined || val === null) return "0";
+                        let n = parseFloat(val);
+                        // If it's an integer, return it as such. Otherwise, keep original (rounded to 2 places if it was float).
+                        return n % 1 === 0 ? n.toString() : parseFloat(n.toFixed(2)).toString();
                     }
-                    div_data += "</div>";
-                    div_data += "<div class='table-responsive'><table class='table table-hover align-middle custom-table'><thead><tr class='bg-light'><th>Student Name</th><th>Roll Number</th><th style='width: 15%'>Objective (30)</th><th style='width: 15%'>Descriptive (10)</th><th style='width: 15%'>Assignment (5)</th><th style='width: 12%'>Total</th></tr></thead><tbody>";
+
+                    for (key in json_data) {
+                        var student = json_data[key];
+                        var m1 = student.mid1;
+                        var m2 = student.mid2;
+
+                        var m1_dis_15 = (m1.dis / 2).toFixed(1);
+                        var m1_sum = (parseFloat(m1.obj) + parseFloat(m1_dis_15) + parseFloat(m1.asgn)).toFixed(2);
+                        var m1_total_rounded = Math.min(Math.round(m1_sum), 30);
+
+                        var m2_dis_15 = (m2.dis / 2).toFixed(1);
+                        var m2_sum = (parseFloat(m2.obj) + parseFloat(m2_dis_15) + parseFloat(m2.asgn)).toFixed(2);
+                        var m2_total_rounded = Math.min(Math.round(m2_sum), 30);
+
+                        var best = Math.max(m1_total_rounded, m2_total_rounded);
+                        var other = Math.min(m1_total_rounded, m2_total_rounded);
+                        var p80 = (best * 0.8).toFixed(2);
+                        var p20 = (other * 0.2).toFixed(2);
+                        var raw_total = (parseFloat(p80) + parseFloat(p20)).toFixed(2);
+                        var round_off = Math.min(Math.round(raw_total), 30);
+
+                        div_data += "<tr>";
+                        div_data += "<td class='border-dark' style='padding: 4px;'>" + (parseInt(key) + 1) + "</td>";
+                        div_data += "<td class='border-dark px-2' style='padding: 4px;'><code>" + (student.roll_number || 'N/A') + "</code></td>";
+                        div_data += "<td class='text-start fw-bold border-dark px-2' style='padding: 4px;'>" + student.name + "</td>";
+
+                        div_data += "<td class='border-dark' style='padding: 4px;'>" + fmt(m1.obj) + "</td><td class='border-dark' style='padding: 4px;'>" + fmt(m1_dis_15) + "</td><td class='border-dark' style='padding: 4px;'>" + fmt(m1.asgn) + "</td><td class='border-dark text-muted font-italic' style='padding: 4px;'>" + fmt(m1_sum) + "</td><td class='fw-bold border-dark bg-light' style='padding: 4px;'>" + fmt(m1_total_rounded) + "</td>";
+                        div_data += "<td class='border-dark' style='padding: 4px;'>" + fmt(m2.obj) + "</td><td class='border-dark' style='padding: 4px;'>" + fmt(m2_dis_15) + "</td><td class='border-dark' style='padding: 4px;'>" + fmt(m2.asgn) + "</td><td class='border-dark text-muted font-italic' style='padding: 4px;'>" + fmt(m2_sum) + "</td><td class='fw-bold border-dark bg-light' style='padding: 4px;'>" + fmt(m2_total_rounded) + "</td>";
+
+                        div_data += "<td class='border-dark' style='padding: 4px;'>" + fmt(p80) + "</td><td class='border-dark' style='padding: 4px;'>" + fmt(p20) + "</td><td class='border-dark fw-bold' style='padding: 4px;'>" + fmt(raw_total) + "</td>";
+                        div_data += "<td class='border-dark bg-light' style='padding: 4px;'><input type='number' class='form-control form-control-sm fw-bold text-center p-0 border-0 bg-transparent' name='objective_" + student.id + "' value='" + round_off + "' readonly style='font-size: 0.8rem; height: 25px;'></td>";
+
+                        div_data += "<input type='hidden' name='student_ids[]' value='" + student.id + "'>";
+                        div_data += "<input type='hidden' name='descriptive_" + student.id + "' value='0'>";
+                        div_data += "<input type='hidden' name='assignment_" + student.id + "' value='0'>";
+                        div_data += "</tr>";
+                    }
+                    div_data += "</tbody></table></div>";
+                } else {
+                    // REGULAR EXAM VIEW
+                    div_data += "<div class='table-responsive'><table class='table table-hover align-middle custom-table'><thead><tr class='bg-light'><th>Student Name</th><th>Roll Number</th><th style='width: 15%'>Descriptive (30)</th><th style='width: 15%'>Objective (10)</th><th style='width: 15%'>Assignment (5)</th><th style='width: 12%'>Total</th></tr></thead><tbody>";
 
                     for (key in json_data) {
                         var studentId = json_data[key]['id'];
@@ -306,18 +396,18 @@
                         div_data += "<tr>";
                         div_data += "<td><span class='fw-bold'>" + json_data[key]['name'] + "</span></td>";
                         div_data += "<td><code>" + (json_data[key]['roll_number'] || 'N/A') + "</code></td>";
-                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='objective_" + studentId + "' value='" + marks['objective'] + "' min='0' max='30' " + isLocked + "></td>";
-                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='descriptive_" + studentId + "' value='" + marks['descriptive'] + "' min='0' max='10' " + isLocked + "></td>";
+                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='descriptive_" + studentId + "' value='" + marks['descriptive'] + "' min='0' max='30' " + isLocked + "></td>";
+                        div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='objective_" + studentId + "' value='" + marks['objective'] + "' min='0' max='10' " + isLocked + "></td>";
                         div_data += "<td><input type='number' class='form-control mark-input' data-id='" + studentId + "' name='assignment_" + studentId + "' value='" + marks['assignment'] + "' min='0' max='5' " + isLocked + "></td>";
                         div_data += "<td><div class='d-flex align-items-center'><input type='text' class='form-control fw-bold bg-light total-field border-0 text-center' id='total_" + studentId + "' name='total_" + studentId + "' value='" + marks['total'] + "' readonly style='width: 85px; padding: 0.5rem 4px;'>" + lockBadge + "</div></td>";
                         div_data += "<input type='hidden' name='student_ids[]' value='" + studentId + "'>";
                         div_data += "</tr>";
                     }
-
                     div_data += "</tbody></table></div>";
-                    div_data += "<div class='mt-4'><button class='btn btn-success btn-lg w-100 shadow-sm' type='submit'><i class='fas fa-save me-2'></i>Save / Update Marks</button></div>";
-                    $("#student_data").html(div_data);
                 }
+
+                div_data += "<div class='mt-4'><button class='btn btn-success btn-lg w-100 shadow-sm' type='submit'><i class='fas fa-save me-2'></i>Save / Update Marks</button></div>";
+                $("#student_data").html(div_data);
             }).fail(function (xhr, status, error) {
                 console.error("AJAX Error:", status, error, xhr.responseText);
                 alert("Error in fetching students: " + error + "\nServer response: " + xhr.responseText);
@@ -345,9 +435,9 @@
             var desc = parseFloat($("input[name='descriptive_" + studentId + "']").val()) || 0;
             var assign = parseFloat($("input[name='assignment_" + studentId + "']").val()) || 0;
 
-            // Internal calculation: (Obj / 2) + Desc + Assign
-            var converted_obj = obj / 2;
-            var total = converted_obj + desc + assign;
+            // Internal calculation: Obj + (Desc / 2) + Assign
+            var converted_desc = desc / 2;
+            var total = obj + converted_desc + assign;
             $("#total_" + studentId).val(total.toFixed(1));
         });
 

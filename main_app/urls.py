@@ -57,6 +57,7 @@ urlpatterns = [
     path("staff/view/leave/", hod_views.view_staff_leave, name="view_staff_leave",),
     path("attendance/view/", hod_views.admin_view_attendance,
          name="admin_view_attendance",),
+    path("marks/calculate-final/", hod_views.calculate_final_internal, name='calculate_final_internal'),
     path("marks/view/", hod_views.admin_view_marks_report,
          name="admin_view_marks_report",),
     path("attendance/fetch/", hod_views.get_admin_attendance,
@@ -149,8 +150,8 @@ urlpatterns = [
     path('staff/result/export-template/', staff_views.export_marks_template, name='export_marks_template'),
     path('staff/result/generic-template/', staff_views.download_generic_template, name='download_generic_template'),
     path('staff/result/import-excel/', staff_views.import_marks_excel, name='import_marks_excel'),
-    path('staff/internships/', staff_views.staff_view_internship,
-         name='staff_view_internship'),
+    path('staff/result/export-final-internal/', staff_views.export_final_internal, name='export_final_internal'),
+
 
 
 
@@ -176,8 +177,7 @@ urlpatterns = [
     path('student/view/result/', student_views.student_view_result,
          name='student_view_result'),
     path('student/consolidated-marks/', student_views.student_consolidated_marks,          name='student_consolidated_marks'),     path('student/results-traditional/', student_views.student_view_results_traditional,          name='student_view_results_traditional'),
-    path('student/internships/', student_views.student_view_internship,
-         name='student_view_internship'),
+
 
     # Staff Timetable
     path("staff/timetable/add/", staff_views.staff_add_timetable, name='staff_add_timetable'),
@@ -227,11 +227,7 @@ urlpatterns = [
     # Student View Announcement
     path("student/announcement/view/", student_views.student_view_announcement, name='student_view_announcement'),
 
-    # Internship management (Admin)
-    path("internship/manage/", hod_views.manage_internship, name='manage_internship'),
-    path("internship/add/", hod_views.add_internship, name='add_internship'),
-    path("internship/edit/<int:internship_id>", hod_views.edit_internship, name='edit_internship'),
-    path("internship/delete/<int:internship_id>", hod_views.delete_internship, name='delete_internship'),
+
 
     # Academic Calendar management
     path("calendar/manage/", hod_views.manage_calendar, name='manage_calendar'),

@@ -107,13 +107,16 @@ def get_user_profile_pic(request):
             return JsonResponse({"status": "error", "message": f"Account with email '{email}' not found."})
         
         user = users.first()
+        full_name = f"{user.first_name} {user.last_name}".strip()
+        if not full_name:
+            full_name = user.username or "User"
+            
         if user.profile_pic:
             url = user.profile_pic.url
         else:
-            name = f"{user.first_name} {user.last_name}".strip() or "User"
-            url = f"https://ui-avatars.com/api/?name={name}&background=6197e6&color=fff"
+            url = f"https://ui-avatars.com/api/?name={full_name}&background=6197e6&color=fff"
             
-        return JsonResponse({"status": "success", "url": url})
+        return JsonResponse({"status": "success", "url": url, "full_name": full_name})
         
     except Exception as e:
         return JsonResponse({"status": "error", "message": f"Server Error: {str(e)}"})

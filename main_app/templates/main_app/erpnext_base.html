@@ -28,57 +28,260 @@
     {% block custom_css %}{% endblock %}
 
     <style>
-        /* Force Absolute Black in Dark Mode to bypass any caching headers */
-        .dark-mode {
-            --glass-bg: rgba(0, 0, 0, 0.95) !important;
-            --glass-bg-hover: rgba(10, 10, 10, 0.98) !important;
-            --surface: rgba(0, 0, 0, 0.8) !important;
-            --surface-raised: rgba(0, 0, 0, 0.9) !important;
-            --glass-border: rgba(255, 255, 255, 0.04) !important;
-            --text-primary: #ffffff !important;
+        :root {
+            --glass-bg: rgba(239, 246, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-blur: blur(25px);
+            --glass-shadow: 0 10px 40px rgba(37, 99, 235, 0.08);
+            --accent-glow: 0 0 20px rgba(37, 99, 235, 0.4);
+            --glow-accent: #2563eb; 
+            --glow-secondary: #1d4ed8; 
+            --glow-tertiary: #60a5fa; 
+            --text-main: #111827;
         }
 
-        .dark-mode .main-header,
-        .dark-mode .erpnext-navbar {
-            background: rgba(255, 255, 255, 0.06) !important; /* White glass tint over black */
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+        .dark-mode {
+            --glass-bg: rgba(15, 23, 42, 0.85) !important; 
+            --glass-bg-hover: rgba(30, 41, 59, 0.95) !important;
+            --surface: #020617 !important;
+            --glass-border: rgba(255, 255, 255, 0.08) !important;
+            --text-main: #f8fafc !important;
+            --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+            --glow-accent: #94a3b8 !important;
+            --glow-secondary: #64748b !important;
+        }
+
+        .dark-mode body {
+            background-color: #020617 !important;
+            color: var(--text-main) !important;
+        }
+
+        /* Ocean Glass - The Professional Look */
+        .mesh-background {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
+            overflow: hidden;
         }
 
         .dark-mode .mesh-background {
-            background-color: #000000 !important;
-            background-image: none !important;
+            background-color: #020617 !important;
+            background-image: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 1) 0%, #020617 100%) !important;
+        }
+
+        .erpnext-sidebar {
+            background: rgba(239, 246, 255, 0.4) !important;
+            backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(37, 99, 235, 0.1);
         }
 
         .dark-mode .erpnext-sidebar {
-            background: #000000 !important;
+            background: rgba(15, 23, 42, 0.95) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .card, .erpnext-card, .update-grid-card, .sd-table-wrapper-no-scroll,
+        .sd-cgpa-info-card, .sd-cgpa-gauge-card {
+            background: linear-gradient(135deg, var(--glass-bg), rgba(255, 255, 255, 0.2));
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle Indigo Tint for Glass (Dark Mode Only) */
+        .dark-mode .erpnext-card, .dark-mode .card {
+            background: rgba(30, 41, 59, 0.7) !important;
+            background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%) !important;
+        }
+
+        /* Innovative Lift and Glow Effect on Hover */
+        .card:hover, .erpnext-card:hover, .update-grid-card:hover, 
+        .sd-cgpa-info-card:hover, .sd-cgpa-gauge-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .dark-mode .card:hover, .dark-mode .erpnext-card:hover, 
+        .dark-mode .update-grid-card:hover, .dark-mode .sd-cgpa-info-card:hover {
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(37, 99, 235, 0.2) !important;
         }
 
         .dark-mode .card,
+        .dark-mode .erpnext-card,
         .dark-mode .update-grid-card,
         .dark-mode .sd-table-wrapper-no-scroll,
         .dark-mode .sd-cgpa-info-card,
         .dark-mode .sd-cgpa-gauge-card {
-            background: rgba(30, 30, 36, 0.45) !important; /* Smooth dark-slate transparency */
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.06) !important;
-            border-radius: 20px !important; /* Smooth rounded corners */
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            background: rgba(30, 41, 59, 0.65) !important;
+            backdrop-filter: blur(30px) !important;
+            -webkit-backdrop-filter: blur(30px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7) !important;
+        }
+
+        /* Subtle Inner Shadow for Depth (Dark Mode Only) */
+        .dark-mode .erpnext-card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .dark-mode .page-title, 
+        .dark-mode .college-name, 
+        .dark-mode .navbar-left h2,
+        .dark-mode .card-title,
+        .dark-mode h1, .dark-mode h2, .dark-mode h3, 
+        .dark-mode .text-dark,
+        .dark-mode .dashboard-date,
+        .dark-mode .breadcrumb-item,
+        .dark-mode .breadcrumb-item a {
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .text-muted {
+            color: #cbd5e1 !important;
         }
 
         .dark-mode .master-glass-panel {
-            background: rgba(0, 0, 0, 0.5) !important;
+            background: rgba(0, 0, 0, 0.4) !important;
         }
 
         .dark-mode table,
         .dark-mode th,
-        .dark-mode td,
-        .dark-mode .text-primary {
+        .dark-mode td {
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Global Liquid Glass Components */
+        .filter-bar-wrapper {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            padding: 6px;
+            display: inline-flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .dark-mode .filter-bar-wrapper {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border-color: rgba(255,255,255,0.05) !important;
+        }
+
+        .filter-pill {
+            border: none;
+            background: rgba(0, 0, 0, 0.03);
+            color: #64748b;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+
+        .dark-mode .filter-pill {
+            background: rgba(255, 255, 255, 0.03) !important;
+            color: #94a3b8 !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .filter-pill span {
+            background: rgba(0, 0, 0, 0.05);
+            color: inherit;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+        }
+
+        .dark-mode .filter-pill span {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Luminous Emerald Filter Pills */
+        .filter-pill.active-filter {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.2)) !important;
+            color: #059669 !important;
+            border: 1px solid rgba(16, 185, 129, 0.35) !important;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .dark-mode .filter-pill.active-filter {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.55), rgba(5, 150, 105, 0.45)) !important;
+            color: #ffffff !important;
+            border-color: rgba(52, 211, 153, 0.65) !important;
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.5) !important;
+        }
+
+        .filter-pill.active-filter span {
+            background: rgba(37, 99, 235, 0.1);
+            color: #2563eb;
+        }
+
+        .dark-mode .filter-pill.active-filter span {
+            background: rgba(255, 255, 255, 0.25) !important;
             color: #ffffff !important;
         }
+
+        .filter-pill:hover:not(.active-filter) {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1e293b;
+        }
+
+        .dark-mode .filter-pill:hover:not(.active-filter) {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .dark-mode .badge.bg-light {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .dark-mode .badge.bg-primary {
+            background: rgba(37, 99, 235, 0.45) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.3) !important;
+        }
+
+        .role-counter-badge {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
         body {
             min-width: 1200px;
             overflow-x: auto;

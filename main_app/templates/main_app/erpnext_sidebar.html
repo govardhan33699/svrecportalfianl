@@ -1,10 +1,19 @@
 {% load static %}
 <style>
     .nav-icon-emoji {
-        font-size: 1.2rem !important;
-        width: 20px !important;
+        font-size: 1.1rem !important;
+        width: 24px !important;
         text-align: center;
-        display: inline-block !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary); /* Force Blue Theme for Icons */
+        transition: color 0.3s ease;
+    }
+    
+    .nav-link:hover .nav-icon-emoji,
+    .nav-link.active .nav-icon-emoji {
+        color: #ffffff !important;
     }
 </style>
 <!-- Sidebar Header -->
@@ -45,7 +54,7 @@
         {% url 'admin_view_profile' as admin_view_profile %}
         <a href="{{ admin_view_profile }}"
             class="nav-link {% if admin_view_profile == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">👤</span>
+            <span class="nav-icon-emoji"><i class="fas fa-user"></i></span>
             <span class="nav-text">Profile</span>
         </a>
     </div>
@@ -55,7 +64,7 @@
         {% url 'manage_course_combined' as manage_course_combined %}
         <a href="{{ manage_course_combined }}"
             class="nav-link {% if manage_course_combined == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📘</span>
+            <span class="nav-icon-emoji"><i class="fas fa-book"></i></span>
             <span class="nav-text">Course Management</span>
         </a>
     </div>
@@ -68,7 +77,7 @@
     <div class="nav-item">
         {% url 'add_staff' as add_staff %}
         <a href="{{ add_staff }}" class="nav-link {% if add_staff == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">➕</span>
+            <span class="nav-icon-emoji"><i class="fas fa-plus-circle"></i></span>
             <span class="nav-text">Add Staff</span>
         </a>
     </div>
@@ -76,14 +85,14 @@
         {% url 'manage_staff' as manage_staff %}
         <a href="{{ manage_staff }}"
             class="nav-link {% if manage_staff == request.path or 'edit_staff' in request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">👥</span>
+            <span class="nav-icon-emoji"><i class="fas fa-users-cog"></i></span>
             <span class="nav-text">Manage Staff</span>
         </a>
     </div>
     <div class="nav-item">
         {% url 'add_student' as add_student %}
         <a href="{{ add_student }}" class="nav-link {% if add_student == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🎓</span>
+            <span class="nav-icon-emoji"><i class="fas fa-user-graduate"></i></span>
             <span class="nav-text">Add Student</span>
         </a>
     </div>
@@ -91,7 +100,7 @@
         {% url 'manage_student' as manage_student %}
         <a href="{{ manage_student }}"
             class="nav-link {% if manage_student == request.path or 'edit_student' in request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">👥</span>
+            <span class="nav-icon-emoji"><i class="fas fa-users"></i></span>
             <span class="nav-text">Manage Students</span>
         </a>
     </div>
@@ -101,7 +110,7 @@
         {% url 'admin_notify_staff' as admin_notify_staff %}
         <a href="{{ admin_notify_staff }}"
             class="nav-link {% if admin_notify_staff == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🔔</span>
+            <span class="nav-icon-emoji"><i class="fas fa-bell"></i></span>
             <span class="nav-text">Notify Staff</span>
         </a>
     </div>
@@ -109,14 +118,14 @@
         {% url 'admin_notify_student' as admin_notify_student %}
         <a href="{{ admin_notify_student }}"
             class="nav-link {% if admin_notify_student == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📢</span>
+            <span class="nav-icon-emoji"><i class="fas fa-bullhorn"></i></span>
             <span class="nav-text">Notify Students</span>
         </a>
     </div>
 
     <div class="nav-item has-submenu {% if 'announcement' in request.path %}open{% endif %}">
         <a href="#" class="nav-link">
-            <span class="nav-icon-emoji">📜</span>
+            <span class="nav-icon-emoji"><i class="fas fa-scroll"></i></span>
             <span class="nav-text">Announcements</span>
             <i class="nav-arrow fas fa-chevron-right"></i>
         </a>
@@ -138,29 +147,7 @@
         </div>
     </div>
 
-    <div class="nav-item has-submenu {% if 'internship' in request.path %}open{% endif %}">
-        <a href="#" class="nav-link">
-            <span class="nav-icon-emoji">💼</span>
-            <span class="nav-text">Internships</span>
-            <i class="nav-arrow fas fa-chevron-right"></i>
-        </a>
-        <div class="nav-submenu">
-            <div class="nav-item">
-                {% url 'add_internship' as add_internship %}
-                <a href="{{ add_internship }}"
-                    class="nav-link {% if add_internship == request.path %}active{% endif %}">
-                    <span class="nav-text">Add Internship</span>
-                </a>
-            </div>
-            <div class="nav-item">
-                {% url 'manage_internship' as manage_internship %}
-                <a href="{{ manage_internship }}"
-                    class="nav-link {% if manage_internship == request.path or 'edit_internship' in request.path %}active{% endif %}">
-                    <span class="nav-text">Manage Internships</span>
-                </a>
-            </div>
-        </div>
-    </div>
+
 
 
 
@@ -169,7 +156,7 @@
         {% url 'admin_view_attendance' as admin_view_attendance %}
         <a href="{{ admin_view_attendance }}"
             class="nav-link {% if admin_view_attendance == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📈</span>
+            <span class="nav-icon-emoji"><i class="fas fa-chart-line"></i></span>
             <span class="nav-text">View Attendance</span>
         </a>
     </div>
@@ -177,7 +164,7 @@
         {% url 'admin_view_marks_report' as admin_view_marks_report %}
         <a href="{{ admin_view_marks_report }}"
             class="nav-link {% if admin_view_marks_report == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📄</span>
+            <span class="nav-icon-emoji"><i class="fas fa-file-invoice"></i></span>
             <span class="nav-text">View Marks</span>
         </a>
     </div>
@@ -185,7 +172,7 @@
         {% url 'student_feedback_message' as student_feedback_message %}
         <a href="{{ student_feedback_message }}"
             class="nav-link {% if student_feedback_message == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">💬</span>
+            <span class="nav-icon-emoji"><i class="fas fa-comment-dots"></i></span>
             <span class="nav-text">Student Feedback</span>
         </a>
     </div>
@@ -193,7 +180,7 @@
         {% url 'staff_feedback_message' as staff_feedback_message %}
         <a href="{{ staff_feedback_message }}"
             class="nav-link {% if staff_feedback_message == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">💬</span>
+            <span class="nav-icon-emoji"><i class="fas fa-comment-dots"></i></span>
             <span class="nav-text">Staff Feedback</span>
         </a>
     </div>
@@ -202,7 +189,7 @@
     <div class="nav-item">
         {% url 'view_staff_leave' as view_staff_leave %}
         <a href="{{ view_staff_leave }}" class="nav-link {% if view_staff_leave == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🗓️</span>
+            <span class="nav-icon-emoji"><i class="fas fa-calendar-times"></i></span>
             <span class="nav-text">Staff Leave</span>
         </a>
     </div>
@@ -210,7 +197,7 @@
         {% url 'view_student_leave' as view_student_leave %}
         <a href="{{ view_student_leave }}"
             class="nav-link {% if view_student_leave == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🗓️</span>
+            <span class="nav-icon-emoji"><i class="fas fa-calendar-times"></i></span>
             <span class="nav-text">Student Leave</span>
         </a>
     </div>
@@ -230,7 +217,7 @@
         {% url 'staff_view_profile' as staff_view_profile %}
         <a href="{{ staff_view_profile }}"
             class="nav-link {% if staff_view_profile == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">👤</span>
+            <span class="nav-icon-emoji"><i class="fas fa-user-circle"></i></span>
             <span class="nav-text">Profile</span>
         </a>
     </div>
@@ -239,7 +226,7 @@
     <div class="nav-item">
         {% url 'staff_add_result' as staff_add_result %}
         <a href="{{ staff_add_result }}" class="nav-link {% if staff_add_result == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">➕</span>
+            <span class="nav-icon-emoji"><i class="fas fa-plus-circle"></i></span>
             <span class="nav-text">Add Marks</span>
         </a>
     </div>
@@ -249,7 +236,7 @@
         {% url 'staff_take_attendance' as staff_take_attendance %}
         <a href="{{ staff_take_attendance }}"
             class="nav-link {% if staff_take_attendance == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">✅</span>
+            <span class="nav-icon-emoji"><i class="fas fa-check-circle"></i></span>
             <span class="nav-text">Take Attendance</span>
         </a>
     </div>
@@ -259,7 +246,7 @@
         {% url 'staff_manage_timetable' as staff_manage_timetable %}
         <a href="{{ staff_manage_timetable }}"
             class="nav-link {% if staff_manage_timetable == request.path or 'staff/timetable' in request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📅</span>
+            <span class="nav-icon-emoji"><i class="fas fa-calendar-day"></i></span>
             <span class="nav-text">My Timetable</span>
         </a>
     </div>
@@ -269,7 +256,7 @@
         {% url 'staff_create_assignment' as staff_create_assignment %}
         <a href="{{ staff_create_assignment }}"
             class="nav-link {% if staff_create_assignment == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📝</span>
+            <span class="nav-icon-emoji"><i class="fas fa-pen-nib"></i></span>
             <span class="nav-text">Create Assignment</span>
         </a>
     </div>
@@ -277,7 +264,7 @@
         {% url 'staff_manage_assignments' as staff_manage_assignments %}
         <a href="{{ staff_manage_assignments }}"
             class="nav-link {% if staff_manage_assignments == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📋</span>
+            <span class="nav-icon-emoji"><i class="fas fa-clipboard-list"></i></span>
             <span class="nav-text">Manage Assignments</span>
         </a>
     </div>
@@ -287,7 +274,7 @@
         {% url 'staff_add_material' as staff_add_material %}
         <a href="{{ staff_add_material }}"
             class="nav-link {% if staff_add_material == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📁</span>
+            <span class="nav-icon-emoji"><i class="fas fa-folder-open"></i></span>
             <span class="nav-text">Manage Materials</span>
         </a>
     </div>
@@ -297,7 +284,7 @@
         {% url 'staff_view_notification' as staff_view_notification %}
         <a href="{{ staff_view_notification }}"
             class="nav-link {% if staff_view_notification == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🔔</span>
+            <span class="nav-icon-emoji"><i class="fas fa-bell"></i></span>
             <span class="nav-text">Notifications</span>
         </a>
     </div>
@@ -305,29 +292,22 @@
         {% url 'staff_view_announcement' as staff_view_announcement %}
         <a href="{{ staff_view_announcement }}"
             class="nav-link {% if staff_view_announcement == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📜</span>
+            <span class="nav-icon-emoji"><i class="fas fa-scroll"></i></span>
             <span class="nav-text">Announcements</span>
         </a>
     </div>
     <div class="nav-item">
         {% url 'staff_apply_leave' as staff_apply_leave %}
         <a href="{{ staff_apply_leave }}" class="nav-link {% if staff_apply_leave == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📅</span>
+            <span class="nav-icon-emoji"><i class="fas fa-calendar-plus"></i></span>
             <span class="nav-text">Apply for Leave</span>
         </a>
     </div>
-    <div class="nav-item">
-        {% url 'staff_view_internship' as staff_view_internship %}
-        <a href="{{ staff_view_internship }}"
-            class="nav-link {% if staff_view_internship == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">💼</span>
-            <span class="nav-text">Internships</span>
-        </a>
-    </div>
+
     <div class="nav-item">
         {% url 'staff_feedback' as staff_feedback %}
         <a href="{{ staff_feedback }}" class="nav-link {% if staff_feedback == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">💬</span>
+            <span class="nav-icon-emoji"><i class="fas fa-comment-dots"></i></span>
             <span class="nav-text">Feedback</span>
         </a>
     </div>
@@ -339,7 +319,7 @@
         {% url 'student_view_profile' as student_view_profile %}
         <a href="{{ student_view_profile }}"
             class="nav-link {% if student_view_profile == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">👤</span>
+            <span class="nav-icon-emoji"><i class="fas fa-user-circle"></i></span>
             <span class="nav-text">Profile</span>
         </a>
     </div>
@@ -356,7 +336,7 @@
         {% url 'student_attendance_report' as student_attendance_report %}
         <a href="{{ student_attendance_report }}"
             class="nav-link {% if student_attendance_report == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📋</span>
+            <span class="nav-icon-emoji"><i class="fas fa-clipboard-check"></i></span>
             <span class="nav-text">Attendance Report</span>
         </a>
     </div>
@@ -364,18 +344,18 @@
         {% url 'student_view_result' as student_view_result %}
         <a href="{{ student_view_result }}"
             class="nav-link {% if student_view_result == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📈</span>
+            <span class="nav-icon-emoji"><i class="fas fa-chart-bar"></i></span>
             <span class="nav-text">View Internal Marks</span>
         </a>
     </div>
     <div class="nav-item"> {% url 'student_view_results_traditional' as student_view_results_traditional %} <a
             href="{{ student_view_results_traditional }}"
             class="nav-link {% if student_view_results_traditional == request.path %}active{% endif %}"> <span
-                class="nav-icon-emoji">📊</span> <span class="nav-text">SEM-WISE RESULTS</span> </a> </div>
+                class="nav-icon-emoji"><i class="fas fa-poll"></i></span> <span class="nav-text">SEM-WISE RESULTS</span> </a> </div>
     <div class="nav-item"> {% url 'student_consolidated_marks' as student_consolidated_marks %}
         <a href="{{ student_consolidated_marks }}"
             class="nav-link {% if student_consolidated_marks == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📄</span>
+            <span class="nav-icon-emoji"><i class="fas fa-file-alt"></i></span>
             <span class="nav-text">Consolidate Marks Memo</span>
         </a>
     </div>
@@ -383,7 +363,7 @@
         {% url 'student_view_timetable' as student_view_timetable %}
         <a href="{{ student_view_timetable }}"
             class="nav-link {% if student_view_timetable == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🕒</span>
+            <span class="nav-icon-emoji"><i class="fas fa-clock"></i></span>
             <span class="nav-text">Timetable</span>
         </a>
     </div>
@@ -391,23 +371,16 @@
         {% url 'student_view_assignments' as student_view_assignments %}
         <a href="{{ student_view_assignments }}"
             class="nav-link {% if student_view_assignments == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📝</span>
+            <span class="nav-icon-emoji"><i class="fas fa-edit"></i></span>
             <span class="nav-text">Assignments</span>
         </a>
     </div>
-    <div class="nav-item">
-        {% url 'student_view_internship' as student_view_internship %}
-        <a href="{{ student_view_internship }}"
-            class="nav-link {% if student_view_internship == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">💼</span>
-            <span class="nav-text">Internships</span>
-        </a>
-    </div>
+
     <div class="nav-item">
         {% url 'student_view_certificates' as student_view_certificates %}
         <a href="{{ student_view_certificates }}"
             class="nav-link {% if student_view_certificates == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📜</span>
+            <span class="nav-icon-emoji"><i class="fas fa-certificate"></i></span>
             <span class="nav-text">My Certificates</span>
         </a>
     </div>
@@ -417,7 +390,7 @@
         {% url 'student_view_material' as student_view_material %}
         <a href="{{ student_view_material }}"
             class="nav-link {% if student_view_material == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📁</span>
+            <span class="nav-icon-emoji"><i class="fas fa-folder-open"></i></span>
             <span class="nav-text">Study Materials</span>
         </a>
     </div>
@@ -425,7 +398,7 @@
         {% url 'student_cloud_storage' as student_cloud_storage %}
         <a href="{{ student_cloud_storage }}"
             class="nav-link {% if student_cloud_storage == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">☁️</span>
+            <span class="nav-icon-emoji"><i class="fas fa-cloud"></i></span>
             <span class="nav-text">Cloud Storage</span>
         </a>
     </div>
@@ -435,7 +408,7 @@
         {% url 'student_view_notification' as student_view_notification %}
         <a href="{{ student_view_notification }}"
             class="nav-link {% if student_view_notification == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🔔</span>
+            <span class="nav-icon-emoji"><i class="fas fa-bell"></i></span>
             <span class="nav-text">Notifications</span>
         </a>
     </div>
@@ -443,7 +416,7 @@
         {% url 'student_view_announcement' as student_view_announcement %}
         <a href="{{ student_view_announcement }}"
             class="nav-link {% if student_view_announcement == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📜</span>
+            <span class="nav-icon-emoji"><i class="fas fa-scroll"></i></span>
             <span class="nav-text">Announcements</span>
         </a>
     </div>
@@ -451,14 +424,14 @@
         {% url 'student_apply_leave' as student_apply_leave %}
         <a href="{{ student_apply_leave }}"
             class="nav-link {% if student_apply_leave == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">📅</span>
+            <span class="nav-icon-emoji"><i class="fas fa-calendar-plus"></i></span>
             <span class="nav-text">Apply for Leave</span>
         </a>
     </div>
     <div class="nav-item">
         {% url 'student_feedback' as student_feedback %}
         <a href="{{ student_feedback }}" class="nav-link {% if student_feedback == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">💬</span>
+            <span class="nav-icon-emoji"><i class="fas fa-comment-dots"></i></span>
             <span class="nav-text">Feedback</span>
         </a>
     </div>
@@ -466,7 +439,7 @@
         {% url 'student_change_password' as student_change_password %}
         <a href="{{ student_change_password }}"
             class="nav-link {% if student_change_password == request.path %}active{% endif %}">
-            <span class="nav-icon-emoji">🔑</span>
+            <span class="nav-icon-emoji"><i class="fas fa-key"></i></span>
             <span class="nav-text">Change Password</span>
         </a>
     </div>

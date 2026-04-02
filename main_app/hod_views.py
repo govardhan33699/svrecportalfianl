@@ -13,12 +13,13 @@ from django.views.generic import UpdateView
 
 from .forms import *
 from .models import (
-    Admin, Internship, Staff, Student, Subject, Course, Session, Degree,
+    Admin, Staff, Student, Subject, Course, Session, Degree,
     Attendance, AttendanceReport, LeaveReportStudent, LeaveReportStaff,
     FeedbackStudent, FeedbackStaff, NotificationStaff, NotificationStudent,
     StudentResult, Period, Timetable, Assignment, AssignmentSubmission,
-    Announcement, Regulation, AcademicCalendar, CalendarEvent, SEMESTER_CHOICES, StudentCertificate,
-    AcademicLevel, AcademicSemester,
+    StudyMaterial, Announcement, AcademicCalendar, CalendarEvent,
+    Regulation, StudentCertificate, StudentCloudFile,
+    SEMESTER_CHOICES, AcademicLevel, AcademicSemester,
     EmailTemplate, Workflow, WorkflowExecutionLog
 )
 
@@ -114,14 +115,12 @@ def admin_home(request):
         "present_count": present_count,
         "attendance_rate": attendance_rate,
         "today_date": today,
-        "total_internships": Internship.objects.all().count(),
         "total_degrees": Degree.objects.all().count(),
     }
 
     # Recent Activities
     recent_students = Student.objects.all().select_related('admin').order_by("-admin__created_at")[:3]
     recent_staff = Staff.objects.all().select_related('admin').order_by("-admin__created_at")[:3]
-    recent_internships = Internship.objects.all().order_by("-created_at")[:3]
     recent_student_leaves = LeaveReportStudent.objects.filter(status=0).order_by("-created_at")[:3]
 
 
@@ -141,14 +140,6 @@ def admin_home(request):
             'time': st.admin.created_at,
             'icon': 'fa-user-tie',
             'color': 'success'
-        })
-    for i in recent_internships:
-        activities.append({
-            'type': 'internship',
-            'title': f"Internship Posted: {i.title} @ {i.company}",
-            'time': i.created_at,
-            'icon': 'fa-briefcase',
-            'color': 'warning'
         })
     for l in recent_student_leaves:
         activities.append({
@@ -2082,74 +2073,7 @@ def delete_regulation(request, regulation_id):
         messages.error(request, "Could not delete: " + str(e))
     return redirect(reverse('manage_regulation'))
 
-def manage_internship(request):
-    internships = Internship.objects.all().order_by('-created_at')
-    context = {
-        'internships': internships,
-        'page_title': 'Manage Internships'
-    }
-    return render(request, "hod_template/manage_internship.html", context)
 
-
-def add_internship(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        company = request.POST.get('company')
-        description = request.POST.get('description')
-        link = request.POST.get('link')
-        deadline = request.POST.get('deadline')
-        
-        try:
-            internship = Internship(
-                title=title,
-                company=company,
-                description=description,
-                link=link,
-                deadline=deadline
-            )
-            internship.save()
-            messages.success(request, "Internship Added Successfully")
-            return redirect(reverse('manage_internship'))
-        except Exception as e:
-            messages.error(request, "Could Not Add Internship: " + str(e))
-            
-    context = {
-        'page_title': 'Add Internship'
-    }
-    return render(request, "hod_template/add_internship_template.html", context)
-
-
-def edit_internship(request, internship_id):
-    internship = get_object_or_404(Internship, id=internship_id)
-    if request.method == 'POST':
-        internship.title = request.POST.get('title')
-        internship.company = request.POST.get('company')
-        internship.description = request.POST.get('description')
-        internship.link = request.POST.get('link')
-        internship.deadline = request.POST.get('deadline')
-        
-        try:
-            internship.save()
-            messages.success(request, "Internship Updated Successfully")
-            return redirect(reverse('manage_internship'))
-        except Exception as e:
-            messages.error(request, "Could Not Update Internship: " + str(e))
-            
-    context = {
-        'internship': internship,
-        'page_title': 'Edit Internship'
-    }
-    return render(request, "hod_template/edit_internship_template.html", context)
-
-
-def delete_internship(request, internship_id):
-    internship = get_object_or_404(Internship, id=internship_id)
-    try:
-        internship.delete()
-        messages.success(request, "Internship Deleted Successfully")
-    except Exception as e:
-        messages.error(request, "Could Not Delete Internship: " + str(e))
-    return redirect(reverse('manage_internship'))
 
 def manage_calendar(request):
     calendars = AcademicCalendar.objects.all().select_related(
@@ -2405,13 +2329,13 @@ def admin_edit_marks_memo(request, student_id):
             res = StudentResult.objects.filter(
                 student=student,
                 subject=sub,
-                exam_name='FINAL_EXTERNAL',
+                exam_name='Final Internal',
             ).order_by('id').first()
             if not res:
                 res = StudentResult(
                     student=student,
                     subject=sub,
-                    exam_name='FINAL_EXTERNAL',
+                    exam_name='Final Internal',
                 )
             if em_val != '':
                 try:
@@ -2590,7 +2514,7 @@ def admin_add_marks_memo_subject(request, student_id):
             res, created = StudentResult.objects.get_or_create(
                 student=student,
                 subject=subject,
-                exam_name='FINAL_EXTERNAL',
+                exam_name='Final Internal',
                 defaults={'semester': semester}
             )
             if created:
@@ -2611,5 +2535,81 @@ def admin_delete_marks_memo_subject(request, student_id, subject_id):
     else:
         messages.warning(request, f"No results found for {subject.name}.")
     return redirect(reverse('admin_edit_marks_memo', args=[student_id]))
+
+
+def calculate_final_internal(request):
+    if request.method != 'POST':
+        return HttpResponse("Method Not Allowed")
+    
+    course_id = request.POST.get('course')
+    session_id = request.POST.get('session')
+    semester = request.POST.get('semester')
+    section = request.POST.get('section')
+    regulation_id = request.POST.get('regulation')
+    
+    if not course_id or not session_id:
+        messages.error(request, "Please select Branch and Academic Year")
+        return redirect(reverse('admin_view_marks_report'))
+        
+    # Get subjects for this filter
+    subjects_qs = Subject.objects.filter(course_id=course_id)
+    if semester:
+        subjects_qs = subjects_qs.filter(semester=semester)
+    if regulation_id:
+        subjects_qs = subjects_qs.filter(regulation_id=regulation_id)
+    
+    subjects = list(subjects_qs)
+    
+    # Get students
+    student_qs = Student.objects.filter(course_id=course_id)
+    if section:
+        student_qs = student_qs.filter(section=section)
+    if semester:
+        student_qs = student_qs.filter(semester=semester)
+    if regulation_id:
+        student_qs = student_qs.filter(regulation_id=regulation_id)
+        
+    students = list(student_qs)
+    
+    if not subjects or not students:
+        messages.warning(request, "No students or subjects found for the selected criteria.")
+        return redirect(reverse('admin_view_marks_report'))
+        
+    final_count = 0
+    for student in students:
+        for subject in subjects:
+            # Get Mid 1 and Mid 2 results
+            mid1 = StudentResult.objects.filter(student=student, subject=subject, exam_name='Mid 1').first()
+            mid2 = StudentResult.objects.filter(student=student, subject=subject, exam_name='Mid 2').first()
+            
+            if mid1 or mid2:
+                m1_total = mid1.total if mid1 else 0
+                m2_total = mid2.total if mid2 else 0
+                
+                # Formula: Final = Round(max(m1, m2)*0.8 + min(m1, m2)*0.2)
+                best = max(m1_total, m2_total)
+                other = min(m1_total, m2_total)
+                
+                final_val = (best * 0.8) + (other * 0.2)
+                rounded_final = round(final_val)
+                
+                # Update or create Final Internal record
+                StudentResult.objects.update_or_create(
+                    student=student,
+                    subject=subject,
+                    exam_name='Final Internal',
+                    defaults={
+                        'total': rounded_final,
+                        'internal_marks': rounded_final, # Sync internal_marks too
+                        'semester': semester or subject.semester
+                    }
+                )
+                final_count += 1
+                
+    messages.success(request, f"Successfully calculated Final Internal marks for {final_count} student-subject records.")
+    
+    # Redirect back with the same GET parameters to show the results
+    query_params = request.POST.urlencode()
+    return redirect(f"{reverse('admin_view_marks_report')}?{query_params}")
 
 

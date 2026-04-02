@@ -22,23 +22,49 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block custom_css %}{% endblock custom_css %}
     <style>
-        /* Force Absolute Black in Dark Mode to bypass any caching headers */
+        /* Ocean Glass Design Tokens - White & Blue */
+        :root {
+            --glass-bg: rgba(239, 246, 255, 0.45); /* Faint Blue-Tinted translucency */
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-blur: blur(25px);
+            --glass-shadow: 0 10px 40px rgba(37, 99, 235, 0.08);
+            --accent-glow: 0 0 20px rgba(37, 99, 235, 0.4);
+            --glow-accent: #2563eb; /* Vibrant Blue */
+            --glow-secondary: #1d4ed8; /* Deep Blue */
+            --glow-tertiary: #60a5fa; /* Soft Sky */
+            --text-main: #111827;
+        }
+
+        /* Clean Monochrome Dark Mode */
         .dark-mode {
-            --glass-bg: rgba(0, 0, 0, 0.95) !important;
-            --glass-bg-hover: rgba(10, 10, 10, 0.98) !important;
-            --surface: rgba(0, 0, 0, 0.8) !important;
-            --surface-raised: rgba(0, 0, 0, 0.9) !important;
-            --glass-border: rgba(255, 255, 255, 0.04) !important;
-            --text-primary: #ffffff !important;
+            --glass-bg: rgba(15, 23, 42, 0.85) !important; 
+            --glass-bg-hover: rgba(30, 41, 59, 0.95) !important;
+            --surface: #020617 !important;
+            --surface-raised: #0f172a !important;
+            --glass-border: rgba(255, 255, 255, 0.08) !important;
+            --text-primary: #f8fafc !important;
+            --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+            --glow-accent: #94a3b8 !important; /* Neutral slate */
+            --glow-secondary: #64748b !important;
+        }
+
+        /* Ocean Glass - The Professional Look */
+        .mesh-background {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -2;
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
+            overflow: hidden;
         }
 
         .dark-mode .mesh-background {
-            background-color: #000000 !important;
-            background-image: none !important;
+            background-color: #020617 !important;
+            background-image: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 1) 0%, #020617 100%) !important;
         }
 
         .dark-mode .erpnext-sidebar {
-            background: #000000 !important;
+            background: rgba(15, 23, 42, 0.95) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
         }
 
         .dark-mode .card,
@@ -46,11 +72,11 @@
         .dark-mode .sd-table-wrapper-no-scroll,
         .dark-mode .sd-cgpa-info-card,
         .dark-mode .sd-cgpa-gauge-card {
-            background: rgba(30, 30, 36, 0.45) !important; /* Smooth dark-slate transparency */
+            background: rgba(30, 41, 59, 0.65) !important; /* Slate Glass */
             backdrop-filter: blur(20px) !important;
             -webkit-backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.06) !important;
-            border-radius: 20px !important; /* Smooth rounded corners */
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
         }
 

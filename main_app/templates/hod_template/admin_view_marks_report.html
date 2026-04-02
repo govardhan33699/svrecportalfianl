@@ -293,11 +293,25 @@
                             <h5 class="card-title text-success"><i class="fas fa-play-circle"></i> Actions</h5>
                         </div>
                         <div class="card-body d-flex flex-column justify-content-center gap-3">
-                            <button type="submit" class="btn btn-primary btn-action w-100">Show Data</button>
-                            <button type="button" class="btn btn-danger btn-action w-100" onclick="window.print()">Print
-                                Report</button>
-                            <a href="{% url 'admin_view_marks_report' %}"
-                                class="btn btn-light btn-action w-100 border">Reset</a>
+                            <button type="submit" form="filterForm" class="btn btn-primary btn-action w-100">Show Data</button>
+                            
+                            {% if filters_applied %}
+                            <form action="{% url 'calculate_final_internal' %}" method="POST" onsubmit="return confirm('Calculate Final Internal Marks (80:20 Rule) for this selection?\n\nThis will update or create records for all students in this group.')">
+                                {% csrf_token %}
+                                <!-- Pass current filters to the POST request -->
+                                <input type="hidden" name="course" value="{{ request.GET.course }}">
+                                <input type="hidden" name="session" value="{{ request.GET.session }}">
+                                <input type="hidden" name="semester" value="{{ request.GET.semester }}">
+                                <input type="hidden" name="section" value="{{ request.GET.section }}">
+                                <input type="hidden" name="regulation" value="{{ request.GET.regulation }}">
+                                <button type="submit" class="btn btn-warning btn-action w-100">
+                                    <i class="fas fa-calculator"></i> Calculate Final
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <button type="button" class="btn btn-danger btn-action w-100" onclick="window.print()">Print Report</button>
+                            <a href="{% url 'admin_view_marks_report' %}" class="btn btn-light btn-action w-100 border">Reset</a>
                         </div>
                     </div>
                 </div>

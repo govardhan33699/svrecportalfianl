@@ -33,7 +33,7 @@ class EditResultView(View):
                 result.objective = objective
                 result.descriptive = descriptive
                 result.assignment = assignment
-                result.total = (objective / 2) + descriptive + assignment
+                result.total = objective + (descriptive / 2) + assignment
                 result.save()
                 messages.success(request, "Marks Updated")
                 return redirect(reverse('edit_student_result'))

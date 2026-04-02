@@ -437,18 +437,6 @@ class Announcement(models.Model):
         return self.title
 
 
-class Internship(models.Model):
-    title = models.CharField(max_length=200)
-    company = models.CharField(max_length=200)
-    description = models.TextField()
-    link = models.URLField(max_length=500, null=True, blank=True)
-    deadline = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} at {self.company}"
-
 
 class AcademicCalendar(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, verbose_name="Academic Year")
@@ -475,7 +463,6 @@ class CalendarEvent(models.Model):
         ('end_exam', 'End Theory Examinations'),
         ('workshop', 'Branch Specific Workshop'),
         ('results', 'Declaration of Results'),
-        ('internship', 'Industry Internship'),
         ('next_commencement', 'Commencement of Next Semester'),
         ('other', 'Other'),
     ]
@@ -547,7 +534,6 @@ class StudentCloudFile(models.Model):
 
 # Student Certificates
 CERTIFICATE_TYPE_CHOICES = [
-    ('Internship', 'Internship'),
     ('Workshop', 'Workshop'),
     ('Sports', 'Sports'),
     ('Technical', 'Technical'),

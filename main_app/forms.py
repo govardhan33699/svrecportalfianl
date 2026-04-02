@@ -314,20 +314,20 @@ class EditResultForm(FormSettings):
 
     def __init__(self, *args, **kwargs):
         super(EditResultForm, self).__init__(*args, **kwargs)
-        self.fields['objective'].widget.attrs.update({'max': '30', 'min': '0'})
-        self.fields['descriptive'].widget.attrs.update({'max': '10', 'min': '0'})
+        self.fields['objective'].widget.attrs.update({'max': '10', 'min': '0'})
+        self.fields['descriptive'].widget.attrs.update({'max': '30', 'min': '0'})
         self.fields['assignment'].widget.attrs.update({'max': '5', 'min': '0'})
 
     def clean_objective(self):
         objective = self.cleaned_data.get('objective')
-        if objective > 30:
-            raise forms.ValidationError("Objective marks cannot exceed 30")
+        if objective > 10:
+            raise forms.ValidationError("Objective marks cannot exceed 10")
         return objective
 
     def clean_descriptive(self):
         descriptive = self.cleaned_data.get('descriptive')
-        if descriptive > 10:
-            raise forms.ValidationError("Descriptive marks cannot exceed 10")
+        if descriptive > 30:
+            raise forms.ValidationError("Descriptive marks cannot exceed 30")
         return descriptive
 
     def clean_assignment(self):

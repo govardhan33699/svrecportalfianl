@@ -1,4 +1,4 @@
-# SVREC College ERP - Project Overview
+# SVR Engineering College - Protal Overview
 **Department of CSE-(AI)**
 **College:** SVREC (AUTONOMOUS) NANDYAL
 

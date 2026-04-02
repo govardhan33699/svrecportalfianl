@@ -148,7 +148,21 @@
 
         /* Right Column Form Elements */
         .user-avatar-wrapper {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name-display {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e225f;
+            display: none;
+            margin-top: 5px;
+            text-align: center;
+            animation: fadeIn 0.4s ease forwards;
         }
 
         .user-avatar {
@@ -197,6 +211,26 @@
             display: flex;
             align-items: center;
             z-index: 2;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.2s;
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            outline: none;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-blue);
         }
 
         .input-wrapper input {
@@ -306,6 +340,7 @@
                     <div class="user-avatar" id="defaultAvatar">
                         <i class="fas fa-user"></i>
                     </div>
+                    <div id="userNameDisplay" class="user-name-display"></div>
                 </div>
 
                 <form action="{% url 'user_login' %}" method="post" style="width: 100%;" id="loginForm">
@@ -343,6 +378,9 @@
                             <div class="input-wrapper">
                                 <span class="input-icon"><i class="fas fa-lock"></i></span>
                                 <input type="password" placeholder="Password" name="password" id="passwordInput">
+                                <button type="button" class="password-toggle" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                                </button>
                             </div>
                         </div>
                         <button type="submit" class="btn-submit">Sign In</button>
@@ -388,6 +426,7 @@
                     if (response.status === 'success') {
                         // Update UI for step 2
                         $('#userProfilePic').attr('src', response.url).show();
+                        $('#userNameDisplay').text(response.full_name).fadeIn();
                         $('#defaultAvatar').hide();
 
                         // Transition
@@ -431,6 +470,7 @@
                 setTimeout(() => {
                     $('#step1').css({ 'opacity': '1', 'transform': 'translateX(0)' });
                     $('#userProfilePic').hide();
+                    $('#userNameDisplay').hide().text('');
                     $('#defaultAvatar').show();
                 }, 50);
             }, 400);
@@ -441,6 +481,21 @@
             setTimeout(() => {
                 $('#ajaxAlert').fadeOut();
             }, 3000);
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
         }
 
         // Allow 'Enter' key on Username field to trigger 'Next'

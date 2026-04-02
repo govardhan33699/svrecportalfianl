@@ -16,7 +16,7 @@ from .models import (
     Student, Subject, Attendance, AttendanceReport, StudentResult,
     Announcement, Assignment, AssignmentSubmission, Timetable, Course,
     NotificationStudent, LeaveReportStudent, FeedbackStudent, Book, Regulation,
-    Session, Period, Internship, StudyMaterial, StudentCloudFile, StudentCertificate
+    Session, Period, StudyMaterial, StudentCloudFile, StudentCertificate
 )
 from .forms import (
     LeaveReportStudentForm, FeedbackStudentForm, StudentEditForm,
@@ -488,7 +488,7 @@ def student_view_result(request):
         entry['code'] = sub.code or ''
         entry['max_marks'] = sub.max_marks or 30
 
-    # Then, overlay actual marks data
+        # Then, overlay actual marks data
     for res in results:
         # Robust semester attribution: prioritize result's semester, then fallback to subject's semester
         sem = res.semester or res.subject.semester or student.semester or '1'
@@ -504,7 +504,12 @@ def student_view_result(request):
 
         exam_key = EXAM_NAME_MAP.get(res.exam_name)
         if exam_key:
-            entry['marks'][exam_key] = res.total
+            entry['marks'][exam_key] = {
+                'total': res.total,
+                'obj': res.objective,
+                'des': res.descriptive,
+                'assign': res.assignment
+            }
 
     # Build structured data for template
     # { semester_display_name: { 'subjects': [...], 'rows': [...] } }
@@ -530,11 +535,11 @@ def student_view_result(request):
         # Build rows for each exam type
         rows = []
         for exam_key, exam_label in EXAM_TYPES:
-            marks_row = []
+            row_marks = []
             for sub_id in subject_ids_ordered:
-                val = subjects_dict[sub_id]['marks'].get(exam_key, '')
-                marks_row.append(val)
-            rows.append({'label': exam_label, 'marks': marks_row, 'is_final': False})
+                m_data = subjects_dict[sub_id]['marks'].get(exam_key)
+                row_marks.append(m_data) # Dict or None
+            rows.append({'label': exam_label, 'marks': row_marks, 'is_final': False})
 
         # Calculate Final row
         final_marks = []
@@ -546,13 +551,15 @@ def student_view_result(request):
                 final_score = round(float(s_entry['internal_override']))
             else:
                 m = s_entry['marks']
-                int1 = float(m.get('INT-1', 0) or 0)
-                int2 = float(m.get('INT-2', 0) or 0)
+                int1 = float(m.get('INT-1', {}).get('total', 0) or 0)
+                int2 = float(m.get('INT-2', {}).get('total', 0) or 0)
                 m_max = max(int1, int2)
                 m_min = min(int1, int2)
                 final_score = round((0.8 * m_max) + (0.2 * m_min))
             final_marks.append(final_score)
-        rows.append({'label': 'Final', 'marks': final_marks, 'is_final': True})
+        
+        final_row_marks = [{'total': f} for f in final_marks]
+        rows.append({'label': 'Final Internal', 'marks': final_row_marks, 'is_final': True})
 
         semester_data[sem_name] = {
             'subjects': subjects_list,
@@ -1105,13 +1112,7 @@ def student_view_announcement(request):
     }
     return render(request, "student_template/student_view_announcement.html", context)
 
-def student_view_internship(request):
-    internships = Internship.objects.all().order_by('-created_at')
-    context = {
-        'internships': internships,
-        'page_title': 'Internship Opportunities'
-    }
-    return render(request, "student_template/student_view_internship.html", context)
+
 def student_cloud_storage(request):
     student = get_object_or_404(Student, admin=request.user)
     files = StudentCloudFile.objects.filter(student=student).order_by('-created_at')

@@ -7,219 +7,223 @@
 
 {% block custom_css %}
 <style>
-    /* --- Latest Updates Glass Grid --- */
+    /* --- Latest Updates Liquid Glass --- */
     .updates-grid-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
+        gap: 24px;
         margin-bottom: 20px;
     }
 
     .update-grid-card {
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.45);
-        border-radius: 20px;
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
         overflow: hidden;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.04);
+        box-shadow: var(--glass-shadow);
         display: flex;
         flex-direction: column;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
     }
 
     .update-grid-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
     }
 
     .ug-card-header {
-        padding: 16px 20px;
+        padding: 20px 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-        background: rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
     }
 
-    .ug-title {
-        font-weight: 800;
-        font-size: 1rem;
-        letter-spacing: 0.3px;
+    /* Filter Bar - Liquid Glass Pill Style */
+    .filter-bar-wrapper {
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50px;
+        padding: 6px;
+        display: inline-flex;
+        gap: 4px;
+        margin-bottom: 24px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
-    /* Colorized Titles & Icons */
-    .news-card .ug-title {
-        color: #1d4ed8;
+    .dark-mode .filter-bar-wrapper {
+        background: rgba(0, 0, 0, 0.2);
+        border-color: rgba(255,255,255,0.05);
     }
 
-    .exams-card .ug-title {
-        color: #047857;
+    .filter-pill {
+        border: none;
+        background: rgba(0, 0, 0, 0.03);
+        color: #64748b;
+        padding: 8px 18px;
+        border-radius: 40px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        white-space: nowrap;
+        border: 1px solid transparent;
     }
 
-    .placements-card .ug-title {
-        color: #ea580c;
+    .dark-mode .banner-stat-item {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
     }
 
-    .ug-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
+    .dark-mode .update-grid-card[data-category] {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border-color: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    .dark-mode .p-3[style*="background"] {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .dark-mode .ug-icon-bg {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .filter-pill {
+        background: rgba(255, 255, 255, 0.03) !important;
+        color: #60a5fab8 !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .filter-pill span {
+        background: rgba(0, 0, 0, 0.05);
+        color: inherit;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
-        color: #fff;
+        font-size: 0.65rem;
     }
 
-    .news-card .ug-icon {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    .dark-mode .filter-pill span {
+        background: rgba(255, 255, 255, 0.08) !important;
     }
 
-    .exams-card .ug-icon {
-        background: linear-gradient(135deg, #10b981, #059669);
+    .filter-pill.active-filter {
+        background: rgba(37, 99, 235, 0.12) !important;
+        color: #2563eb !important;
+        border: 1px solid rgba(37, 99, 235, 0.3) !important;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.15);
     }
 
-    .placements-card .ug-icon {
-        background: linear-gradient(135deg, #f97316, #ea580c);
+    .dark-mode .filter-pill.active-filter {
+        background: rgba(37, 99, 235, 0.4) !important;
+        color: #ffffff !important;
+        border-color: rgba(96, 165, 250, 0.6) !important;
+        box-shadow: 0 0 25px rgba(37, 99, 235, 0.4) !important;
     }
 
-    .ug-card-body {
-        padding: 18px 20px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        background: rgba(255, 255, 255, 0.2);
+    .dark-mode .filter-pill.active-filter span {
+        background: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
     }
 
-    .ug-item {
-        padding-bottom: 14px;
-        border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+    .dark-mode .ug-items-list > div {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
     }
 
-    .ug-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
+    .dark-mode .welcome-banner .banner-stat-item {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
-    .ug-date {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #64748b;
-        margin-bottom: 4px;
-    }
-
-    .ug-item-title {
-        font-weight: 700;
-        font-size: 0.95rem;
+    .filter-pill:hover:not(.active-filter) {
+        background: rgba(0, 0, 0, 0.05);
         color: #1e293b;
-        line-height: 1.35;
     }
 
-    .ug-item-desc {
-        font-size: 0.82rem;
-        color: #475569;
-        line-height: 1.4;
-        margin-top: 5px;
+    .dark-mode .filter-pill:hover:not(.active-filter) {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
-    .ug-item-empty {
-        text-align: center;
-        padding: 40px 0;
-        color: #94a3b8;
-        font-size: 0.88rem;
-        font-style: italic;
-    }
-
-    /* Dark Mode compatibility updates */
-    .dark-mode .update-grid-card {
-        background: rgba(30, 30, 45, 0.6);
-        border-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .dark-mode .ug-card-body {
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-    .dark-mode .ug-item-title {
-        color: #f1f5f9;
-    }
-
-    .dark-mode .ug-item-desc {
-        color: #94a3b8;
-    }
-
-    .dark-mode .ug-item {
-        border-bottom-color: rgba(255, 255, 255, 0.06);
-    }
-
-    .dark-mode .news-card .ug-title {
-        color: #60a5fa;
-    }
-
-    .dark-mode .exams-card .ug-title {
-        color: #34d399;
-    }
-
-    .dark-mode .placements-card .ug-title {
-        color: #fb923c;
-    }
-
-    /* --- Admin Dashboard Glass Design --- */
-    body .welcome-banner {
+    /* Innovative HOD Welcome Banner */
+    .welcome-banner {
         background: rgba(255, 255, 255, 0.45) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(40px) !important;
+        -webkit-backdrop-filter: blur(40px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 28px !important;
+        padding: 24px 32px !important;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03) !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 20px;
+        margin-bottom: 24px !important;
+    }
+
+    @media (max-width: 991px) {
+        .welcome-banner {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 20px !important;
+        }
+    }
+
+    /* Perimeter Glow for HOD Banner (Luminous Aurora Emerald) */
+    .welcome-banner::before {
+        content: "";
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .banner-stat-item {
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
         border-radius: 20px !important;
-        padding: 1.5rem 2rem !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important;
-        margin-bottom: 2rem !important;
+        padding: 20px !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    body .admin-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1.25rem;
-        margin-bottom: 2.5rem;
-    }
-
-    body .admin-stat-card {
-        background: rgba(255, 255, 255, 0.45) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.45) !important;
-        border-radius: 20px !important;
-        padding: 1.5rem !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important;
-        transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-    }
-
-    .admin-stat-card:hover {
+    .banner-stat-item:hover {
         transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06) !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
 
-    .stat-value {
-        font-weight: 800 !important;
-        font-size: 2rem !important;
+    .dark-mode .banner-stat-item {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
     }
 
     body .erpnext-card {
-        background: rgba(255, 255, 255, 0.45) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.45) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important;
-        overflow: hidden;
-    }
-
-    .erpnext-card .card-header {
-        background: transparent !important;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
-        padding: 1.25rem 1.5rem !important;
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur) !important;
+        -webkit-backdrop-filter: var(--glass-blur) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 28px !important;
+        box-shadow: var(--glass-shadow) !important;
     }
 
     body .quick-actions-grid {
@@ -238,6 +242,7 @@
     body .quick-action-btn:hover {
         background: rgba(255, 255, 255, 0.5) !important;
         transform: translateY(-2px);
+        box-shadow: none !important;
     }
 
     .absentees-section * {
@@ -277,8 +282,7 @@
 
 {% block content %}
 <!-- Welcome Banner -->
-<div class="welcome-banner"
-    style="background: rgba(255, 255, 255, 0.45) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid rgba(255, 255, 255, 0.45) !important; border-radius: 20px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important; padding: 1.25rem 2rem !important; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem !important;">
+<div class="welcome-banner">
     <div>
         <span class="text-success fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 1.2px;">Admin
             Control Centre</span>
@@ -322,7 +326,7 @@
 <div class="row g-4 mb-4">
     <div class="col-12">
         <div class="erpnext-card h-100"
-            style="background: rgba(255, 255, 255, 0.45) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid rgba(255, 255, 255, 0.45) !important; border-radius: 20px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important; overflow: hidden; display: flex; flex-direction: column;">
+            style="overflow: hidden; display: flex; flex-direction: column;">
             <div class="card-header">
                 <h3 class="card-title"
                     style="font-size:1rem; font-weight:700; display:flex; align-items:center; gap:10px;"><i
@@ -364,7 +368,7 @@
                         style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
                         <div class="d-flex align-items-center gap-3">
                             <div
-                                style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); color:#10b981; font-size: 1rem;">
+                                style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); color:#2563eb; font-size: 1rem;">
                                 <i class="fas fa-users"></i>
                             </div>
                             <div>
@@ -394,7 +398,7 @@
                         style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
                         <div class="d-flex align-items-center gap-3">
                             <div
-                                style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(139,92,246,0.1); color:#8b5cf6; font-size: 1rem;">
+                                style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(139,92,246,0.1); color:#2563eb; font-size: 1rem;">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
                             <div>
@@ -424,7 +428,7 @@
                         style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
                         <div class="d-flex align-items-center gap-3">
                             <div
-                                style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); color:#10b981; font-size: 1rem;">
+                                style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); color:#2563eb; font-size: 1rem;">
                                 <i class="fas fa-file-invoice"></i>
                             </div>
                             <div>
@@ -459,8 +463,7 @@
 <div class="row g-4 mb-4">
     <div class="col-12">
         <div class="absentees-section">
-            <div class="erpnext-card"
-                style="background: #fffafa !important; border: 1px solid rgba(239, 68, 68, 0.1) !important; border-radius: 24px !important; box-shadow: 0 10px 40px rgba(239, 68, 68, 0.03) !important; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="erpnext-card" style="overflow: hidden; display: flex; flex-direction: column;">
                 <!-- Header Panel -->
                 <div class="card-header absentees-header d-flex justify-content-between align-items-center p-3"
                     style="background: transparent; border-bottom: none !important;">
@@ -507,7 +510,7 @@
                             style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">Total Students</div>
                     </div>
                     <div class="text-center flex-grow-1">
-                        <div class="h3 fw-bold mb-0" style="color: #8b5cf6;">{{ attendance_rate }}%</div>
+                        <div class="h3 fw-bold mb-0" style="color: #2563eb;">{{ attendance_rate }}%</div>
                         <div class="text-muted text-uppercase"
                             style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">Today's Attendance Rate
                         </div>
@@ -554,7 +557,7 @@
                                     </td>
                                     <td class="align-middle">
                                         <span class="badge d-inline-flex align-items-center gap-1"
-                                            style="background: rgba(139, 92, 246, 0.08); color: #7c3aed; border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">
+                                            style="background: rgba(139, 92, 246, 0.08); color: #1e40af; border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">
                                             <i class="fas fa-circle" style="font-size: 5px;"></i> {{ absentee.course }}
                                         </span>
                                     </td>
@@ -595,8 +598,7 @@
     </div>
 </div>
 <!-- Latest Updates Grid Section -->
-<div class="erpnext-card"
-    style="background: rgba(255, 255, 255, 0.45) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid rgba(255, 255, 255, 0.45) !important; border-radius: 20px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03) !important; overflow: hidden; margin-bottom: 28px;">
+<div class="erpnext-card" style="overflow: hidden; margin-bottom: 28px;">
     <div class="card-header d-flex justify-content-between align-items-center p-3"
         style="background: transparent !important; border-bottom: 1px solid rgba(0,0,0,0.04) !important;">
         <div class="d-flex align-items-center gap-3">
@@ -616,27 +618,19 @@
         </a>
     </div>
     <div class="card-body p-3">
-        <!-- Filter Pills Bar -->
-        <div class="d-flex gap-2 mb-4 filter-bar" style="overflow-x: auto; padding-bottom: 5px;" id="updatesFilterBar">
-            <button class="btn active-filter d-flex align-items-center gap-1" data-target="all"
-                style="background: #2563eb; color: #ffffff; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.72rem; border: none; transition: all 0.2s;">
-                All <span
-                    style="background: rgba(255,255,255,0.2); color: #ffffff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold;">{{ news_announcements|length|add:exam_announcements|length|add:placement_announcements|length }}</span>
+        <!-- Filter Pills Bar (Liquid Glass Style) -->
+        <div class="filter-bar-wrapper">
+            <button class="filter-pill active-filter" data-target="all">
+                All <span>{{ news_announcements|length|add:exam_announcements|length|add:placement_announcements|length }}</span>
             </button>
-            <button class="btn d-flex align-items-center gap-1" data-target="news"
-                style="background: #f1f5f9; color: #64748b; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.72rem; border: none; transition: all 0.2s;">
-                📰 News <span
-                    style="background: rgba(100, 116, 139, 0.08); color: #64748b; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; margin-left: 2px;">{{ news_announcements|length }}</span>
+            <button class="filter-pill" data-target="news">
+                📰 News <span>{{ news_announcements|length }}</span>
             </button>
-            <button class="btn d-flex align-items-center gap-1" data-target="exams"
-                style="background: #f1f5f9; color: #64748b; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.72rem; border: none; transition: all 0.2s;">
-                📝 Examinations <span
-                    style="background: rgba(100, 116, 139, 0.08); color: #64748b; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; margin-left: 2px;">{{ exam_announcements|length }}</span>
+            <button class="filter-pill" data-target="exams">
+                📝 Exams <span>{{ exam_announcements|length }}</span>
             </button>
-            <button class="btn d-flex align-items-center gap-1" data-target="announcements"
-                style="background: #f1f5f9; color: #64748b; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.72rem; border: none; transition: all 0.2s;">
-                📢 Announcements <span
-                    style="background: rgba(100, 116, 139, 0.08); color: #64748b; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; margin-left: 2px;">{{ placement_announcements|length }}</span>
+            <button class="filter-pill" data-target="announcements">
+                📢 Announcements <span>{{ placement_announcements|length }}</span>
             </button>
         </div>
 
@@ -700,12 +694,12 @@
                     <div class="d-flex align-items-center gap-2">
                         <div
                             style="background: rgba(5, 150, 105, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-file-invoice" style="font-size: 13px; color: #059669;"></i>
+                            <i class="fas fa-file-invoice" style="font-size: 13px; color: #1e40af;"></i>
                         </div>
-                        <span style="font-weight: 800; color: #059669; font-size: 0.88rem;">Examinations</span>
+                        <span style="font-weight: 800; color: #1e40af; font-size: 0.88rem;">Examinations</span>
                     </div>
                     <span class="badge"
-                        style="background: rgba(5, 150, 105, 0.06); color: #059669; border-radius: 20px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ exam_announcements|length }} item</span>
+                        style="background: rgba(5, 150, 105, 0.06); color: #1e40af; border-radius: 20px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ exam_announcements|length }} item</span>
                 </div>
 
                 <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
@@ -714,14 +708,14 @@
                         style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
                         <div>
                             <div
-                                style="color: #059669; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-circle" style="font-size: 4px; color: #059669;"></i> {{ item.created_at|date:"d M Y"|upper }}
+                                style="color: #1e40af; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-circle" style="font-size: 4px; color: #1e40af;"></i> {{ item.created_at|date:"d M Y"|upper }}
                             </div>
                             <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
                         </div>
                         <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
                             style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
-                            onmouseover="this.style.color='#059669'" onmouseout="this.style.color='#64748b'">
+                            onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#64748b'">
                             <i class="fas fa-edit"></i>
                         </a>
                     </div>
@@ -737,7 +731,7 @@
                 {% if exam_announcements %}
                 <div class="text-center mt-3">
                     <a href="{% url 'manage_announcement' %}" class="fw-bold"
-                        style="font-size: 0.78rem; text-decoration: none; color: #059669;">View all exams →</a>
+                        style="font-size: 0.78rem; text-decoration: none; color: #1e40af;">View all exams →</a>
                 </div>
                 {% endif %}
             </div>
@@ -797,7 +791,7 @@
         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top"
             style="border-color: rgba(0,0,0,0.04) !important;">
             <div style="font-size: 0.72rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
-                <i class="fas fa-circle" style="font-size: 6px; color: #10b981;"></i> Live · Updates
+                <i class="fas fa-circle" style="font-size: 6px; color: #2563eb;"></i> Live · Updates
             </div>
             <div style="font-size: 0.72rem; color: #64748b; font-weight: 700;" id="noticesCount">
                 Showing <span style="color: #1e293b;">{{ exam_announcements|length|add:placement_announcements|length|add:news_announcements|length }}</span>
@@ -816,67 +810,31 @@
 {% block custom_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const filterButtons = document.querySelectorAll('#updatesFilterBar .btn');
+        const filterButtons = document.querySelectorAll('.filter-bar-wrapper .filter-pill');
         const cards = document.querySelectorAll('#updatesGridContainer .update-grid-card');
         const noticesCount = document.getElementById('noticesCount');
-
-        // Total notices count from badges
-        let totalNotices = 0;
-        filterButtons.forEach(b => {
-            const badge = b.querySelector('span');
-            if (badge && b.getAttribute('data-target') !== 'all') {
-                totalNotices += parseInt(badge.textContent.trim()) || 0;
-            }
-        });
 
         filterButtons.forEach(btn => {
             btn.addEventListener('click', function () {
                 const target = this.getAttribute('data-target');
 
-                // Reset all buttons style
-                filterButtons.forEach(b => {
-                    b.classList.remove('active-filter');
-                    b.style.background = '#f1f5f9';
-                    b.style.color = '#64748b';
-                    const badge = b.querySelector('span');
-                    if (badge) {
-                        badge.style.background = 'rgba(100, 116, 139, 0.08)';
-                        badge.style.color = '#64748b';
-                    }
-                });
-
-                // Activate current button
+                // Toggle active class
+                filterButtons.forEach(b => b.classList.remove('active-filter'));
                 this.classList.add('active-filter');
-                this.style.background = '#2563eb';
-                this.style.color = '#ffffff';
-                const activeBadge = this.querySelector('span');
-                if (activeBadge) {
-                    activeBadge.style.background = 'rgba(255,255,255,0.2)';
-                    activeBadge.style.color = '#ffffff';
-                }
 
-                // Filter columns
-                let visibleCount = 0;
+                // Filter cards with smooth fade
                 cards.forEach(card => {
                     const category = card.getAttribute('data-category');
                     if (target === 'all' || category === target) {
-                        card.style.display = 'block';
-                        // Count items inside list
-                        const items = card.querySelectorAll('.p-3[style*="background"]');
-                        visibleCount += items.length;
+                        card.style.display = 'flex';
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                        }, 10);
                     } else {
                         card.style.display = 'none';
                     }
                 });
-
-                // Update notices count footer
-                if (noticesCount) {
-                    if (target === 'all') {
-                        noticesCount.innerHTML = `Showing <span style="color: #1e293b;">${totalNotices}</span> of <span>${totalNotices}</span> notices`;
-                    } else {
-                        noticesCount.innerHTML = `Showing <span style="color: #1e293b;">${visibleCount}</span> of <span>${totalNotices}</span> notices`;
-                    }
-                }
             });
         });
     });
