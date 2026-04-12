@@ -73,6 +73,8 @@ urlpatterns = [
     path("student/view/<int:student_id>/delete-memo-subject/<int:subject_id>/", hod_views.admin_delete_marks_memo_subject, name='admin_delete_marks_memo_subject'),
 
     path("student/view/<int:student_id>/results-traditional/", hod_views.admin_view_results_traditional, name='admin_view_results_traditional'),
+    path("student/ajax-update-mark/", hod_views.ajax_update_student_mark, name='ajax_update_student_mark'),
+    path("ajax-delete-entity/", hod_views.ajax_delete_entity, name='ajax_delete_entity'),
     path("student/import/", hod_views.import_student, name='import_student'),
     path("course_management/", hod_views.manage_course_combined, name='manage_course_combined'),
     path("course/manage/", hod_views.manage_degree, name='manage_degree'),
@@ -234,6 +236,8 @@ urlpatterns = [
     path("calendar/add/", hod_views.add_calendar, name='add_calendar'),
     path("calendar/edit/<int:calendar_id>", hod_views.edit_calendar, name='edit_calendar'),
     path("calendar/delete/<int:calendar_id>", hod_views.delete_calendar, name='delete_calendar'),
+    path("calendar/inline-update/<int:calendar_id>/", hod_views.inline_update_calendar, name='inline_update_calendar'),
+    path("calendar/event/inline-update/<int:event_id>/", hod_views.inline_update_calendar_event, name='inline_update_calendar_event'),
 
     # Student Certificate management (Admin)
     path("student/view/<int:student_id>/certificate/add/", hod_views.add_student_certificate, name='add_student_certificate'),

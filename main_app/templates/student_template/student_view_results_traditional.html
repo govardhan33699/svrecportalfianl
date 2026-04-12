@@ -169,6 +169,70 @@
     .pct-yellow { color: #d58512 !important; } /* Golden for readability on white bg */
     .pct-orange { color: #fd7e14 !important; }
     .pct-red { color: #dc3545 !important; }
+
+    /* ── Inline Edit Styles ── */
+    .editable-cell {
+        cursor: pointer;
+        position: relative;
+        transition: background-color 0.2s;
+    }
+    .editable-cell:hover {
+        background-color: #e8f0fe !important;
+    }
+    .dark-mode .editable-cell:hover {
+        background-color: rgba(99, 102, 241, 0.15) !important;
+    }
+    .editable-cell .edit-input {
+        width: 60px;
+        padding: 4px 6px;
+        border: 2px solid #1a73e8;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 600;
+        outline: none;
+        background: #fff;
+    }
+    .dark-mode .editable-cell .edit-input {
+        background: #2d2d3f;
+        color: #fff;
+        border-color: #6366f1;
+    }
+    .editable-cell .edit-icon {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 8px;
+        color: #aaa;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .editable-cell:hover .edit-icon {
+        opacity: 1;
+    }
+
+    /* Save flash animation */
+    @keyframes saveFlash {
+        0% { background-color: #d4edda; }
+        100% { background-color: transparent; }
+    }
+    .save-flash {
+        animation: saveFlash 1s ease-out;
+    }
+
+    /* Saving spinner */
+    .saving-indicator {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #ddd;
+        border-top-color: #1a73e8;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 </style>
 {% endblock custom_css %}
 
@@ -191,17 +255,18 @@
         {% for sem_key, subjects in sem_subjects.items %}
         {% if subjects %}
         <!-- Table -->
-        <table class="results-table">
+        <table class="results-table" id="sem-table-{{ sem_key }}">
             <thead>
                 <tr>
-                    <th colspan="7" class="text-center"
+                    <th colspan="8" class="text-center"
                         style="background-color: #1a73e8; color: #ffffff; font-weight: 700; font-size: 1.1rem; border-bottom: none;">
                         {% for k, v in semester_labels.items %}{% if k == sem_key %}{{ v }}{% endif %}{% endfor %}
                     </th>
                 </tr>
                 <tr>
                     <th class="text-center" style="width: 5%;">S.No.</th>
-                    <th style="width: 50%;">Subject Name</th>
+                    <th class="text-center" style="width: 10%;">Subject Code</th>
+                    <th style="width: 40%;">Subject Name</th>
                     <th class="text-center" style="width: 8%;">INT</th>
                     <th class="text-center" style="width: 8%;">EXT</th>
                     <th class="text-center" style="width: 8%;">TOT</th>
@@ -211,17 +276,39 @@
             </thead>
             <tbody>
                 {% for item in subjects %}
-                <tr class="{% if item.status == 'Fail' %}row-fail{% endif %}">
+                <tr class="{% if item.status == 'Fail' %}row-fail{% endif %}" id="row-{{ sem_key }}-{{ item.subject_id }}">
                     <td class="text-center">{{ forloop.counter }}</td>
+                    <td class="text-center">{{ item.code|default:"-" }}</td>
                     <td>
                         <div>{{ item.name|upper }}</div>
                     </td>
+                    {% if is_admin %}
+                    <td class="text-center editable-cell"
+                        data-student="{{ student.id }}"
+                        data-subject="{{ item.subject_id }}"
+                        data-field="internal_marks"
+                        data-sem="{{ sem_key }}"
+                        id="im-{{ sem_key }}-{{ item.subject_id }}">
+                        <span class="cell-value">{{ item.im|floatformat:"0" }}</span>
+                        <i class="fas fa-pencil-alt edit-icon"></i>
+                    </td>
+                    <td class="text-center editable-cell"
+                        data-student="{{ student.id }}"
+                        data-subject="{{ item.subject_id }}"
+                        data-field="external_marks"
+                        data-sem="{{ sem_key }}"
+                        id="em-{{ sem_key }}-{{ item.subject_id }}">
+                        <span class="cell-value">{% if item.em != "" %}{{ item.em|floatformat:"0" }}{% else %}-{% endif %}</span>
+                        <i class="fas fa-pencil-alt edit-icon"></i>
+                    </td>
+                    {% else %}
                     <td class="text-center">{{ item.im|floatformat:"0" }}</td>
                     <td class="text-center">{% if item.em != "" %}{{ item.em|floatformat:"0" }}{% else %}-{% endif %}
                     </td>
-                    <td class="text-center">{{ item.tot|floatformat:"0" }}</td>
+                    {% endif %}
+                    <td class="text-center" id="tot-{{ sem_key }}-{{ item.subject_id }}">{{ item.tot|floatformat:"0" }}</td>
                     <td class="text-center">{{ item.cr|floatformat }}</td>
-                    <td class="text-center"
+                    <td class="text-center" id="status-{{ sem_key }}-{{ item.subject_id }}"
                         style="font-weight: 600; color: {% if item.status == 'Pass' %}#28a745{% else %}#000000{% endif %};">
                         {{ item.status }}
                     </td>
@@ -231,6 +318,9 @@
             <tfoot>
                 <tr style="background-color: #ffffff;">
                     <!-- S.No (spacer) -->
+                    <td style="border-top: 2px solid #1a73e8;"></td>
+
+                    <!-- Subject Code (spacer) -->
                     <td style="border-top: 2px solid #1a73e8;"></td>
 
                     <!-- Subject Name -->
@@ -254,7 +344,7 @@
                     <!-- TOT (SGPA) -->
                     <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
                         <span class="stats-label" style="display: block;">SGPA</span>
-                        <span class="stats-value" style="font-weight: 700;">
+                        <span class="stats-value" id="sgpa-{{ sem_key }}" style="font-weight: 700;">
                             {% for k, v in sem_stats.items %}
                                 {% if k == sem_key %}
                                     <span class="{% if v.sgpa >= 9.0 %}sgpa-green{% elif v.sgpa >= 8.0 %}sgpa-blue{% elif v.sgpa >= 7.0 %}sgpa-yellow{% elif v.sgpa >= 6.0 %}sgpa-orange{% else %}sgpa-red{% endif %}">
@@ -268,7 +358,7 @@
                     <!-- Credits (Percentage) -->
                     <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
                         <span class="stats-label" style="display: block;">Percentage</span>
-                        <span class="stats-value" style="font-weight: 700;">
+                        <span class="stats-value" id="pct-{{ sem_key }}" style="font-weight: 700;">
                             {% for k, v in sem_stats.items %}
                                 {% if k == sem_key %}
                                     <span class="{% if v.percentage >= 90 %}pct-blue{% elif v.percentage >= 80 %}pct-green{% elif v.percentage >= 70 %}pct-yellow{% elif v.percentage >= 60 %}pct-orange{% else %}pct-red{% endif %}">
@@ -282,7 +372,7 @@
                     <!-- Result (Backlogs) -->
                     <td class="text-center" style="padding: 12px 10px; border-top: 2px solid #1a73e8;">
                         <span class="stats-label" style="display: block;">Backlogs</span>
-                        <span class="stats-value danger" style="font-weight: 700;">
+                        <span class="stats-value danger" id="backlogs-{{ sem_key }}" style="font-weight: 700;">
                             {% for k, v in sem_stats.items %}
                             {% if k == sem_key %}
                             {{ v.backlogs }}
@@ -297,4 +387,149 @@
         {% endfor %}
     </div>
 </div>
+
+{% if is_admin %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+(function() {
+    const CSRF = '{{ csrf_token }}';
+    const AJAX_URL = '{% url "ajax_update_student_mark" %}';
+
+    // ── Click to Edit ──
+    $(document).on('click', '.editable-cell', function(e) {
+        const cell = $(this);
+
+        // Already editing
+        if (cell.find('.edit-input').length) return;
+
+        const currentVal = cell.find('.cell-value').text().trim();
+        const displayVal = (currentVal === '-' || currentVal === '') ? '' : currentVal;
+
+        // Replace text with input
+        cell.find('.cell-value').hide();
+        cell.find('.edit-icon').hide();
+
+        const input = $('<input>', {
+            type: 'number',
+            class: 'edit-input',
+            value: displayVal,
+            step: '1',
+            min: '0',
+            max: cell.data('field') === 'internal_marks' ? '30' : '70'
+        });
+
+        cell.append(input);
+        input.focus().select();
+
+        // ── Save on blur or Enter ──
+        function saveValue() {
+            const newVal = input.val().trim();
+            input.remove();
+
+            // Show saving indicator
+            cell.find('.cell-value').text('').show();
+            cell.append('<span class="saving-indicator"></span>');
+
+            $.ajax({
+                url: AJAX_URL,
+                type: 'POST',
+                data: {
+                    student_id: cell.data('student'),
+                    subject_id: cell.data('subject'),
+                    field: cell.data('field'),
+                    value: newVal || '0',
+                    csrfmiddlewaretoken: CSRF
+                },
+                success: function(resp) {
+                    cell.find('.saving-indicator').remove();
+                    if (resp.success) {
+                        const semKey = resp.sem_key;
+                        const subId = cell.data('subject');
+
+                        // Update IM cell
+                        const imCell = $('#im-' + semKey + '-' + subId);
+                        imCell.find('.cell-value').text(resp.im).show();
+                        imCell.find('.edit-icon').show();
+
+                        // Update EM cell
+                        const emCell = $('#em-' + semKey + '-' + subId);
+                        emCell.find('.cell-value').text(resp.em == 0 ? '-' : resp.em).show();
+                        emCell.find('.edit-icon').show();
+
+                        // Update TOT
+                        $('#tot-' + semKey + '-' + subId).text(resp.tot);
+
+                        // Update Status
+                        const statusCell = $('#status-' + semKey + '-' + subId);
+                        statusCell.text(resp.status);
+                        statusCell.css('color', resp.status === 'Pass' ? '#28a745' : '#000');
+
+                        // Update row fail class
+                        const row = $('#row-' + semKey + '-' + subId);
+                        if (resp.status === 'Fail') {
+                            row.addClass('row-fail');
+                        } else {
+                            row.removeClass('row-fail');
+                        }
+
+                        // Update footer stats
+                        updateSemStats(semKey, resp.sgpa, resp.percentage, resp.backlogs);
+
+                        // Flash animation
+                        cell.addClass('save-flash');
+                        setTimeout(() => cell.removeClass('save-flash'), 1000);
+                    } else {
+                        cell.find('.cell-value').text(currentVal).show();
+                        cell.find('.edit-icon').show();
+                        alert('Error: ' + (resp.error || 'Unknown error'));
+                    }
+                },
+                error: function(xhr) {
+                    cell.find('.saving-indicator').remove();
+                    cell.find('.cell-value').text(currentVal).show();
+                    cell.find('.edit-icon').show();
+                    alert('Save failed. Please try again.');
+                }
+            });
+        }
+
+        input.on('blur', saveValue);
+        input.on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.off('blur'); // prevent double-fire
+                saveValue();
+            }
+            if (e.key === 'Escape') {
+                input.remove();
+                cell.find('.cell-value').text(currentVal).show();
+                cell.find('.edit-icon').show();
+            }
+        });
+    });
+
+    // ── Update footer stats ──
+    function updateSemStats(semKey, sgpa, percentage, backlogs) {
+        // SGPA
+        let sgpaClass = 'sgpa-red';
+        if (sgpa >= 9) sgpaClass = 'sgpa-green';
+        else if (sgpa >= 8) sgpaClass = 'sgpa-blue';
+        else if (sgpa >= 7) sgpaClass = 'sgpa-yellow';
+        else if (sgpa >= 6) sgpaClass = 'sgpa-orange';
+        $('#sgpa-' + semKey).html('<span class="' + sgpaClass + '">' + sgpa.toFixed(2) + '</span>');
+
+        // Percentage
+        let pctClass = 'pct-red';
+        if (percentage >= 90) pctClass = 'pct-blue';
+        else if (percentage >= 80) pctClass = 'pct-green';
+        else if (percentage >= 70) pctClass = 'pct-yellow';
+        else if (percentage >= 60) pctClass = 'pct-orange';
+        $('#pct-' + semKey).html('<span class="' + pctClass + '">' + percentage + '%</span>');
+
+        // Backlogs
+        $('#backlogs-' + semKey).text(backlogs);
+    }
+})();
+</script>
+{% endif %}
 {% endblock content %}

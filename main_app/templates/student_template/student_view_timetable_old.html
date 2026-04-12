@@ -1,0 +1,348 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-shadow: rgba(232, 13, 13, 0.245);
+        --accent-navy: #0f172a;
+        --accent-blue: #377dee;
+    }
+
+    .dark-mode :root {
+        --glass-bg: rgba(15, 23, 42, 0.4);
+        --glass-border: rgba(255, 255, 255, 0.05);
+        --glass-shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-timetable-card {
+        background: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+        overflow: visible !important;
+        margin: 0 10px 2rem 10px;
+        width: calc(100% - 20px);
+        animation: panelIn 0.6s ease forwards;
+    }
+
+    .table-responsive {
+        overflow-x: visible !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100%;
+    }
+
+    .timetable-table {
+        min-width: 100% !important;
+        width: 100% !important;
+        table-layout: auto;
+    }
+
+    .timetable-table td {
+        border: 1px solid var(--glass-border) !important;
+        padding: 0.2rem !important;
+        vertical-align: middle;
+        position: relative;
+        min-width: 130px !important;
+        height: 60px;
+        flex: 1;
+    }
+
+    /* Responsive cell width */
+    @media (max-width: 1400px) {
+        .timetable-table td {
+            min-width: 110px !important;
+            font-size: 0.9rem;
+        }
+        .subject-name {
+            font-size: 0.7rem !important;
+        }
+        .staff-name {
+            font-size: 0.5rem !important;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .timetable-table td {
+            min-width: 90px !important;
+            height: 55px;
+            padding: 0.15rem !important;
+        }
+        .subject-name {
+            font-size: 0.65rem !important;
+        }
+    }
+
+    @media (max-width: 1000px) {
+        .timetable-table td {
+            min-width: 80px !important;
+            height: 50px;
+            padding: 0.1rem !important;
+            font-size: 0.8rem;
+        }
+        .staff-name {
+            font-size: 0.48rem !important;
+        }
+    }
+
+    /* Compact reference table */
+    .reference-table td {
+        padding: 0.4rem 0.6rem !important;
+        height: auto !important;
+        font-size: 0.8rem;
+    }
+
+    .reference-table th {
+        padding: 0.5rem 0.6rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .day-cell {
+        background: rgba(0, 0, 0, 0.02) !important;
+        color: #1a202c !important;
+        font-weight: 700;
+        font-size: 0.7rem;
+        min-width: 60px !important;
+        width: 60px !important;
+        flex: 0 0 60px;
+    }
+
+    .timetable-table th {
+        background: rgba(0, 0, 0, 0.04) !important;
+        color: #1a202c !important;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        padding: 0.6rem 0.2rem !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        vertical-align: middle;
+        min-width: 130px !important;
+    }
+
+    /* Subject Card inside cell */
+    .subject-pill {
+        border-radius: 6px;
+        padding: 0.3rem 0.15rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        background: rgba(255, 255, 255, 0.45) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .subject-pill.alt-color {
+        background: rgba(255, 255, 255, 0.25) !important;
+    }
+
+    .subject-pill:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    .subject-name {
+        font-weight: 600;
+        font-size: 0.65rem;
+        line-height: 1.1;
+        margin-bottom: 0.15rem;
+        text-align: center;
+        color: #1e293b;
+    }
+
+    .staff-name {
+        font-size: 0.55rem;
+        font-weight: 500;
+        background: rgba(0, 0, 0, 0.03);
+        color: #64748b;
+        padding: 1px 4px;
+        border-radius: 3px;
+        white-space: nowrap;
+        max-width: 95%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .empty-cell {
+        opacity: 0.15;
+        font-size: 1rem;
+        color: var(--text-tertiary);
+    }
+
+    /* Break and Lunch visual separators */
+    th.period-after-break {
+        border-left: 8px solid #856404 !important;
+        position: relative;
+        padding-left: 2px !important;
+    }
+
+    th.period-after-break::before {
+        content: 'B R E A K';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        bottom: 0;
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #856404;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: 2px;
+        line-height: 1;
+    }
+
+    th.period-after-lunch {
+        border-left: 8px solid #d4af37 !important;
+        position: relative;
+        padding-left: 2px !important;
+    }
+
+    th.period-after-lunch::before {
+        content: 'L U N C H';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        bottom: 0;
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #d4af37;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: 2px;
+        line-height: 1;
+    }
+
+    /* Remove labels from body cells - only borders */
+    td.period-after-break {
+        border-left: 8px solid #856404 !important;
+    }
+
+    td.period-after-lunch {
+        border-left: 8px solid #d4af37 !important;
+    }
+
+    @keyframes panelIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid py-4" style="padding-left: 0 !important; padding-right: 0 !important;">
+        <div class="glass-timetable-card" style="margin-left: 10px; margin-right: 10px; border-radius: 15px;">
+            <div class="timetable-header d-flex align-items-center justify-content-center">
+                <i style="color: var(--accent-blue);"></i>
+                <h3>Class Timetable</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table timetable-table text-center">
+                    <thead>
+                        <tr>
+                            <th class="day-cell" style="width: 80px !important;">DAY</th>
+                            {% for period in periods %}
+                            <th class="{% if period.number == 3 %}period-after-break{% elif period.number == 5 %}period-after-lunch{% endif %}">
+                                <div class="mb-1">PERIOD {{period.number}}</div>
+                                <div style="font-size: 0.6rem; opacity: 0.6; font-weight: 500;">
+                                    {{period.start_time|time:"g:i A"}} - {{period.end_time|time:"g:i A"}}
+                                </div>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in grid_rows %}
+                        <tr>
+                            <td class="day-cell align-middle text-uppercase">{{row.day|slice:":3"}}</td>
+                            {% for entry in row.cells %}
+                            <td class="align-middle {% if forloop.counter == 3 %}period-after-break{% elif forloop.counter == 5 %}period-after-lunch{% endif %}">
+                                {% if entry %}
+                                <div
+                                    class="subject-pill {% if forloop.parentloop.counter|add:forloop.counter|divisibleby:2 %}alt-color{% endif %}">
+                                    {% if entry.subject.short_code %}
+                                    <div class="subject-name" style="color: #377dee; font-weight: 700; font-size: 0.75rem;">
+                                        {{entry.subject.short_code}}
+                                    </div>
+                                    {% endif %}
+                                    <div class="staff-name">
+                                        <i class="fas fa-user-tie mr-1"></i>{{entry.staff.admin.first_name}}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="empty-cell">&mdash;</div>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Subject Reference Table -->
+        <div class="glass-timetable-card" style="margin-top: 2rem; margin-left: 10px; margin-right: 10px; border-radius: 15px;">
+            <div class="timetable-header d-flex align-items-center justify-content-center">
+                <i style="color: var(--accent-blue);"></i>
+                <h3>Subject Reference</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table timetable-table reference-table text-center" style="font-size: 0.85rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Sl. No</th>
+                            <th>Subj.Code</th>
+                            <th>Short Code</th>
+                            <th>Subject</th>
+                            <th>Faculty Short Code</th>
+                            <th>Faculty Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in all_timetable_entries %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ entry.subject.code }}</strong></td>
+                            <td><strong style="color: #377dee;">{{ entry.subject.short_code|default:"—" }}</strong></td>
+                            <td style="text-align: left;">{{ entry.subject.name }}</td>
+                            <td><strong>{{ entry.staff.staff_code|default:"—" }}</strong></td>
+                            <td>{{ entry.staff.admin.first_name }} {{ entry.staff.admin.last_name }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="color: var(--text-tertiary);">No subjects assigned</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

@@ -1,11 +1,7 @@
 {% extends 'main_app/erpnext_base.html' %}
 {% load static %}
 
-{% block page_title %}{{ page_title }}{% endblock page_title %}
-{% block page_header %}
-<i class="fas fa-user-graduate me-2"></i> {{ page_title }}
-{% endblock page_header %}
-
+{% block page_title %}Manage Students{% endblock page_title %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'manage_student' %}">Students</a></li>
@@ -14,229 +10,538 @@
 
 {% block custom_css %}
 <style>
- .manage-header {
- display: flex;
- align-items: center;
- justify-content: space-between;
- flex-wrap: wrap;
- gap: 16px;
- margin-bottom: 24px;
- }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
- .manage-header h2 {
- font-size: 1.5rem;
- font-weight: 750;
- color: var(--text-primary);
- margin: 0;
- display: flex;
- align-items: center;
- gap: 10px;
- }
+.ms-root { font-family: 'Inter', sans-serif; }
 
- .manage-header h2 i {
- color: var(--primary);
- font-size: 1.2rem;
- }
+/* ── Top Header Bar ── */
+.ms-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+}
 
- .manage-header .header-actions {
- display: flex;
- gap: 10px;
- }
+.ms-page-title {
+    font-size: 1.5rem; font-weight: 800; color: #0f172a;
+    display: flex; align-items: center; gap: 12px;
+}
 
- .filter-card {
- background: var(--glass-bg);
- backdrop-filter: var(--glass-blur);
- border: 1px solid var(--glass-border);
- border-radius: var(--radius-lg);
- padding: 20px 24px;
- margin-bottom: 20px;
- }
+.dark-mode .ms-page-title { color: #f8fafc !important; }
 
- .filter-row {
- display: flex;
- flex-wrap: wrap;
- gap: 12px;
- align-items: flex-end;
- }
+.ms-page-title-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.35);
+}
 
- .filter-group {
- flex: 1;
- min-width: 140px;
- }
+.ms-topbar-actions { display: flex; gap: 10px; }
 
- .filter-group label {
- display: block;
- font-size: 11.5px;
- font-weight: 700;
- text-transform: uppercase;
- letter-spacing: 0.5px;
- color: var(--text-tertiary);
- margin-bottom: 6px;
- }
+.ms-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; font-size: 0.82rem;
+    font-weight: 700; cursor: pointer; border: none;
+    text-decoration: none; transition: all 0.2s; white-space: nowrap;
+}
 
- .filter-group .form-control {
- font-size: 13px;
- padding: 8px 12px;
- border-radius: var(--radius-xs);
- }
+.ms-btn-primary { background: #3b82f6; color: #fff; }
+.ms-btn-primary:hover { background: #2563eb; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
 
- .student-avatar {
- width: 40px;
- height: 40px;
- border-radius: 12px;
- object-fit: cover;
- border: 2px solid var(--glass-border);
- }
+.ms-btn-outline { background: #fff; color: #475569; border: 1.5px solid #e2e8f0; }
+.ms-btn-outline:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
 
- .student-name {
- font-weight: 650;
- color: var(--text-primary);
- text-transform: uppercase;
- font-size: 13.5px;
- }
+.dark-mode .ms-btn-outline {
+    background: rgba(30, 41, 59, 0.4) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark-mode .ms-btn-outline:hover { background: rgba(30, 41, 59, 0.8) !important; color: #fff !important; }
 
- .action-btn-group {
- display: flex;
- gap: 6px;
- }
+/* ── Stats Strip ── */
+.ms-stats-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin-bottom: 22px;
+}
 
- .action-btn-group .btn {
- padding: 6px 12px;
- font-size: 11.5px;
- border-radius: var(--radius-xs);
- }
+.ms-stat-chip {
+    background: #fff; border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.07);
+    padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
 
- .badge-section {
- display: inline-flex;
- align-items: center;
- padding: 3px 10px;
- border-radius: var(--radius-pill);
- font-size: 11.5px;
- font-weight: 600;
- background: rgba(99, 102, 241, 0.08);
- color: var(--primary);
- }
+.dark-mode .ms-stat-chip {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+.ms-stat-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+
+.ms-stat-chip-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+}
+
+.ms-stat-chip-val {
+    font-size: 1.55rem; font-weight: 900; color: #0f172a; line-height: 1;
+}
+.dark-mode .ms-stat-chip-val { color: #f8fafc !important; }
+
+.ms-stat-chip-label {
+    font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px;
+}
+
+/* ── Filter Card ── */
+.ms-filter-card {
+    background: #fff; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.07);
+    padding: 18px 22px; margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.dark-mode .ms-filter-card {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ms-filter-grid {
+    display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr auto;
+    gap: 12px; align-items: end;
+}
+
+.ms-filter-group label {
+    display: block; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #94a3b8; margin-bottom: 6px;
+}
+
+.ms-filter-group input,
+.ms-filter-group select {
+    width: 100%; padding: 9px 13px; font-size: 0.82rem; font-weight: 500;
+    border: 1.5px solid #e2e8f0; border-radius: 10px; color: #334155;
+    background: #f8fafc; transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.dark-mode .ms-filter-group input,
+.dark-mode .ms-filter-group select {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+}
+
+.ms-filter-group input:focus,
+.ms-filter-group select:focus {
+    border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    background: #fff;
+}
+.dark-mode .ms-filter-group input:focus,
+.dark-mode .ms-filter-group select:focus { background: rgba(30, 41, 59, 0.9) !important; }
+
+.ms-filter-actions { display: flex; gap: 8px; }
+
+/* ── Student Table Card ── */
+.ms-table-card {
+    background: #fff; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.07);
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.dark-mode .ms-table-card {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ms-table-header {
+    padding: 16px 24px; border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fafbfc;
+}
+
+.dark-mode .ms-table-header {
+    background: rgba(30, 41, 59, 0.4) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ms-table-header-title {
+    font-size: 0.88rem; font-weight: 800; color: #1e293b;
+    display: flex; align-items: center; gap: 8px;
+}
+.dark-mode .ms-table-header-title { color: #f8fafc !important; }
+
+.ms-result-count {
+    font-size: 0.75rem; font-weight: 700; padding: 3px 12px;
+    border-radius: 100px; background: #eff6ff; color: #3b82f6;
+}
+.dark-mode .ms-result-count { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+
+/* ── Table Styles ── */
+.ms-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+
+.ms-table th {
+    padding: 11px 16px; font-size: 0.67rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #64748b; background: #f8fafc; text-align: left;
+    border-bottom: 1px solid #f1f5f9; white-space: nowrap;
+}
+
+.dark-mode .ms-table th {
+    background: rgba(30, 41, 59, 0.6) !important;
+    color: #94a3b8 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ms-table th:first-child { padding-left: 24px; }
+.ms-table th:last-child { text-align: right; padding-right: 24px; }
+
+.ms-table td {
+    padding: 13px 16px; border-bottom: 1px solid #f1f5f9;
+    color: #334155; vertical-align: middle;
+}
+
+.dark-mode .ms-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+    color: #cbd5e1 !important;
+}
+
+.ms-table td:first-child { padding-left: 24px; }
+.ms-table td:last-child { padding-right: 24px; }
+
+.ms-table tbody tr { transition: background 0.15s; }
+.ms-table tbody tr:hover { background: #f8fafc; }
+.dark-mode .ms-table tbody tr:hover { background: rgba(255, 255, 255, 0.02) !important; }
+.ms-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── Avatar ── */
+.ms-avatar {
+    width: 42px; height: 42px; border-radius: 12px;
+    object-fit: cover; border: 2px solid #e2e8f0;
+}
+.dark-mode .ms-avatar { border-color: rgba(255, 255, 255, 0.1) !important; }
+
+.ms-avatar-fallback {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 0.88rem;
+    flex-shrink: 0;
+}
+
+/* ── Name Cell ── */
+.ms-student-name {
+    font-weight: 800; color: #0f172a; font-size: 0.85rem;
+    text-transform: uppercase; letter-spacing: 0.1px;
+}
+.dark-mode .ms-student-name { color: #f8fafc !important; }
+
+.ms-student-roll {
+    font-size: 0.72rem; color: #94a3b8; font-weight: 600; margin-top: 2px;
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Badges ── */
+.ms-badge {
+    display: inline-flex; align-items: center; padding: 3px 10px;
+    border-radius: 7px; font-size: 0.7rem; font-weight: 700;
+    white-space: nowrap;
+}
+
+.ms-badge-blue { background: #eff6ff; color: #2563eb; }
+.ms-badge-green { background: #f0fdf4; color: #15803d; }
+.ms-badge-orange { background: #fff7ed; color: #c2410c; }
+.ms-badge-purple { background: #f5f3ff; color: #7c3aed; }
+.ms-badge-gray { background: #f1f5f9; color: #475569; }
+
+.dark-mode .ms-badge-blue { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+.dark-mode .ms-badge-green { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+.dark-mode .ms-badge-orange { background: rgba(245, 158, 11, 0.15) !important; color: #fbbf24 !important; }
+.dark-mode .ms-badge-purple { background: rgba(139, 92, 246, 0.15) !important; color: #a78bfa !important; }
+.dark-mode .ms-badge-gray { background: rgba(148, 163, 184, 0.15) !important; color: #cbd5e1 !important; }
+
+/* ── Action Buttons ── */
+.ms-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+.ms-action-btn {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; text-decoration: none; border: none;
+    cursor: pointer; transition: all 0.2s;
+}
+
+.ms-action-view { background: #eff6ff; color: #3b82f6; }
+.ms-action-view:hover { background: #3b82f6; color: #fff; transform: translateY(-1px); }
+
+.ms-action-edit { background: #f0fdf4; color: #16a34a; }
+.ms-action-edit:hover { background: #16a34a; color: #fff; transform: translateY(-1px); }
+
+.ms-action-delete { background: #fff1f2; color: #dc2626; }
+.ms-action-delete:hover { background: #dc2626; color: #fff; transform: translateY(-1px); }
+
+.dark-mode .ms-action-view { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+.dark-mode .ms-action-edit { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+.dark-mode .ms-action-delete { background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; }
+.dark-mode .ms-action-btn:hover { color: #fff !important; }
+
+/* ── Empty State ── */
+.ms-empty {
+    text-align: center; padding: 60px 32px;
+}
+
+.ms-empty-icon {
+    width: 70px; height: 70px; border-radius: 20px;
+    background: #f1f5f9; display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 16px;
+    font-size: 1.8rem; color: #94a3b8;
+}
+.dark-mode .ms-empty-icon { background: rgba(255, 255, 255, 0.05) !important; }
+.dark-mode .ms-empty div[style*="color:#1e293b"] { color: #f8fafc !important; }
+
+/* ── Responsive ── */
+@media(max-width: 900px) {
+    .ms-stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .ms-filter-grid { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width: 600px) {
+    .ms-stats-strip { grid-template-columns: 1fr 1fr; }
+    .ms-filter-grid { grid-template-columns: 1fr; }
+}
+</style>
 </style>
 {% endblock custom_css %}
 
 {% block content %}
-<div class="manage-header">
- <div class="header-actions">
- <a href="{% url 'import_student' %}" class="btn btn-secondary btn-sm"><i class="fas fa-file-import"></i>
- Import</a>
- <a href="{% url 'add_student' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Student</a>
- </div>
-</div>
+<div class="ms-root">
 
-<div class="filter-card">
- <form method="GET" action="{% url 'manage_student' %}">
- <div class="filter-row">
- <div class="filter-group">
- <label>Roll Number</label>
- <input type="text" name="enrollment_number" class="form-control" placeholder="Enter roll number"
- value="{{ request.GET.enrollment_number }}">
- </div>
- <div class="filter-group">
- <label>Name</label>
- <input type="text" name="name" class="form-control" placeholder="Enter student name"
- value="{{ request.GET.name }}">
- </div>
- <div class="filter-group">
- <label>Semester</label>
- <select name="semester" class="form-control">
- <option value="">All Semesters</option>
- {% for sem_val, sem_name in semesters %}
- <option value="{{ sem_val }}" {% if request.GET.semester == sem_val %} selected {% endif %}> {{ sem_name }}</option>
- {% endfor %}
- </select>
- </div>
- <div class="filter-group">
- <label>Branch</label>
- <select name="course" class="form-control">
- <option value="">All Branches</option>
- {% for course in courses %}
- <option value="{{ course.id|stringformat:'s' }}" {% if request.GET.course == course.id|stringformat:'s' %} selected {% endif %}>{{ course.name }}
- </option>
- {% endfor %}
- </select>
- </div>
- <div class="filter-group">
- <label>Regulation</label>
- <select name="regulation" class="form-control">
- <option value="">All Regulations</option>
- {% for reg in regulations %}
- <option value="{{ reg.id|stringformat:'s' }}" {% if request.GET.regulation == reg.id|stringformat:'s' %} selected {% endif %}>{{ reg.name }}</option>
- {% endfor %}
- </select>
- </div>
- <div class="filter-actions d-flex gap-2">
- <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
- <a href="{% url 'manage_student' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
- </div>
- </div>
- </form>
-</div>
+    <!-- ══ Top Bar ══ -->
+    <div class="ms-topbar">
+        <div class="ms-page-title">
+            <div class="ms-page-title-icon"><i class="fas fa-user-graduate"></i></div>
+            Manage Students
+        </div>
+        <div class="ms-topbar-actions">
+            <a href="{% url 'import_student' %}" class="ms-btn ms-btn-outline">
+                <i class="fas fa-file-import"></i> Import
+            </a>
+            <a href="{% url 'add_student' %}" class="ms-btn ms-btn-primary">
+                <i class="fas fa-plus"></i> Add Student
+            </a>
+        </div>
+    </div>
 
-<div class="erpnext-card">
- <div class="card-body p-0">
- {% if students %}
- <div class="table-responsive">
- <table class="table align-middle mb-0">
+    <!-- ══ Stats Strip ══ -->
+    <div class="ms-stats-strip">
+        <div class="ms-stat-chip">
+            <div class="ms-stat-chip-icon" style="background:#eff6ff; color:#3b82f6;"><i class="fas fa-users"></i></div>
+            <div>
+                <div class="ms-stat-chip-val">{{ students|length }}</div>
+                <div class="ms-stat-chip-label">Showing</div>
+            </div>
+        </div>
+        <div class="ms-stat-chip">
+            <div class="ms-stat-chip-icon" style="background:#f0fdf4; color:#16a34a;"><i class="fas fa-code-branch"></i></div>
+            <div>
+                <div class="ms-stat-chip-val">{{ courses|length }}</div>
+                <div class="ms-stat-chip-label">Branches</div>
+            </div>
+        </div>
+        <div class="ms-stat-chip">
+            <div class="ms-stat-chip-icon" style="background:#fefce8; color:#ca8a04;"><i class="fas fa-book"></i></div>
+            <div>
+                <div class="ms-stat-chip-val">{{ semesters|length }}</div>
+                <div class="ms-stat-chip-label">Semesters</div>
+            </div>
+        </div>
+        <div class="ms-stat-chip">
+            <div class="ms-stat-chip-icon" style="background:#f5f3ff; color:#7c3aed;"><i class="fas fa-gavel"></i></div>
+            <div>
+                <div class="ms-stat-chip-val">{{ regulations|length }}</div>
+                <div class="ms-stat-chip-label">Regulations</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Filter Card ══ -->
+    <div class="ms-filter-card">
+        <form method="GET" action="{% url 'manage_student' %}">
+            <div class="ms-filter-grid">
+                <div class="ms-filter-group">
+                    <label><i class="fas fa-id-badge" style="margin-right:4px;"></i> Roll Number</label>
+                    <input type="text" name="enrollment_number" placeholder="e.g. 23AM1A3101"
+                           value="{{ request.GET.enrollment_number }}">
+                </div>
+                <div class="ms-filter-group">
+                    <label><i class="fas fa-user" style="margin-right:4px;"></i> Student Name</label>
+                    <input type="text" name="name" placeholder="Search by name..."
+                           value="{{ request.GET.name }}">
+                </div>
+                <div class="ms-filter-group">
+                    <label><i class="fas fa-book" style="margin-right:4px;"></i> Semester</label>
+                    <select name="semester">
+                        <option value="">All Semesters</option>
+                        {% for sem_val, sem_name in semesters %}
+                        <option value="{{ sem_val }}" {% if request.GET.semester == sem_val %}selected{% endif %}>{{ sem_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ms-filter-group">
+                    <label><i class="fas fa-code-branch" style="margin-right:4px;"></i> Branch</label>
+                    <select name="course">
+                        <option value="">All Branches</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id|stringformat:'s' }}"
+                            {% if request.GET.course == course.id|stringformat:'s' %}selected{% endif %}>
+                            {{ course.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ms-filter-group">
+                    <label><i class="fas fa-gavel" style="margin-right:4px;"></i> Regulation</label>
+                    <select name="regulation">
+                        <option value="">All Regulations</option>
+                        {% for reg in regulations %}
+                        <option value="{{ reg.id|stringformat:'s' }}"
+                            {% if request.GET.regulation == reg.id|stringformat:'s' %}selected{% endif %}>
+                            {{ reg.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ms-filter-actions">
+                    <button type="submit" class="ms-btn ms-btn-primary" style="height:40px;">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'manage_student' %}" class="ms-btn ms-btn-outline" style="height:40px;">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ Table Card ══ -->
+    <div class="ms-table-card">
+        <div class="ms-table-header">
+            <div class="ms-table-header-title">
+                <i class="fas fa-list" style="color:#3b82f6;"></i>
+                Student Directory
+            </div>
+            <span class="ms-result-count">{{ students|length }} student{% if students|length != 1 %}s{% endif %} found</span>
+        </div>
+
+        {% if students %}
+        <div style="overflow-x: auto;">
+            <table class="ms-table">
                 <thead>
                     <tr>
-                        <th class="ps-4">Profile</th>
-                        <th>Roll Number</th>
-                        <th>Name</th>
+                        <th>#</th>
+                        <th>Student</th>
                         <th>Email</th>
-                        <th>Regulation</th>
-                        <th>Year</th>
-                        <th>Semester</th>
                         <th>Branch</th>
+                        <th>Year / Sem</th>
                         <th>Section</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <th>Regulation</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for student in students %}
                     <tr>
-                        <td class="ps-4">
-                            {% if student.profile_pic %}
-                            <img class="student-avatar" src="{{ student.profile_pic.url }}" alt=""
-                                onerror="this.src='{% static 'dist/img/default-avatar.png' %}';">
-                            {% else %}
-                            <img class="student-avatar" src="{% static 'dist/img/default-avatar.png' %}" alt="">
-                            {% endif %}
+                        <!-- # -->
+                        <td style="color:#cbd5e1; font-weight:700; font-size:0.78rem; width:50px;">{{ forloop.counter }}</td>
+
+                        <!-- Student (Avatar + Name) -->
+                        <td>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                {% if student.profile_pic %}
+                                <img src="{{ student.profile_pic.url }}" class="ms-avatar"
+                                     onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';"
+                                     alt="">
+                                <div class="ms-avatar-fallback" style="display:none;">
+                                    {{ student.first_name|first }}{{ student.last_name|first }}
+                                </div>
+                                {% else %}
+                                <div class="ms-avatar-fallback">
+                                    {{ student.first_name|first }}{{ student.last_name|first }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="ms-student-name">{{ student.first_name }} {{ student.last_name }}</div>
+                                    <div class="ms-student-roll">{{ student.student.roll_number|default:"—" }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td style="font-weight:600;">{{ student.student.roll_number }}</td>
-                        <td class="student-name">{{ student.first_name }} {{ student.last_name }}</td>
-                        <td><small>{{ student.email }}</small></td>
-                        <td>{{ student.student.regulation.name|default:"N/A" }}</td>
-                        <td>{{ student.student.academic_year.name|default:"N/A" }}</td>
-                        <td>{{ student.student.semester.name|default:"N/A" }}</td>
-                        <td><span class="badge-section">{{ student.student.course.name }}</span></td>
-                        <td>{{ student.student.get_section_display }}</td>
-                        <td class="text-end pe-4">
-                            <div class="action-btn-group">
+
+                        <!-- Email -->
+                        <td style="color:#64748b; font-size:0.78rem;">{{ student.email }}</td>
+
+                        <!-- Branch -->
+                        <td><span class="ms-badge ms-badge-blue">{{ student.student.course.name|default:"—" }}</span></td>
+
+                        <!-- Year / Semester -->
+                        <td>
+                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                <span class="ms-badge ms-badge-green">{{ student.student.academic_year.name|default:"—" }}</span>
+                                <span class="ms-badge ms-badge-orange">{{ student.student.semester.name|default:"—" }}</span>
+                            </div>
+                        </td>
+
+                        <!-- Section -->
+                        <td><span class="ms-badge ms-badge-gray">{{ student.student.get_section_display }}</span></td>
+
+                        <!-- Regulation -->
+                        <td><span class="ms-badge ms-badge-purple">{{ student.student.regulation.name|default:"—" }}</span></td>
+
+                        <!-- Actions -->
+                        <td>
+                            <div class="ms-actions">
                                 <a href="{% url 'view_student_detail' student.student.id %}"
-                                    class="btn btn-primary btn-sm" title="View"><i class="fas fa-eye"></i></a>
-                                <a href="{% url 'edit_student' student.student.id %}" class="btn btn-info btn-sm"
-                                    title="Edit"><i class="fas fa-edit"></i></a>
-                                <a href="{% url 'delete_student' student.student.id %}" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Are you sure?')" title="Delete"><i
-                                        class="fas fa-trash"></i></a>
+                                   class="ms-action-btn ms-action-view" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'edit_student' student.student.id %}"
+                                   class="ms-action-btn ms-action-edit" title="Edit Student">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <a href="{% url 'delete_student' student.student.id %}"
+                                   class="ms-action-btn ms-action-delete" title="Delete Student"
+                                   onclick="return confirm('Are you sure you want to delete {{ student.first_name }} {{ student.last_name }}? This cannot be undone.')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
- </table>
- </div>
- {% else %}
- <div class="text-center py-5">
- <i class="fas fa-user-graduate fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
- <p class="text-muted">No students found. Try adjusting your filters.</p>
- </div>
- {% endif %}
- </div>
+            </table>
+        </div>
+        {% else %}
+        <div class="ms-empty">
+            <div class="ms-empty-icon"><i class="fas fa-user-graduate"></i></div>
+            <div style="font-size:1rem; font-weight:700; color:#1e293b; margin-bottom:6px;">No Students Found</div>
+            <div style="font-size:0.82rem; color:#94a3b8; margin-bottom:20px;">
+                {% if request.GET %}
+                    No students match your search criteria. Try adjusting the filters.
+                {% else %}
+                    No students have been added yet. Get started by adding a student.
+                {% endif %}
+            </div>
+            {% if request.GET %}
+            <a href="{% url 'manage_student' %}" class="ms-btn ms-btn-outline" style="margin-right:8px;">
+                <i class="fas fa-times"></i> Clear Filters
+            </a>
+            {% endif %}
+            <a href="{% url 'add_student' %}" class="ms-btn ms-btn-primary">
+                <i class="fas fa-plus"></i> Add Student
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock content %}

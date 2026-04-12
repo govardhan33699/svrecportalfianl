@@ -4,10 +4,10 @@
 <i class="fas fa-calendar me-2"></i> {{ page_title }}
 {% endblock page_header %}
 
-
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'manage_calendar' %}">Calendar</a></li>
-<li class="breadcrumb-item active">Manage</li>
+<li class="breadcrumb-item"><a href="{% url 'admin_home' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'manage_calendar' %}" onclick="showRegulations(); return false;">Calendar</a></li>
+<li class="breadcrumb-item active" id="dynamic-breadcrumb">Manage</li>
 {% endblock breadcrumb %}
 
 {% block custom_css %}
@@ -15,7 +15,7 @@
     .manage-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         flex-wrap: wrap;
         gap: 16px;
         margin-bottom: 24px;
@@ -182,7 +182,7 @@
         font-weight: 500;
     }
 
-    /* Dark Mode */
+    /* Dark Mode variables for table */
     .dark-mode .cal-session-header {
         background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.1));
         border-color: rgba(255, 255, 255, 0.1);
@@ -224,94 +224,632 @@
         background: rgba(50, 50, 60, 0.4);
         color: #94a3b8;
     }
+
+    /* Glass Box Grid CSS */
+    .folder-container {
+        padding: 20px 0;
+    }
+    
+    .folder-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 25px;
+    }
+    
+    .folder-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 30px 15px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .folder-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.8), rgba(255,255,255,0));
+    }
+    
+    .folder-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 14px 40px 0 rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+    }
+    
+    .folder-name {
+        font-weight: 750;
+        color: var(--text-primary);
+        text-align: center;
+        font-size: 1.2rem;
+        word-break: break-word;
+        letter-spacing: 0.5px;
+    }
+    
+    .folder-meta {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+    
+    .dark-mode .folder-card {
+        background: rgba(30, 30, 40, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+    
+    .dark-mode .folder-card::before {
+        background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.2), rgba(255,255,255,0));
+    }
+    
+    .dark-mode .folder-card:hover {
+        background: rgba(50, 50, 60, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .dark-mode .folder-name {
+        color: #e2e8f0;
+    }
+
+    .dark-mode .folder-meta {
+        background: rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+    }
+    
+    #dynamic-breadcrumb a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    #dynamic-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+    /* Inline editing */
+    .editable-date-cell,
+    .editable-event-cell {
+        cursor: pointer;
+        position: relative;
+    }
+
+    .editable-date-cell:hover .date-display,
+    .editable-event-cell:hover .date-display {
+        text-decoration: underline dotted;
+        color: #6366f1;
+    }
+
+    .edit-hint {
+        margin-left: 6px;
+        opacity: 0;
+        font-size: 0.7rem;
+        color: #6366f1;
+        transition: opacity 0.2s;
+    }
+
+    .editable-date-cell:hover .edit-hint,
+    .editable-event-cell:hover .edit-hint {
+        opacity: 1;
+    }
+
+    .inline-edit-popup {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid rgba(99,102,241,0.3);
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        min-width: 280px;
+    }
+
+    .inline-edit-popup.active {
+        display: block;
+    }
+
+    .inline-edit-popup label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #475569;
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .inline-edit-popup input[type="date"] {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        outline: none;
+    }
+
+    .inline-edit-popup input[type="date"]:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+    }
+
+    .inline-edit-popup .popup-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .inline-edit-popup .btn-save {
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 5px 14px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .inline-edit-popup .btn-save:hover { background: #4f46e5; }
+
+    .inline-edit-popup .btn-cancel {
+        background: transparent;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 0.82rem;
+        cursor: pointer;
+    }
+
+    .dark-mode .inline-edit-popup {
+        background: #1e1e2e;
+        border-color: rgba(99,102,241,0.4);
+        color: #e2e8f0;
+    }
+
+    .dark-mode .inline-edit-popup label { color: #94a3b8; }
+    .dark-mode .inline-edit-popup input[type="date"] {
+        background: #2d2d3a;
+        border-color: #3f3f5a;
+        color: #e2e8f0;
+    }
+
+    .inline-save-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #22c55e;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        z-index: 99999;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+        pointer-events: none;
+    }
+
+    .inline-save-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .inline-save-toast.error {
+        background: #ef4444;
+    }
 </style>
 {% endblock custom_css %}
 
 {% block content %}
 <div class="manage-header">
     <a href="{% url 'add_calendar' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Entry</a>
+    <a href="{% url 'add_regulation' %}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Add Regulation</a>
+    <a href="{% url 'add_session' %}" class="btn btn-info btn-sm"><i class="fas fa-plus"></i> Add Academic Year</a>
 </div>
 
-{% for session_id, group in grouped_calendars.items %}
-<div class="cal-session-block">
-    <!-- Session Header -->
-    <div class="cal-session-header">
-        <h3>{{ group.session }}</h3>
+<!-- Level 1: Regulations -->
+<div id="view-regulations" class="folder-container">
+    <div class="folder-grid">
+        {% for reg_name, session_groups in reg_grouped.items %}
+        <div class="folder-card" onclick="showSessions('{{ reg_name|slugify }}', '{{ reg_name|escapejs }}')">
+            <div class="folder-name">{{ reg_name }}</div>
+            <div class="folder-meta">{{ session_groups|length }} Years</div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1; text-align: center;">
+            <i class="fas fa-box-open" style="font-size: 3rem; color: #cbd5e1;"></i>
+            <p class="mt-3">No Academic Calendars found.</p>
+        </div>
+        {% endfor %}
     </div>
+</div>
 
-    {% for calendar in group.calendars %}
-    <!-- Semester Block -->
-    <div class="cal-semester-block">
-        <div class="cal-semester-header">
-            <span>{{ calendar.get_semester_display }} Semester</span>
-            {% if calendar.regulation %}
-            <span class="sem-badge">{{ calendar.regulation.name }}</span>
-            {% endif %}
-            <div class="cal-semester-actions">
-                <div class="action-btn-group">
-                    <a href="{% url 'edit_calendar' calendar.id %}" class="btn btn-info btn-sm" title="Edit"><i
-                            class="fas fa-edit"></i></a>
-                    <a href="{% url 'delete_calendar' calendar.id %}"
-                        onclick="return confirm('Delete this entire semester calendar?')" class="btn btn-danger btn-sm"
-                        title="Delete"><i class="fas fa-trash"></i></a>
+<!-- Level 2 & 3 Wrappers -->
+{% for reg_name, session_groups in reg_grouped.items %}
+
+<!-- Level 2: Sessions for {{ reg_name }} -->
+<div id="view-sessions-{{ reg_name|slugify }}" class="folder-container view-sessions-container" style="display: none;">
+    <div class="folder-grid">
+        {% for session_key, group in session_groups.items %}
+        <div class="folder-card" onclick="showCalendars('{{ reg_name|slugify }}', '{{ session_key|slugify }}', '{{ reg_name|escapejs }}', '{{ group.session|escapejs }}')">
+            <div class="folder-name" style="text-transform: uppercase;">{{ group.session }}</div>
+            <div class="folder-meta">ACADEMIC YEAR</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Level 3: Calendars for {{ reg_name }} -->
+{% for session_key, group in session_groups.items %}
+<div id="view-calendars-{{ reg_name|slugify }}-{{ session_key|slugify }}" class="view-calendars-container" style="display: none;">
+    <div class="cal-session-block">
+        <div class="cal-session-header border mb-3" style="background: transparent;">
+            <h3>Academic Calendar - {{ reg_name }}</h3>
+            <small>{{ group.session }}</small>
+        </div>
+
+        {% for calendar in group.calendars %}
+            <!-- Original calendar table block -->
+            <div class="cal-semester-block">
+                <div class="cal-semester-header">
+                    <span>{{ calendar.get_semester_display }} Semester</span>
+                    {% if calendar.regulation %}
+                    <span class="sem-badge">{{ calendar.regulation.name }}</span>
+                    {% endif %}
+                    <div class="cal-semester-actions">
+                        <div class="action-btn-group">
+                            <a href="{% url 'edit_calendar' calendar.id %}" class="btn btn-info btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'delete_calendar' calendar.id %}" onclick="return confirm('Delete this entire semester calendar?')" class="btn btn-danger btn-sm" title="Delete"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </div>
                 </div>
+
+                <table class="cal-table">
+                    <thead>
+                        <tr>
+                            <th style="width:45%">Event</th>
+                            <th style="width:35%">Date</th>
+                            <th style="width:20%">Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Commencement Row -->
+                        <tr>
+                            <td class="event-name">Commencement of Class Work</td>
+                            <td class="event-date editable-date-cell"
+                                data-cal-id="{{ calendar.id }}"
+                                data-field="commencement_date"
+                                data-raw="{% if calendar.commencement_date %}{{ calendar.commencement_date|date:'Y-m-d' }}{% endif %}"
+                                data-display="{% if calendar.commencement_date %}{{ calendar.commencement_date|date:'d-m-Y' }}{% endif %}"
+                                data-update-url="{% url 'inline_update_calendar' calendar.id %}"
+                                data-mode="single">
+                                <span class="date-display">{% if calendar.commencement_date %}{{ calendar.commencement_date|date:"d-m-Y" }}{% else %}<em style="color:#94a3b8">Not set — click to edit</em>{% endif %}</span>
+                                <span class="edit-hint"><i class="fas fa-pencil-alt"></i></span>
+                            </td>
+                            <td class="event-duration">—</td>
+                        </tr>
+                        <!-- Instruction Period Row -->
+                        <tr data-instruction-row="{{ calendar.id }}">
+                            <td class="event-name">Instruction Period for the Semester</td>
+                            <td class="event-date editable-date-cell"
+                                data-cal-id="{{ calendar.id }}"
+                                data-field="instruction_end_date"
+                                data-raw="{% if calendar.instruction_end_date %}{{ calendar.instruction_end_date|date:'Y-m-d' }}{% endif %}"
+                                data-display="{% if calendar.commencement_date and calendar.instruction_end_date %}{{ calendar.commencement_date|date:'d-m-Y' }} to {{ calendar.instruction_end_date|date:'d-m-Y' }}{% endif %}"
+                                data-update-url="{% url 'inline_update_calendar' calendar.id %}"
+                                data-mode="instruction">
+                                <span class="date-display" id="instr-display-{{ calendar.id }}">{% if calendar.commencement_date and calendar.instruction_end_date %}{{ calendar.commencement_date|date:"d-m-Y" }} to {{ calendar.instruction_end_date|date:"d-m-Y" }}{% else %}<em style="color:#94a3b8">Not set — click to edit</em>{% endif %}</span>
+                                <span class="edit-hint"><i class="fas fa-pencil-alt"></i></span>
+                            </td>
+                            <td class="event-duration" id="instr-dur-{{ calendar.id }}">{{ calendar.instruction_duration_text }}</td>
+                        </tr>
+
+                        {% for event in calendar.events.all %}
+                        {% if forloop.first %}
+                        <tr class="section-row">
+                            <td colspan="3">Examinations &amp; Events</td>
+                        </tr>
+                        {% endif %}
+                        <tr data-event-row="{{ event.id }}">
+                            <td class="event-name">{{ event.display_name }}</td>
+                            <td class="event-date editable-event-cell"
+                                data-event-id="{{ event.id }}"
+                                data-start-raw="{{ event.start_date|date:'Y-m-d' }}"
+                                data-end-raw="{% if event.end_date %}{{ event.end_date|date:'Y-m-d' }}{% endif %}"
+                                data-update-url="{% url 'inline_update_calendar_event' event.id %}">
+                                <span class="date-display" id="event-date-{{ event.id }}">{{ event.date_range_display }}</span>
+                                <span class="edit-hint"><i class="fas fa-pencil-alt"></i></span>
+                            </td>
+                            <td class="event-duration" id="event-dur-{{ event.id }}">{{ event.duration_text|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
-
-        <table class="cal-table">
-            <thead>
-                <tr>
-                    <th style="width:45%">Event</th>
-                    <th style="width:35%">Date</th>
-                    <th style="width:20%">Duration</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Commencement -->
-                <tr>
-                    <td class="event-name">Commencement of Class Work</td>
-                    <td class="event-date">{{ calendar.commencement_date|date:"d-m-Y" }}</td>
-                    <td class="event-duration">—</td>
-                </tr>
-                <!-- Instruction Period -->
-                <tr>
-                    <td class="event-name">Instruction Period for the Semester</td>
-                    <td class="event-date">{{ calendar.commencement_date|date:"d-m-Y" }} to {{ calendar.instruction_end_date|date:"d-m-Y" }}</td>
-                    <td class="event-duration">
-                        {% widthratio calendar.instruction_end_date|timeuntil:calendar.commencement_date 1 1 %}
-                    </td>
-                </tr>
-
-                {% with calendar.events.all as events %}
-                {% if events %}
-                <!-- Examinations Section -->
-                <tr class="section-row">
-                    <td colspan="3">Examinations & Events</td>
-                </tr>
-                {% for event in events %}
-                <tr>
-                    <td class="event-name">{{ event.display_name }}</td>
-                    <td class="event-date">{{ event.date_range_display }}</td>
-                    <td class="event-duration">{{ event.duration_text|default:"—" }}</td>
-                </tr>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
-            </tbody>
-        </table>
-    </div>
-    {% endfor %}
-</div>
-{% empty %}
-<div class="erpnext-card">
-    <div class="card-body">
-        <div class="empty-state">
-            <i class="fas fa-calendar"></i>
-            <p>No academic calendar entries found.</p>
-            <a href="{% url 'add_calendar' %}" class="btn btn-primary btn-sm mt-3"><i class="fas fa-plus"></i> Add First
-                Entry</a>
-        </div>
+        {% endfor %}
     </div>
 </div>
 {% endfor %}
+
+{% endfor %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        showRegulations();
+    });
+
+    function hideAllViews() {
+        document.getElementById('view-regulations').style.display = 'none';
+        
+        const sessions = document.querySelectorAll('.view-sessions-container');
+        sessions.forEach(el => el.style.display = 'none');
+        
+        const calendars = document.querySelectorAll('.view-calendars-container');
+        calendars.forEach(el => el.style.display = 'none');
+    }
+
+    function showRegulations() {
+        hideAllViews();
+        document.getElementById('view-regulations').style.display = 'block';
+        document.getElementById('dynamic-breadcrumb').innerHTML = 'Manage';
+    }
+
+    function showSessions(regSlug, regName) {
+        hideAllViews();
+        const el = document.getElementById('view-sessions-' + regSlug);
+        if (el) el.style.display = 'block';
+        
+        document.getElementById('dynamic-breadcrumb').innerHTML = `
+            <a href="#" onclick="showRegulations(); return false;">Manage</a> / 
+            ${regName}
+        `;
+    }
+
+    function showCalendars(regSlug, sessionSlug, regName, sessionName) {
+        hideAllViews();
+        const el = document.getElementById('view-calendars-' + regSlug + '-' + sessionSlug);
+        if (el) el.style.display = 'block';
+        
+        document.getElementById('dynamic-breadcrumb').innerHTML = `
+            <a href="#" onclick="showRegulations(); return false;">Manage</a> / 
+            <a href="#" onclick="showSessions('${regSlug}', '${regName.replace(/'/g, "\\'")}'); return false;">${regName}</a> / 
+            ${sessionName} / ACADEMIC CALENDAR
+        `;
+    }
+</script>
+
+{% block custom_js %}
+<script>
+// ─── Toast notification ───────────────────────────────────────────
+function showToast(msg, isError) {
+    let toast = document.getElementById('inline-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'inline-toast';
+        toast.className = 'inline-save-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.toggle('error', !!isError);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ─── Close all open popups ────────────────────────────────────────
+function closeAllPopups() {
+    document.querySelectorAll('.inline-edit-popup').forEach(p => p.remove());
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.editable-date-cell') && !e.target.closest('.editable-event-cell') && !e.target.closest('.inline-edit-popup')) {
+        closeAllPopups();
+    }
+});
+
+// ─── Calendar header rows (commencement / instruction end) ────────
+document.querySelectorAll('.editable-date-cell').forEach(function(cell) {
+    cell.addEventListener('click', function(e) {
+        if (e.target.closest('.inline-edit-popup')) return;
+
+        closeAllPopups();
+
+        const mode      = cell.dataset.mode;      // 'single' or 'instruction'
+        const field     = cell.dataset.field;
+        const raw       = cell.dataset.raw;
+        const url       = cell.dataset.updateUrl;
+        const calId     = cell.dataset.calId;
+
+        const popup = document.createElement('div');
+        popup.className = 'inline-edit-popup active';
+
+        if (mode === 'single') {
+            popup.innerHTML = `
+                <label>Date</label>
+                <input type="date" id="ie-date" value="${raw}">
+                <div class="popup-actions">
+                    <button class="btn-cancel" onclick="closeAllPopups()">Cancel</button>
+                    <button class="btn-save" onclick="saveCalendarField(this)">Save</button>
+                </div>`;
+        } else {
+            popup.innerHTML = `
+                <label>Instruction End Date</label>
+                <input type="date" id="ie-date" value="${raw}">
+                <div class="popup-actions">
+                    <button class="btn-cancel" onclick="closeAllPopups()">Cancel</button>
+                    <button class="btn-save" onclick="saveCalendarField(this)">Save</button>
+                </div>`;
+        }
+
+        popup.dataset.field  = field;
+        popup.dataset.url    = url;
+        popup.dataset.calId  = calId;
+        popup.dataset.mode   = mode;
+
+        cell.style.position = 'relative';
+        cell.appendChild(popup);
+        popup.querySelector('input').focus();
+    });
+});
+
+function saveCalendarField(btn) {
+    const popup = btn.closest('.inline-edit-popup');
+    const cell  = popup.parentElement;
+    const field = popup.dataset.field;
+    const url   = popup.dataset.url;
+    const calId = popup.dataset.calId;
+    const mode  = popup.dataset.mode;
+    const value = popup.querySelector('#ie-date').value;
+
+    if (!value) { showToast('Please pick a date', true); return; }
+
+    btn.textContent = '...';
+    btn.disabled = true;
+
+    const body = new FormData();
+    body.append('field', field);
+    body.append('value', value);
+    body.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+    fetch(url, { method: 'POST', body: body })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { showToast('Error: ' + data.error, true); return; }
+
+            if (mode === 'single') {
+                // Update commencement display + sync the instruction period row display prefix
+                cell.querySelector('.date-display').textContent = data.commencement_display;
+                const instrDisp = document.getElementById('instr-display-' + calId);
+                if (instrDisp) instrDisp.textContent = data.instruction_display;
+                const instrDur  = document.getElementById('instr-dur-' + calId);
+                if (instrDur)  instrDur.textContent  = data.duration;
+            } else {
+                // Update instruction period display + duration
+                const instrDisp = document.getElementById('instr-display-' + calId);
+                if (instrDisp) instrDisp.textContent = data.instruction_display;
+                const instrDur  = document.getElementById('instr-dur-' + calId);
+                if (instrDur)  instrDur.textContent  = data.duration;
+            }
+
+            // Update data-raw for next edit
+            cell.dataset.raw = value;
+            showToast('✓ Saved');
+            closeAllPopups();
+        })
+        .catch(() => showToast('Network error', true));
+}
+
+// ─── Event rows (start / end / duration) ─────────────────────────
+document.querySelectorAll('.editable-event-cell').forEach(function(cell) {
+    cell.addEventListener('click', function(e) {
+        if (e.target.closest('.inline-edit-popup')) return;
+
+        closeAllPopups();
+
+        const eventId  = cell.dataset.eventId;
+        const startRaw = cell.dataset.startRaw;
+        const endRaw   = cell.dataset.endRaw || '';
+        const url      = cell.dataset.updateUrl;
+
+        // Get current duration text from sibling td
+        const durCell = document.getElementById('event-dur-' + eventId);
+        const durVal  = durCell ? (durCell.textContent.trim() === '—' ? '' : durCell.textContent.trim()) : '';
+
+        const popup = document.createElement('div');
+        popup.className = 'inline-edit-popup active';
+        popup.innerHTML = `
+            <label>Start Date</label>
+            <input type="date" id="ie-start" value="${startRaw}">
+            <label>End Date <span style="font-weight:400;color:#94a3b8">(leave blank if single day)</span></label>
+            <input type="date" id="ie-end" value="${endRaw}">
+            <label>Duration <span style="font-weight:400;color:#94a3b8">(e.g. 3 Days, 2 Weeks)</span></label>
+            <input type="text" id="ie-dur" value="${durVal}" placeholder="e.g. 3 Days" style="width:100%;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;margin-bottom:10px;">
+            <div class="popup-actions">
+                <button class="btn-cancel" onclick="closeAllPopups()">Cancel</button>
+                <button class="btn-save" onclick="saveEventDates(this)">Save</button>
+            </div>`;
+
+        popup.dataset.url     = url;
+        popup.dataset.eventId = eventId;
+
+        cell.style.position = 'relative';
+        cell.appendChild(popup);
+        popup.querySelector('#ie-start').focus();
+    });
+});
+
+function saveEventDates(btn) {
+    const popup   = btn.closest('.inline-edit-popup');
+    const cell    = popup.parentElement;
+    const url     = popup.dataset.url;
+    const eventId = popup.dataset.eventId;
+    const start   = popup.querySelector('#ie-start').value;
+    const end     = popup.querySelector('#ie-end').value;
+    const dur     = popup.querySelector('#ie-dur').value;
+
+    if (!start) { showToast('Start date is required', true); return; }
+
+    btn.textContent = '...';
+    btn.disabled = true;
+
+    const body = new FormData();
+    body.append('start_date', start);
+    body.append('end_date', end);
+    body.append('duration_text', dur);
+    body.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+    fetch(url, { method: 'POST', body: body })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { showToast('Error: ' + data.error, true); return; }
+
+            const dispEl = document.getElementById('event-date-' + eventId);
+            if (dispEl) dispEl.textContent = data.date_display;
+
+            const durEl = document.getElementById('event-dur-' + eventId);
+            if (durEl) durEl.textContent = data.duration;
+
+            // Update data attrs for next edit
+            cell.dataset.startRaw = start;
+            cell.dataset.endRaw   = end;
+
+            showToast('✓ Saved');
+            closeAllPopups();
+        })
+        .catch(() => showToast('Network error', true));
+}
+
+// ─── CSRF helper ──────────────────────────────────────────────────
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        document.cookie.split(';').forEach(function(cookie) {
+            const c = cookie.trim();
+            if (c.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(c.substring(name.length + 1));
+            }
+        });
+    }
+    return cookieValue;
+}
+</script>
+{% endblock custom_js %}
 {% endblock content %}

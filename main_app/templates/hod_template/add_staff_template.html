@@ -6,7 +6,7 @@
     /* Sleek Multi-Step Styles */
     .card-registration {
         border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
         border: none;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.95);
@@ -26,34 +26,71 @@
         font-size: 1.5rem;
     }
 
-    /* Tabs Styling */
-    .nav-pills-custom {
-        background: #f4f5f7;
-        border-radius: 14px;
-        padding: 8px;
-        gap: 8px;
+    /* Luminous Emerald Navigation Tabs (Filter-Bar Style) */
+    .filter-bar-wrapper {
+        background: rgba(244, 245, 247, 0.6);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 50px;
+        padding: 6px;
+        display: inline-flex;
+        gap: 6px;
+        margin-bottom: 30px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        max-width: 100%;
+        overflow-x: auto;
     }
 
-    .nav-pills-custom .nav-link {
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        color: #64748b;
-        padding: 12px 20px;
-        transition: all 0.2s ease;
+    .dark-mode .filter-bar-wrapper {
+        background: rgba(31, 41, 55, 0.6) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .filter-pill {
         border: none;
+        background: transparent;
+        color: #64748b;
+        padding: 10px 22px;
+        border-radius: 40px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        white-space: nowrap;
+        border: 1px solid transparent;
     }
 
-    .nav-pills-custom .nav-link:hover {
-        background: rgba(0,0,0,0.03);
-        color: #334155;
+    .dark-mode .filter-pill {
+        color: #94a3b8 !important;
     }
 
-    .nav-pills-custom .nav-link.active {
-        background: white;
-        color: #4f46e5;
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+    .filter-pill.active-filter {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.2)) !important;
+        color: #059669 !important;
+        border: 1px solid rgba(16, 185, 129, 0.35) !important;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
     }
+
+    .dark-mode .filter-pill.active-filter {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.55), rgba(5, 150, 105, 0.45)) !important;
+        color: #ffffff !important;
+        border-color: rgba(52, 211, 153, 0.65) !important;
+    }
+
+    .filter-pill:hover:not(.active-filter) {
+        background: rgba(0, 0, 0, 0.04);
+        color: #1e293b;
+    }
+
+    .dark-mode .filter-pill:hover:not(.active-filter) {
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #fff !important;
+    }
+
 
     /* Form Layouts */
     .form-label {
@@ -63,7 +100,8 @@
         margin-bottom: 8px;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
         border-radius: 10px;
         padding: 11px 16px;
         border: 1px solid #e2e8f0;
@@ -71,7 +109,8 @@
         transition: border-color 0.2s;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
         border-color: #4f46e5;
         box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
@@ -129,7 +168,15 @@
     .btn-prev:hover {
         background: #e2e8f0;
     }
+
+    /* Centering Helper */
+    .div-center {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
 </style>
+
 {% endblock custom_css %}
 
 {% block page_title %}{{ page_title }}{% endblock page_title %}
@@ -156,27 +203,26 @@
                             </div>
                             {% endif %}
 
-                            <!-- Nav Tabs Header -->
-                            <ul class="nav nav-pills nav-pills-custom nav-justified mb-4" id="staffFormTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="basic-info-tab" data-bs-toggle="pill" data-bs-target="#basic-info" type="button" role="tab">Basic Info</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="identification-tab" data-bs-toggle="pill" data-bs-target="#identification" type="button" role="tab">Identification</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="address-tab" data-bs-toggle="pill" data-bs-target="#address-pane" type="button" role="tab">Address</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="family-tab" data-bs-toggle="pill" data-bs-target="#family" type="button" role="tab">Family & Contact</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="qualification-tab" data-bs-toggle="pill" data-bs-target="#qualification" type="button" role="tab">Qualification</button>
-                                </li>
-                            </ul>
-
+                            <!-- Nav Tabs Header (Luminous Emerald Filters) -->
+                            <div class="div-center text-center mb-4">
+                                <div class="filter-bar-wrapper" id="staffFormTabs" role="tablist">
+                                    <button class="filter-pill active-filter" id="basic-info-tab" data-bs-toggle="pill"
+                                        data-bs-target="#basic-info" type="button" role="tab">👤 Basic Info</button>
+                                    <button class="filter-pill" id="identification-tab" data-bs-toggle="pill"
+                                        data-bs-target="#identification" type="button" role="tab">🆔
+                                        Identification</button>
+                                    <button class="filter-pill" id="address-tab" data-bs-toggle="pill"
+                                        data-bs-target="#address-pane" type="button" role="tab">🏠 Address</button>
+                                    <button class="filter-pill" id="family-tab" data-bs-toggle="pill"
+                                        data-bs-target="#family" type="button" role="tab">👨‍👩‍👧 Contact</button>
+                                    <button class="filter-pill" id="qualification-tab" data-bs-toggle="pill"
+                                        data-bs-target="#qualification" type="button" role="tab">🎓
+                                        Qualification</button>
+                                </div>
+                            </div>
                             <!-- Tab Content -->
                             <div class="tab-content" id="staffFormContent">
+
 
                                 <!-- 1. Basic Info -->
                                 <div class="tab-pane fade show active" id="basic-info" role="tabpanel">
@@ -318,13 +364,16 @@
                         </div> <!-- End Card Body -->
 
                         <div class="card-footer border-top-0 d-flex justify-content-between p-4 p-md-5 bg-transparent">
-                            <button type="button" class="btn btn-step btn-prev" id="prevBtn" onclick="prevTab()" style="display:none;">
+                            <button type="button" class="btn btn-step btn-prev" id="prevBtn" onclick="prevTab()"
+                                style="display:none;">
                                 <i class="fas fa-arrow-left me-2"></i> Previous
                             </button>
-                            <button type="button" class="btn btn-step btn-next ms-auto" id="nextBtn" onclick="nextTab()">
+                            <button type="button" class="btn btn-step btn-next ms-auto" id="nextBtn"
+                                onclick="nextTab()">
                                 Next Step <i class="fas fa-arrow-right ms-2"></i>
                             </button>
-                            <button type="submit" class="btn btn-step btn-success ms-auto" id="submitBtn" style="display:none; background: #10b981; border: none;">
+                            <button type="submit" class="btn btn-step btn-success ms-auto" id="submitBtn"
+                                style="display:none; background: #10b981; border: none;">
                                 <i class="fas fa-check-circle me-2"></i> Register Staff
                             </button>
                         </div>
@@ -339,59 +388,92 @@
 
 {% block custom_js %}
 <script>
-    // Step indicator update
+    // Manual Navigation Engine
     const stepsCount = 5;
-    function updateStepIndicator() {
-        const activeTab = document.querySelector('#staffFormTabs .nav-link.active');
-        const activeIndex = Array.from(activeTab.parentElement.parentElement.children).indexOf(activeTab.parentElement) + 1;
-        document.getElementById('stepIndicator').innerText = `Step ${activeIndex} of ${stepsCount}`;
+    const tabIds = ['basic-info', 'identification', 'address-pane', 'family', 'qualification'];
+
+    function showTab(targetId) {
+        // 1. Force hide all panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+        });
+        // 2. Force show target pane
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) targetPane.classList.add('show', 'active');
+
+        // 3. Update pill logic
+        const items = Array.from(document.getElementById('staffFormTabs').children).filter(el => el.classList.contains('filter-pill'));
+        items.forEach(pill => {
+            pill.classList.remove('active-filter', 'active');
+            const target = pill.getAttribute('data-bs-target') || pill.getAttribute('data-target');
+            if (target === '#' + targetId) {
+                pill.classList.add('active-filter', 'active');
+            }
+        });
+
+        // 4. Update index and UI
+        const activeIndex = tabIds.indexOf(targetId);
+        
+        // Step Indicator
+        const indicator = document.getElementById('stepIndicator');
+        if (indicator) indicator.innerText = `Step ${activeIndex + 1} of ${stepsCount}`;
+
+        // Buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (prevBtn) prevBtn.style.display = (activeIndex === 0) ? 'none' : 'block';
+        
+        if (activeIndex === tabIds.length - 1) {
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'block';
+        } else {
+            if (nextBtn) nextBtn.style.display = 'block';
+            if (submitBtn) submitBtn.style.display = 'none';
+        }
     }
 
     function nextTab() {
-        const triggerEl = document.querySelector('#staffFormTabs .nav-link.active');
-        const nextListItem = triggerEl.parentElement.nextElementSibling;
-        if (nextListItem) {
-            const nextButton = nextListItem.querySelector('button');
-            const bsTab = new bootstrap.Tab(nextButton);
-            bsTab.show();
+        const activeTab = document.querySelector('#staffFormTabs .filter-pill.active, #staffFormTabs .filter-pill.active-filter');
+        if (!activeTab) return;
+        const currentTarget = activeTab.getAttribute('data-bs-target') || activeTab.getAttribute('data-target');
+        const currentId = currentTarget.replace('#', '');
+        const currentIndex = tabIds.indexOf(currentId);
+        if (currentIndex < tabIds.length - 1) {
+            showTab(tabIds[currentIndex + 1]);
         }
     }
 
     function prevTab() {
-        const triggerEl = document.querySelector('#staffFormTabs .nav-link.active');
-        const prevListItem = triggerEl.parentElement.previousElementSibling;
-        if (prevListItem) {
-            const prevButton = prevListItem.querySelector('button');
-            const bsTab = new bootstrap.Tab(prevButton);
-            bsTab.show();
+        const activeTab = document.querySelector('#staffFormTabs .filter-pill.active, #staffFormTabs .filter-pill.active-filter');
+        if (!activeTab) return;
+        const currentTarget = activeTab.getAttribute('data-bs-target') || activeTab.getAttribute('data-target');
+        const currentId = currentTarget.replace('#', '');
+        const currentIndex = tabIds.indexOf(currentId);
+        if (currentIndex > 0) {
+            showTab(tabIds[currentIndex - 1]);
         }
     }
 
-    document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(tabEl => {
-        tabEl.addEventListener('shown.bs.tab', function (event) {
-            const activeTab = event.target;
-            const listItems = Array.from(activeTab.parentElement.parentElement.children);
-            const activeIndex = listItems.indexOf(activeTab.parentElement);
-
-            // Toggle Previous Button
-            if (activeIndex === 0) {
-                document.getElementById('prevBtn').style.display = 'none';
-            } else {
-                document.getElementById('prevBtn').style.display = 'block';
-            }
-
-            // Toggle Next / Submit Button
-            if (activeIndex === listItems.length - 1) {
-                document.getElementById('nextBtn').style.display = 'none';
-                document.getElementById('submitBtn').style.display = 'block';
-            } else {
-                document.getElementById('nextBtn').style.display = 'block';
-                document.getElementById('submitBtn').style.display = 'none';
-            }
-
-            updateStepIndicator();
+    // Attach listeners and sync initial state
+    document.addEventListener('DOMContentLoaded', function() {
+        // Direct click listeners for pills
+        const pills = document.querySelectorAll('#staffFormTabs .filter-pill');
+        pills.forEach(pill => {
+            pill.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('data-bs-target') || this.getAttribute('data-target');
+                if (target) showTab(target.replace('#', ''));
+            });
         });
+
+        // Force initial state
+        showTab('basic-info');
     });
+
+
+
 
     // Email Availability Check (Retained from original)
     function validateEmail(email) {
@@ -399,22 +481,22 @@
         return re.test(String(email).toLowerCase());
     }
 
-    $(document).ready(function(){
-        $("#id_email").keyup(function(){
+    $(document).ready(function () {
+        $("#id_email").keyup(function () {
             var email = $(this).val();
-            if (validateEmail(email)){
+            if (validateEmail(email)) {
                 $.ajax({
                     url: "{% url 'check_email_availability' %}",
                     type: 'POST',
                     data: { email: email, csrfmiddlewaretoken: '{{ csrf_token }}' }
-                }).done(function(response){
+                }).done(function (response) {
                     $(".email_error").remove();
-                    if (response == "True"){
+                    if (response == "True") {
                         $("<span class='invalid email_error'>Email Address Already Exists</span>").insertAfter("#id_email");
                     } else {
                         $("<span class='valid email_error'>Email Address Available</span>").insertAfter("#id_email");
                     }
-                }).fail(function(){
+                }).fail(function () {
                     $(".email_error").remove();
                     $("<span class='invalid email_error'>Error checking availability</span>").insertAfter("#id_email");
                 });

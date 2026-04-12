@@ -412,6 +412,10 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         color: #fff;
     }
+
+    .low-marks, .memo-table td.low-marks {
+        color: #ff0000 !important;
+    }
 </style> {% endblock custom_css %} {% block content %} <div class="container-fluid">
     <div class="memo-container">
         <div class="no-print"> <a href="{% url 'view_student_detail' student.id %}" class="btn-memo btn-back"><i
@@ -457,9 +461,9 @@
                         <tbody> {% for sub in yr_data.sem1 %} <tr>
                                 <td class="sno">{{ forloop.counter }}</td>
                                 <td class="subject-name">{{ sub.name }}</td>
-                                <td class="mark-cell">{{ sub.im|floatformat:"-1" }}</td>
+                                <td class="mark-cell {% if sub.im <= 15 %}low-marks{% endif %}">{{ sub.im|floatformat:"-1" }}</td>
                                 <td class="mark-cell">{{ sub.em|floatformat:"-1"|default:"" }}</td>
-                                <td class="mark-cell">{{ sub.tot|floatformat:"-1" }}</td>
+                                <td class="mark-cell {% if sub.tot <= 15 %}low-marks{% endif %}">{{ sub.tot|floatformat:"-1" }}</td>
                                 <td class="mark-cell">{{ sub.status }}</td>
                                 <td class="mark-cell">{{ sub.cr|floatformat:"-1"|default:"" }}</td>
                                 <td class="mark-cell">{{ sub.grade }}</td>
@@ -486,9 +490,9 @@
                         <tbody> {% for sub in yr_data.sem2 %} <tr>
                                 <td class="sno">{{ forloop.counter }}</td>
                                 <td class="subject-name">{{ sub.name }}</td>
-                                <td class="mark-cell">{{ sub.im|floatformat:"-1" }}</td>
+                                <td class="mark-cell {% if sub.im < 15 %}low-marks{% endif %}">{{ sub.im|floatformat:"-1" }}</td>
                                 <td class="mark-cell">{{ sub.em|floatformat:"-1"|default:"" }}</td>
-                                <td class="mark-cell">{{ sub.tot|floatformat:"-1" }}</td>
+                                <td class="mark-cell {% if sub.tot < 15 %}low-marks{% endif %}">{{ sub.tot|floatformat:"-1" }}</td>
                                 <td class="mark-cell">{{ sub.status }}</td>
                                 <td class="mark-cell">{{ sub.cr|floatformat:"-1"|default:"" }}</td>
                                 <td class="mark-cell">{{ sub.grade }}</td>

@@ -20,46 +20,93 @@
     <link rel="stylesheet" href="{% static 'dist/css/theme-toggle-fix.css' %}?v={% now 'U' %}">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS (for exact glass aesthetic tasks) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '.dark-mode'],
+            corePlugins: {
+                preflight: false,
+            },
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
     {% block custom_css %}{% endblock custom_css %}
     <style>
         /* Ocean Glass Design Tokens - White & Blue */
         :root {
-            --glass-bg: rgba(239, 246, 255, 0.45); /* Faint Blue-Tinted translucency */
+            --glass-bg: rgba(239, 246, 255, 0.45);
+            /* Faint Blue-Tinted translucency */
             --glass-border: rgba(255, 255, 255, 0.4);
             --glass-blur: blur(25px);
             --glass-shadow: 0 10px 40px rgba(37, 99, 235, 0.08);
             --accent-glow: 0 0 20px rgba(37, 99, 235, 0.4);
-            --glow-accent: #2563eb; /* Vibrant Blue */
-            --glow-secondary: #1d4ed8; /* Deep Blue */
-            --glow-tertiary: #60a5fa; /* Soft Sky */
+            --glow-accent: #2563eb;
+            /* Vibrant Blue */
+            --glow-secondary: #1d4ed8;
+            /* Deep Blue */
+            --glow-tertiary: #60a5fa;
+            /* Soft Sky */
             --text-main: #111827;
         }
 
         /* Clean Monochrome Dark Mode */
         .dark-mode {
-            --glass-bg: rgba(15, 23, 42, 0.85) !important; 
+            --glass-bg: rgba(15, 23, 42, 0.85) !important;
             --glass-bg-hover: rgba(30, 41, 59, 0.95) !important;
             --surface: #020617 !important;
             --surface-raised: #0f172a !important;
             --glass-border: rgba(255, 255, 255, 0.08) !important;
             --text-primary: #f8fafc !important;
             --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
-            --glow-accent: #94a3b8 !important; /* Neutral slate */
+            --glow-accent: #94a3b8 !important;
+            /* Neutral slate */
             --glow-secondary: #64748b !important;
         }
 
         /* Ocean Glass - The Professional Look */
         .mesh-background {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             z-index: -2;
             background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
             overflow: hidden;
         }
 
+        .role-student .mesh-background {
+            background-color: #e5e8ec !important;
+            /* Cool grey base from top-left of image */
+            background-image:
+                radial-gradient(circle at 100% 0%, #fcf7e9 0%, transparent 65%),
+                radial-gradient(circle at 60% 50%, #fcfbf9 0%, transparent 55%),
+                radial-gradient(circle at 0% 100%, #eeebe1 0%, transparent 60%),
+                linear-gradient(135deg, rgba(229, 232, 236, 0.4) 0%, rgba(250, 236, 210, 0.5) 70%, rgba(247, 241, 216, 0.7) 100%) !important;
+            opacity: 1 !important;
+        }
+
+        .role-student .erpnext-sidebar {
+            background: rgba(255, 255, 255, 0.3) !important;
+            backdrop-filter: blur(25px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.4) !important;
+        }
+
+        .role-student .erpnext-navbar {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-bottom: none !important;
+        }
+
         .dark-mode .mesh-background {
-            background-color: #020617 !important;
-            background-image: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 1) 0%, #020617 100%) !important;
+            background-color: #1a1a24 !important; /* Deep moody background */
+            background-image:
+                radial-gradient(ellipse at top right, rgba(55, 126, 143, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(62, 53, 64, 0.5) 0%, transparent 60%),
+                linear-gradient(135deg, #10151d 0%, #161c24 50%, #1a1a24 100%) !important;
         }
 
         .dark-mode .erpnext-sidebar {
@@ -72,12 +119,12 @@
         .dark-mode .sd-table-wrapper-no-scroll,
         .dark-mode .sd-cgpa-info-card,
         .dark-mode .sd-cgpa-gauge-card {
-            background: rgba(30, 41, 59, 0.65) !important; /* Slate Glass */
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+            backdrop-filter: blur(28px) !important;
+            -webkit-backdrop-filter: blur(28px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
         }
 
         .dark-mode .master-glass-panel {
@@ -86,7 +133,8 @@
 
         .dark-mode .main-header,
         .dark-mode .erpnext-navbar {
-            background: rgba(255, 255, 255, 0.06) !important; /* White glass tint over black */
+            background: rgba(255, 255, 255, 0.06) !important;
+            /* White glass tint over black */
             backdrop-filter: blur(20px) !important;
             -webkit-backdrop-filter: blur(20px) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -99,6 +147,7 @@
         .dark-mode .text-primary {
             color: #ffffff !important;
         }
+
         /* Force Liquid Glass Background for Admin */
         .role-admin .mesh-background {
             background-color: #020617 !important;
@@ -281,8 +330,10 @@
                             <h2 class="college-name m-0">SVR ENGINEERING COLLEGE</h2>
                             <p class="college-status m-0">(AUTONOMOUS)</p>
                         </div>
-                        <img src="{% static 'image/nba_logo.png' %}" alt="NBA Logo" style="height: 40px; margin-left: 20px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));">
-                        <img src="{% static 'image/naac_logo.png' %}" alt="NAAC Logo" style="height: 40px; margin-left: 10px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));">
+                        <img src="{% static 'image/nba_logo.png' %}" alt="NBA Logo"
+                            style="height: 40px; margin-left: 20px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));">
+                        <img src="{% static 'image/naac_logo.png' %}" alt="NAAC Logo"
+                            style="height: 40px; margin-left: 10px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));">
                     </div>
                 </div>
 
@@ -341,13 +392,13 @@
                                 <div class="profile-info-text">
                                     <span class="profile-info-label">Last Login @</span>
                                     <span class="profile-info-label" style="font-size: 0.85rem;">
-                                      {% if request.session.previous_login %}
+                                        {% if request.session.previous_login %}
                                         {{ request.session.previous_login }}
-                                      {% elif user.last_login %}
+                                        {% elif user.last_login %}
                                         {{ user.last_login|date:"d M Y, h:i A" }}
-                                      {% else %}
+                                        {% else %}
                                         Never
-                                      {% endif %}
+                                        {% endif %}
                                     </span>
                                 </div>
                             </div>

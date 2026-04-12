@@ -9,9 +9,18 @@ from . import models
 class FormSettings(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FormSettings, self).__init__(*args, **kwargs)
-        # Here make some changes such as:
+        # Apply bootstrap text/select styling, but keep boolean widgets as checkboxes.
         for field in self.visible_fields():
-            field.field.widget.attrs['class'] = 'form-control'
+            input_type = getattr(field.field.widget, 'input_type', None)
+            if input_type in ('checkbox', 'radio'):
+                field.field.widget.attrs['class'] = 'form-check-input'
+                field.field.widget.attrs['style'] = (
+                    'width:18px;height:18px;min-width:18px;display:inline-block;'
+                    'appearance:auto;-webkit-appearance:checkbox;vertical-align:middle;'
+                    'margin:0 8px 0 0;'
+                )
+            else:
+                field.field.widget.attrs['class'] = 'form-control'
 
 
 class CustomUserForm(FormSettings):
@@ -174,13 +183,34 @@ class CourseForm(FormSettings):
 
 
 class SubjectForm(FormSettings):
+    name = forms.CharField(label="Subject Name", max_length=120)
+    code = forms.CharField(label="Subject Code", max_length=20, required=False)
+    short_code = forms.CharField(label="Short Code", max_length=10, required=False)
+    
+    # Add checkboxes for tracking options
+    show_in_attendance = forms.BooleanField(
+        label="Include in Attendance Tracking",
+        required=False,
+        help_text="Enable attendance recording for this subject"
+    )
+    show_in_results = forms.BooleanField(
+        label="Include in Results",
+        required=False,
+        help_text="Show grades and results for this subject"
+    )
+    show_in_marks = forms.BooleanField(
+        label="Include in Marks Memo",
+        required=False,
+        help_text="Display in student marks memorandum"
+    )
 
     def __init__(self, *args, **kwargs):
         super(SubjectForm, self).__init__(*args, **kwargs)
 
     class Meta:
         model = Subject
-        fields = ['name', 'code', 'staff', 'course', 'regulation', 'semester']
+        fields = ['name', 'code', 'short_code', 'staff', 'course', 'regulation', 
+                  'semester', 'credits', 'show_in_attendance', 'show_in_results', 'show_in_marks']
 
 
 class SessionForm(FormSettings):
@@ -434,7 +464,10 @@ class AnnouncementForm(FormSettings):
 
     class Meta:
         model = models.Announcement
-        fields = ['title', 'content', 'category', 'audience']
+        fields = ['title', 'content', 'category', 'audience', 'expires_at']
+        widgets = {
+            'expires_at': DateInput(attrs={'type': 'date'}),
+        }
 
 
 class AcademicCalendarForm(FormSettings):

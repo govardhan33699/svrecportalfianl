@@ -1,5 +1,6 @@
 {% extends 'main_app/erpnext_base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block page_title %}Dashboard{% endblock page_title %}
 {% block breadcrumb %}
 <li class="breadcrumb-item active">Dashboard</li>
@@ -41,136 +42,138 @@
         border-bottom: 1px solid rgba(0, 0, 0, 0.03);
     }
 
-    /* Filter Bar - Liquid Glass Pill Style */
-    .filter-bar-wrapper {
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 50px;
-        padding: 6px;
-        display: inline-flex;
-        gap: 4px;
-        margin-bottom: 24px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .dark-mode .filter-bar-wrapper {
-        background: rgba(0, 0, 0, 0.2);
-        border-color: rgba(255,255,255,0.05);
-    }
-
-    .filter-pill {
-        border: none;
-        background: rgba(0, 0, 0, 0.03);
-        color: #64748b;
-        padding: 8px 18px;
-        border-radius: 40px;
-        font-weight: 700;
-        font-size: 0.75rem;
+    /* --- User-Provided Sliding Tab System (Exact Sync) --- */
+    .tabs {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        white-space: nowrap;
-        border: 1px solid transparent;
+        position: relative;
+        background-color: #fff;
+        box-shadow: 0 0 1px 0 rgba(24, 94, 224, 0.15), 0 6px 12px 0 rgba(24, 94, 224, 0.15);
+        padding: 0.75rem;
+        border-radius: 99px;
     }
 
-    .dark-mode .banner-stat-item {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+    .tabs * {
+        z-index: 2;
     }
 
-    .dark-mode .update-grid-card[data-category] {
-        background: rgba(255, 255, 255, 0.02) !important;
-        border-color: rgba(255, 255, 255, 0.03) !important;
+    .container input[type="radio"] {
+        display: none;
     }
 
-    .dark-mode .p-3[style*="background"] {
-        background: rgba(255, 255, 255, 0.03) !important;
-        border-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    .dark-mode .ug-icon-bg {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .dark-mode .filter-pill {
-        background: rgba(255, 255, 255, 0.03) !important;
-        color: #60a5fab8 !important;
-        border-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    .filter-pill span {
-        background: rgba(0, 0, 0, 0.05);
-        color: inherit;
-        min-width: 20px;
-        height: 20px;
-        border-radius: 50%;
+    .tab {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.65rem;
+        height: 30px;
+        width: 100px;
+        /* Adapted for content */
+        font-size: .8rem;
+        color: black;
+        font-weight: 500;
+        border-radius: 99px;
+        cursor: pointer;
+        transition: color 0.15s ease-in;
     }
 
-    .dark-mode .filter-pill span {
-        background: rgba(255, 255, 255, 0.08) !important;
+    .notification {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.1rem;
+        height: 1.1rem;
+        position: absolute;
+        top: -5px;
+        right: 8px;
+        font-size: 10px;
+        border-radius: 50%;
+        background-color: #e6eef9;
+        transition: 0.15s ease-in;
+        font-weight: 700;
     }
 
-    .filter-pill.active-filter {
-        background: rgba(37, 99, 235, 0.12) !important;
-        color: #2563eb !important;
-        border: 1px solid rgba(37, 99, 235, 0.3) !important;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.15);
+    .container input[type="radio"]:checked+label {
+        color: #185ee0;
     }
 
-    .dark-mode .filter-pill.active-filter {
-        background: rgba(37, 99, 235, 0.4) !important;
-        color: #ffffff !important;
-        border-color: rgba(96, 165, 250, 0.6) !important;
-        box-shadow: 0 0 25px rgba(37, 99, 235, 0.4) !important;
+    .container input[type="radio"]:checked+label>.notification {
+        background-color: #185ee0;
+        color: #fff;
     }
 
-    .dark-mode .filter-pill.active-filter span {
-        background: rgba(255, 255, 255, 0.25) !important;
-        color: #ffffff !important;
+    .container input[id="radio-1"]:checked~.glider {
+        transform: translateX(0);
     }
 
-    .dark-mode .ug-items-list > div {
-        background: rgba(255, 255, 255, 0.03) !important;
-        border-color: rgba(255, 255, 255, 0.05) !important;
+    .container input[id="radio-2"]:checked~.glider {
+        transform: translateX(100%);
     }
 
-    .dark-mode .welcome-banner .banner-stat-item {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    .container input[id="radio-3"]:checked~.glider {
+        transform: translateX(200%);
     }
 
-    .filter-pill:hover:not(.active-filter) {
-        background: rgba(0, 0, 0, 0.05);
-        color: #1e293b;
+    .container input[id="radio-4"]:checked~.glider {
+        transform: translateX(300%);
     }
 
-    .dark-mode .filter-pill:hover:not(.active-filter) {
-        background: rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
-        border-color: rgba(255, 255, 255, 0.15) !important;
+    .glider {
+        position: absolute;
+        display: flex;
+        height: 30px;
+        width: 100px;
+        background-color: #e6eef9;
+        z-index: 1;
+        border-radius: 99px;
+        transition: 0.25s ease-out;
     }
 
-    /* Innovative HOD Welcome Banner */
+    @media (max-width: 700px) {
+        .tabs {
+            transform: scale(0.6);
+            transform-origin: left center;
+        }
+    }
+
+    /* Dark Mode Support */
+    .dark-mode .tabs {
+        background-color: #1e293b;
+    }
+
+    .dark-mode .tab {
+        color: #cbd5e1;
+    }
+
+    .dark-mode .container input[type="radio"]:checked+label {
+        color: #60a5fa;
+    }
+
+    .dark-mode .glider {
+        background-color: rgba(96, 165, 250, 0.2);
+    }
+
+    .dark-mode .notification {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+    }
+
+    .dark-mode .container input[type="radio"]:checked+label>.notification {
+        background-color: #60a5fa;
+        color: #fff;
+    }
+
+
+
+    /* Innovative HOD Welcome Banner - True Glass Theme */
     .welcome-banner {
-        background: rgba(255, 255, 255, 0.45) !important;
-        backdrop-filter: blur(40px) !important;
-        -webkit-backdrop-filter: blur(40px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(35px) saturate(1.5) !important;
+        -webkit-backdrop-filter: blur(35px) saturate(1.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
         border-radius: 28px !important;
         padding: 24px 32px !important;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03) !important;
+        box-shadow: 0 10px 40px rgba(31, 38, 135, 0.05) !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
@@ -190,15 +193,19 @@
     .welcome-banner::before {
         content: "";
         position: absolute;
-        top: -50%; left: -50%; width: 200%; height: 200%;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
         background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
         pointer-events: none;
     }
 
     .banner-stat-item {
-        background: rgba(255, 255, 255, 0.03) !important;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(20px) saturate(1.5) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
         border-radius: 20px !important;
         padding: 20px !important;
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -218,12 +225,12 @@
     }
 
     body .erpnext-card {
-        background: var(--glass-bg) !important;
-        backdrop-filter: var(--glass-blur) !important;
-        -webkit-backdrop-filter: var(--glass-blur) !important;
-        border: 1px solid var(--glass-border) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(35px) saturate(1.5) !important;
+        -webkit-backdrop-filter: blur(35px) saturate(1.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
         border-radius: 28px !important;
-        box-shadow: var(--glass-shadow) !important;
+        box-shadow: 0 10px 40px rgba(31, 38, 135, 0.05) !important;
     }
 
     body .quick-actions-grid {
@@ -233,9 +240,10 @@
     }
 
     body .quick-action-btn {
-        background: rgba(255, 255, 255, 0.35) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(20px) saturate(1.5) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
         border-radius: 16px !important;
     }
 
@@ -244,6 +252,67 @@
         transform: translateY(-2px);
         box-shadow: none !important;
     }
+
+    /* Ambient Glowing Orbs for True Glass Refraction */
+    .ambient-orbs {
+        position: fixed;
+        width: 100%;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.6;
+        animation: floatOrb 20s infinite alternate ease-in-out;
+    }
+
+    .orb-1 {
+        width: 400px;
+        height: 400px;
+        background: rgba(37, 99, 235, 0.4);
+        top: -10%;
+        left: -10%;
+    }
+
+    .orb-2 {
+        width: 500px;
+        height: 500px;
+        background: rgba(16, 185, 129, 0.3);
+        bottom: 10%;
+        right: -5%;
+        animation-delay: -5s;
+    }
+
+    .orb-3 {
+        width: 300px;
+        height: 300px;
+        background: rgba(139, 92, 246, 0.3);
+        top: 40%;
+        left: 40%;
+        animation-duration: 25s;
+    }
+
+    @keyframes floatOrb {
+        0% {
+            transform: translateY(0) scale(1);
+        }
+
+        100% {
+            transform: translateY(50px) scale(1.1);
+        }
+    }
+
+    .dark-mode .orb {
+        opacity: 0.4;
+    }
+
 
     .absentees-section * {
         background: transparent !important;
@@ -281,18 +350,24 @@
 {% endblock custom_css %}
 
 {% block content %}
+<!-- Ambient Glass Orbs -->
+<div class="ambient-orbs d-none d-md-block">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
 <!-- Welcome Banner -->
 <div class="welcome-banner">
     <div>
         <span class="text-success fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 1.2px;">Admin
             Control Centre</span>
         <h2 class="fw-bold mt-1" style="font-size: 1.8rem; letter-spacing: -0.5px;">Welcome back, {{ user.get_full_name|default:user.username }}</h2>
-        <p class="text-muted mb-0" style="font-size: 0.82rem;">Institution overview — {{ today_date|date:"l, F d, Y" }}
-        </p>
+        <p class="text-muted mb-0" style="font-size: 0.82rem;">Institution overview — {{ today_date|date:"l, F d, Y" }}</p>
     </div>
     <div class="banner-stats d-flex gap-2">
         <a href="{% url 'manage_student' %}" class="banner-stat-item"
-            style="background: rgba(255, 255, 255, 0.65); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.02); text-align: center; min-width: 75px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); text-decoration: none; color: inherit; transition: all 0.2s;"
+            style="padding: 8px 14px; border-radius: 12px; text-align: center; min-width: 75px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); text-decoration: none; color: inherit; transition: all 0.2s;"
             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.04)';"
             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.01)';">
             <div class="stat-num text-primary" style="font-weight: 800; font-size: 1.3rem;">{{ total_students }}</div>
@@ -301,7 +376,7 @@
         </a>
 
         <a href="{% url 'manage_staff' %}" class="banner-stat-item"
-            style="background: rgba(255, 255, 255, 0.65); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.02); text-align: center; min-width: 75px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); text-decoration: none; color: inherit; transition: all 0.2s;"
+            style="padding: 8px 14px; border-radius: 12px; text-align: center; min-width: 75px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); text-decoration: none; color: inherit; transition: all 0.2s;"
             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.04)';"
             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.01)';">
             <div class="stat-num text-success" style="font-weight: 800; font-size: 1.3rem;">{{ total_staff }}</div>
@@ -310,7 +385,7 @@
         </a>
 
         <a href="{% url 'manage_subject' %}" class="banner-stat-item"
-            style="background: rgba(255, 255, 255, 0.65); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.02); text-align: center; min-width: 75px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); text-decoration: none; color: inherit; transition: all 0.2s;"
+            style="padding: 8px 14px; border-radius: 12px; text-align: center; min-width: 75px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); text-decoration: none; color: inherit; transition: all 0.2s;"
             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.04)';"
             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.01)';">
             <div class="stat-num" style="font-weight: 800; font-size: 1.3rem; color: #f59e0b;">{{ total_subject }}</div>
@@ -325,8 +400,7 @@
 <!-- Absentees and Quick Actions side by side --><!-- Quick Actions [Top] -->
 <div class="row g-4 mb-4">
     <div class="col-12">
-        <div class="erpnext-card h-100"
-            style="overflow: hidden; display: flex; flex-direction: column;">
+        <div class="erpnext-card h-100" style="overflow: hidden; display: flex; flex-direction: column;">
             <div class="card-header">
                 <h3 class="card-title"
                     style="font-size:1rem; font-weight:700; display:flex; align-items:center; gap:10px;"><i
@@ -335,7 +409,7 @@
             <div class="card-body flex-grow-1 p-3">
                 <div class="quick-actions-grid">
                     <a href="{% url 'manage_course_combined' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(37, 99, 235, 0.05) !important; border: 1px solid rgba(37, 99, 235, 0.1) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; ">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(37, 99, 235, 0.1); color:#2563eb; font-size: 1rem;">
@@ -350,7 +424,7 @@
                     </a>
 
                     <a href="{% url 'add_staff' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(99,102,241,0.1); color:#6366f1; font-size: 1rem;">
@@ -365,7 +439,7 @@
                     </a>
 
                     <a href="{% url 'manage_staff' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); color:#2563eb; font-size: 1rem;">
@@ -380,7 +454,7 @@
                     </a>
 
                     <a href="{% url 'manage_timetable' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(245,158,11,0.1); color:#f59e0b; font-size: 1rem;">
@@ -395,7 +469,7 @@
                     </a>
 
                     <a href="{% url 'manage_calendar' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(139,92,246,0.1); color:#2563eb; font-size: 1rem;">
@@ -410,7 +484,7 @@
                     </a>
 
                     <a href="{% url 'admin_view_attendance' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(6,182,212,0.1); color:#06b6d4; font-size: 1rem;">
@@ -425,7 +499,7 @@
                     </a>
 
                     <a href="{% url 'admin_view_marks_report' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); color:#2563eb; font-size: 1rem;">
@@ -440,7 +514,7 @@
                     </a>
 
                     <a href="{% url 'manage_student' %}" class="quick-action-btn"
-                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s; background: rgba(255, 255, 255, 0.5) !important; border: 1px solid rgba(0,0,0,0.02) !important;">
+                        style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:14px !important; text-decoration:none; transition:all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
                             <div
                                 style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(219,39,119,0.1); color:#db2777; font-size: 1rem;">
@@ -545,15 +619,18 @@
                             <tbody>
                                 {% for absentee in today_absentees %}
                                 <tr style="border-bottom: 1px solid rgba(0,0,0,0.02) !important;">
-                                    <td class="text-muted align-middle" style="font-size: 0.78rem; font-weight: 600;">{{ forloop.counter|stringformat:"02d" }}</td>
+                                    <td class="text-muted align-middle" style="font-size: 0.78rem; font-weight: 600;">{{
+                                        forloop.counter|stringformat:"02d" }}</td>
                                     <td class="align-middle">
-                                        <div style="font-weight: 800; color: #1e293b; font-size: 0.88rem;">{{ absentee.student_name }}</div>
+                                        <div style="font-weight: 800; color: #1e293b; font-size: 0.88rem;">{{
+                                            absentee.student_name }}</div>
                                         <div class="text-muted" style="font-size: 0.68rem; font-weight: 600;">B.Tech III
                                             Year · {{ absentee.section }}</div>
                                     </td>
                                     <td class="align-middle">
                                         <span class="badge"
-                                            style="background: rgba(37, 99, 235, 0.05); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">{{ absentee.roll_number }}</span>
+                                            style="background: rgba(37, 99, 235, 0.05); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">{{
+                                            absentee.roll_number }}</span>
                                     </td>
                                     <td class="align-middle">
                                         <span class="badge d-inline-flex align-items-center gap-1"
@@ -563,12 +640,14 @@
                                     </td>
                                     <td class="align-middle">
                                         <span class="badge"
-                                            style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">{{ absentee.subject }}</span>
+                                            style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">{{
+                                            absentee.subject }}</span>
                                     </td>
                                     <td class="align-middle">
                                         <span class="badge d-inline-flex align-items-center gap-1"
                                             style="background: #211b02; color: #0c0c0c; border: 1px solid #fef3c7; border-radius: 8px; font-size: 0.72rem; padding: 4px 10px;">
-                                            <i class="fas fa-clock" style="font-size: 10px;"></i> {{ absentee.period_time }}
+                                            <i class="fas fa-clock" style="font-size: 10px;"></i> {{
+                                            absentee.period_time }}
                                         </span>
                                     </td>
                                     <td class="align-middle">
@@ -618,187 +697,203 @@
         </a>
     </div>
     <div class="card-body p-3">
-        <!-- Filter Pills Bar (Liquid Glass Style) -->
-        <div class="filter-bar-wrapper">
-            <button class="filter-pill active-filter" data-target="all">
-                All <span>{{ news_announcements|length|add:exam_announcements|length|add:placement_announcements|length }}</span>
-            </button>
-            <button class="filter-pill" data-target="news">
-                📰 News <span>{{ news_announcements|length }}</span>
-            </button>
-            <button class="filter-pill" data-target="exams">
-                📝 Exams <span>{{ exam_announcements|length }}</span>
-            </button>
-            <button class="filter-pill" data-target="announcements">
-                📢 Announcements <span>{{ placement_announcements|length }}</span>
-            </button>
+        <!-- User-Provided Sliding Tab System -->
+        <div class="tabs-container container mb-4" style="max-width: none; padding: 0;">
+            <div class="tabs">
+                <input type="radio" id="radio-1" name="updates-filter" value="all" checked>
+                <label class="tab" for="radio-1">
+                    All
+                    {% with total_news=news_announcements|length %}
+                    {% with total_exams=exam_announcements|length %}
+                    {% with total_placements=placement_announcements|length %}
+                    {% with sum1=total_news|add:total_exams %}
+                    <span class="notification">{{ sum1|add:total_placements }}</span>
+                    {% endwith %}{% endwith %}{% endwith %}{% endwith %}
+                </label>
+
+                <input type="radio" id="radio-2" name="updates-filter" value="news">
+                <label class="tab" for="radio-2">
+                    News
+                    <span class="notification">{{ news_announcements|length }}</span>
+                </label>
+
+                <input type="radio" id="radio-3" name="updates-filter" value="exams">
+                <label class="tab" for="radio-3">
+                    Exams
+                    <span class="notification">{{ exam_announcements|length }}</span>
+                </label>
+
+                <input type="radio" id="radio-4" name="updates-filter" value="announcements">
+                <label class="tab" for="radio-4">
+                    Announcements
+                    <span class="notification">{{ placement_announcements|length }}</span>
+                </label>
+
+                <span class="glider"></span>
+            </div>
+        </div>
+    <!-- Grids Container -->
+    <div class="updates-grid-container" id="updatesGridContainer"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+
+        <!-- News Column -->
+        <div class="update-grid-card news-card" data-category="news"
+            style="background: transparent; border-right: 1px solid rgba(0,0,0,0.04); padding-right: 12px; transition: all 0.3s ease;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div
+                        style="background: rgba(37, 99, 235, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-newspaper" style="font-size: 13px; color: #2563eb;"></i>
+                    </div>
+                    <span style="font-weight: 800; color: #2563eb; font-size: 0.88rem;">News</span>
+                </div>
+                <span class="badge" style="background: rgba(37, 99, 235, 0.06); color: #2563eb; border-radius: 200px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ news_announcements|length }} items</span>
+            </div>
+
+            <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
+                {% for item in news_announcements %}
+                <div class="p-3 d-flex justify-content-between align-items-start"
+                    style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                    <div>
+                        <div style="color: #2563eb; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-circle" style="font-size: 4px; color: #2563eb;"></i> {{ item.created_at|date:"d M Y"|upper }}
+                            <span class="badge ms-1" style="background: rgba(37, 99, 235, 0.08); color: #2563eb; font-size: 0.6rem; padding: 2px 6px; border-radius: 6px;">{{ item.created_at|days_until }}</span>
+                        </div>
+                        <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
+                    </div>
+                    <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
+                        style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
+                        onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted d-flex flex-column align-items-center justify-content-center flex-grow-1"
+                    style="border: 1px dashed rgba(0,0,0,0.08); border-radius: 12px; background: rgba(0,0,0,0.01);">
+                    <i class="fas fa-envelope-open text-muted mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                    <div style="font-size: 0.75rem; font-weight: 600;">No Recent News</div>
+                    <small style="font-size: 0.65rem; opacity: 0.7;">Check back later</small>
+                </div>
+                {% endfor %}
+            </div>
+            {% if news_announcements %}
+            <div class="text-center mt-3">
+                <a href="{% url 'manage_announcement' %}" class="fw-bold"
+                    style="font-size: 0.78rem; text-decoration: none; color: #2563eb;">View all news →</a>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Grids Container -->
-        <div class="updates-grid-container" id="updatesGridContainer"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-
-            <!-- News Column -->
-            <div class="update-grid-card news-card" data-category="news"
-                style="background: transparent; border-right: 1px solid rgba(0,0,0,0.04); padding-right: 12px; transition: all 0.3s ease;">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <div
-                            style="background: rgba(37, 99, 235, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-newspaper" style="font-size: 13px; color: #2563eb;"></i>
-                        </div>
-                        <span style="font-weight: 800; color: #2563eb; font-size: 0.88rem;">News</span>
+        <!-- Examinations Column -->
+        <div class="update-grid-card exams-card" data-category="exams"
+            style="background: transparent; border-right: 1px solid rgba(0,0,0,0.04); padding-right: 12px; transition: all 0.3s ease;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div
+                        style="background: rgba(5, 150, 105, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-file-invoice" style="font-size: 13px; color: #1e40af;"></i>
                     </div>
-                    <span class="badge"
-                        style="background: rgba(37, 99, 235, 0.06); color: #2563eb; border-radius: 20px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ news_announcements|length }} items</span>
+                    <span style="font-weight: 800; color: #1e40af; font-size: 0.88rem;">Examinations</span>
                 </div>
-
-                <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
-                    {% for item in news_announcements %}
-                    <div class="p-3 d-flex justify-content-between align-items-start"
-                        style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
-                        <div>
-                            <div
-                                style="color: #2563eb; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-circle" style="font-size: 4px; color: #2563eb;"></i> {{ item.created_at|date:"d M Y"|upper }}
-                            </div>
-                            <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
-                        </div>
-                        <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
-                            style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
-                            onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted d-flex flex-column align-items-center justify-content-center flex-grow-1"
-                        style="border: 1px dashed rgba(0,0,0,0.08); border-radius: 12px; background: rgba(0,0,0,0.01);">
-                        <i class="fas fa-envelope-open text-muted mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
-                        <div style="font-size: 0.75rem; font-weight: 600;">No Recent News</div>
-                        <small style="font-size: 0.65rem; opacity: 0.7;">Check back later</small>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% if news_announcements %}
-                <div class="text-center mt-3">
-                    <a href="{% url 'manage_announcement' %}" class="fw-bold"
-                        style="font-size: 0.78rem; text-decoration: none; color: #2563eb;">View all news →</a>
-                </div>
-                {% endif %}
+                <span class="badge" style="background: rgba(5, 150, 105, 0.06); color: #1e40af; border-radius: 200px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ exam_announcements|length }} item</span>
             </div>
 
-            <!-- Examinations Column -->
-            <div class="update-grid-card exams-card" data-category="exams"
-                style="background: transparent; border-right: 1px solid rgba(0,0,0,0.04); padding-right: 12px; transition: all 0.3s ease;">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <div
-                            style="background: rgba(5, 150, 105, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-file-invoice" style="font-size: 13px; color: #1e40af;"></i>
+            <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
+                {% for item in exam_announcements %}
+                <div class="p-3 d-flex justify-content-between align-items-start"
+                    style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                    <div>
+                        <div style="color: #1e40af; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-circle" style="font-size: 4px; color: #1e40af;"></i> {{ item.created_at|date:"d M Y"|upper }}
+                            <span class="badge ms-1" style="background: rgba(30, 64, 175, 0.08); color: #1e40af; font-size: 0.6rem; padding: 2px 6px; border-radius: 6px;">{{ item.created_at|days_until }}</span>
                         </div>
-                        <span style="font-weight: 800; color: #1e40af; font-size: 0.88rem;">Examinations</span>
+                        <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
                     </div>
-                    <span class="badge"
-                        style="background: rgba(5, 150, 105, 0.06); color: #1e40af; border-radius: 20px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ exam_announcements|length }} item</span>
+                    <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
+                        style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
+                        onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#64748b'">
+                        <i class="fas fa-edit"></i>
+                    </a>
                 </div>
-
-                <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
-                    {% for item in exam_announcements %}
-                    <div class="p-3 d-flex justify-content-between align-items-start"
-                        style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
-                        <div>
-                            <div
-                                style="color: #1e40af; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-circle" style="font-size: 4px; color: #1e40af;"></i> {{ item.created_at|date:"d M Y"|upper }}
-                            </div>
-                            <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
-                        </div>
-                        <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
-                            style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
-                            onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#64748b'">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted d-flex flex-column align-items-center justify-content-center flex-grow-1"
-                        style="border: 1px dashed rgba(0,0,0,0.08); border-radius: 12px; background: rgba(0,0,0,0.01);">
-                        <i class="fas fa-file-alt text-muted mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
-                        <div style="font-size: 0.75rem; font-weight: 600;">No Exam Updates</div>
-                        <small style="font-size: 0.65rem; opacity: 0.7;">Check back later</small>
-                    </div>
-                    {% endfor %}
+                {% empty %}
+                <div class="text-center py-4 text-muted d-flex flex-column align-items-center justify-content-center flex-grow-1"
+                    style="border: 1px dashed rgba(0,0,0,0.08); border-radius: 12px; background: rgba(0,0,0,0.01);">
+                    <i class="fas fa-file-alt text-muted mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                    <div style="font-size: 0.75rem; font-weight: 600;">No Exam Updates</div>
+                    <small style="font-size: 0.65rem; opacity: 0.7;">Check back later</small>
                 </div>
-                {% if exam_announcements %}
-                <div class="text-center mt-3">
-                    <a href="{% url 'manage_announcement' %}" class="fw-bold"
-                        style="font-size: 0.78rem; text-decoration: none; color: #1e40af;">View all exams →</a>
-                </div>
-                {% endif %}
+                {% endfor %}
             </div>
-
-            <!-- Announcements Column -->
-            <div class="update-grid-card placements-card" data-category="announcements"
-                style="background: transparent; transition: all 0.3s ease;">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <div
-                            style="background: rgba(245, 158, 11, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-bell" style="font-size: 13px; color: #d97706;"></i>
-                        </div>
-                        <span style="font-weight: 800; color: #d97706; font-size: 0.88rem;">Announcements</span>
-                    </div>
-                    <span class="badge"
-                        style="background: rgba(245, 158, 11, 0.06); color: #d97706; border-radius: 20px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ placement_announcements|length }} item</span>
-                </div>
-
-                <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
-                    {% for item in placement_announcements %}
-                    <div class="p-3 d-flex justify-content-between align-items-start"
-                        style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
-                        <div>
-                            <div
-                                style="color: #d97706; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-circle" style="font-size: 4px; color: #d97706;"></i> {{ item.created_at|date:"d M Y"|upper }}
-                            </div>
-                            <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
-                        </div>
-                        <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
-                            style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
-                            onmouseover="this.style.color='#d97706'" onmouseout="this.style.color='#64748b'">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted d-flex flex-column align-items-center justify-content-center flex-grow-1"
-                        style="border: 1px dashed rgba(0,0,0,0.08); border-radius: 12px; background: rgba(0,0,0,0.01);">
-                        <i class="fas fa-bullhorn text-muted mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
-                        <div style="font-size: 0.75rem; font-weight: 600;">No Announcements</div>
-                        <small style="font-size: 0.65rem; opacity: 0.7;">Check back later</small>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% if placement_announcements %}
-                <div class="text-center mt-3">
-                    <a href="{% url 'manage_announcement' %}" class="fw-bold"
-                        style="font-size: 0.78rem; text-decoration: none; color: #d97706;">View all announcements →</a>
-                </div>
-                {% endif %}
+            {% if exam_announcements %}
+            <div class="text-center mt-3">
+                <a href="{% url 'manage_announcement' %}" class="fw-bold"
+                    style="font-size: 0.78rem; text-decoration: none; color: #1e40af;">View all exams →</a>
             </div>
-
+            {% endif %}
         </div>
 
-        <!-- Footer Status Bar -->
-        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top"
-            style="border-color: rgba(0,0,0,0.04) !important;">
-            <div style="font-size: 0.72rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
-                <i class="fas fa-circle" style="font-size: 6px; color: #2563eb;"></i> Live · Updates
+        <!-- Announcements Column -->
+        <div class="update-grid-card placements-card" data-category="announcements"
+            style="background: transparent; transition: all 0.3s ease;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div
+                        style="background: rgba(245, 158, 11, 0.06); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-bell" style="font-size: 13px; color: #d97706;"></i>
+                    </div>
+                    <span style="font-weight: 800; color: #d97706; font-size: 0.88rem;">Announcements</span>
+                </div>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.06); color: #d97706; border-radius: 200px; font-size: 0.68rem; padding: 4px 10px; font-weight: 600;">{{ placement_announcements|length }} item</span>
             </div>
-            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700;" id="noticesCount">
-                Showing <span style="color: #1e293b;">{{ exam_announcements|length|add:placement_announcements|length|add:news_announcements|length }}</span>
-                of <span>{{ exam_announcements|length|add:placement_announcements|length|add:news_announcements|length }}</span> notices
+
+            <div class="ug-items-list d-flex flex-column gap-2" style="min-height: 180px;">
+                {% for item in placement_announcements %}
+                <div class="p-3 d-flex justify-content-between align-items-start"
+                    style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.03); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                    <div>
+                        <div style="color: #d97706; font-weight: 800; font-size: 0.68rem; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-circle" style="font-size: 4px; color: #d97706;"></i> {{ item.created_at|date:"d M Y"|upper }}
+                            <span class="badge ms-1" style="background: rgba(217, 119, 6, 0.08); color: #d97706; font-size: 0.6rem; padding: 2px 6px; border-radius: 6px;">{{ item.created_at|days_until }}</span>
+                        </div>
+                        <div style="font-weight: 700; color: #1e293b; font-size: 0.82rem; line-height: 1.4;">{{ item.title }}</div>
+                    </div>
+                    <a href="{% url 'edit_announcement' item.id %}" class="text-muted"
+                        style="font-size: 0.8rem; padding: 4px; transition: color 0.2s;"
+                        onmouseover="this.style.color='#d97706'" onmouseout="this.style.color='#64748b'">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted d-flex flex-column align-items-center justify-content-center flex-grow-1"
+                    style="border: 1px dashed rgba(0,0,0,0.08); border-radius: 12px; background: rgba(0,0,0,0.01);">
+                    <i class="fas fa-bullhorn text-muted mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                    <div style="font-size: 0.75rem; font-weight: 600;">No Announcements</div>
+                    <small style="font-size: 0.65rem; opacity: 0.7;">Check back later</small>
+                </div>
+                {% endfor %}
             </div>
+            {% if placement_announcements %}
+            <div class="text-center mt-3">
+                <a href="{% url 'manage_announcement' %}" class="fw-bold"
+                    style="font-size: 0.78rem; text-decoration: none; color: #d97706;">View all announcements →</a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Footer Status Bar -->
+    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top"
+        style="border-color: rgba(0,0,0,0.04) !important;">
+        <div style="font-size: 0.72rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+            <i class="fas fa-circle" style="font-size: 6px; color: #2563eb;"></i> Live · Updates
+        </div>
+        <div style="font-size: 0.72rem; color: #64748b; font-weight: 700;" id="noticesCount">
+            Showing <span style="color: #1e293b;">{{ exam_announcements|length|add:placement_announcements|length|add:news_announcements|length }}</span>
+            of <span>{{ exam_announcements|length|add:placement_announcements|length|add:news_announcements|length }}</span> notices
         </div>
     </div>
+</div>
 </div>
 </div>
 
@@ -810,17 +905,13 @@
 {% block custom_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const filterButtons = document.querySelectorAll('.filter-bar-wrapper .filter-pill');
+        const filterRadios = document.querySelectorAll('.tabs input[type="radio"]');
         const cards = document.querySelectorAll('#updatesGridContainer .update-grid-card');
         const noticesCount = document.getElementById('noticesCount');
 
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
-                const target = this.getAttribute('data-target');
-
-                // Toggle active class
-                filterButtons.forEach(b => b.classList.remove('active-filter'));
-                this.classList.add('active-filter');
+        filterRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                const target = this.value;
 
                 // Filter cards with smooth fade
                 cards.forEach(card => {

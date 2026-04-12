@@ -1,20 +1,49 @@
+<style>
+    .cf-checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cf-checkbox-row input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        appearance: auto !important;
+        -webkit-appearance: checkbox !important;
+        accent-color: #2563eb;
+    }
+
+    .dark-mode .cf-checkbox-row input[type="checkbox"] {
+        accent-color: #60a5fa;
+    }
+</style>
+
 <form role="form" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="card-body">
-
-
-        {% for field in form  %}
+        {% for field in form %}
         <div class="form-group">
             {{field.errors}}
+            
+            {% if field.field.widget.input_type == 'checkbox' %}
+            <!-- Checkbox Field -->
+            <div class="cf-checkbox-row">
+                {{field}}
+                <label for="{{field.id_for_label}}" style="margin:0; cursor:pointer;">
+                    {{field.label}}
+                </label>
+                {% if field.help_text %}
+                <small class="form-text text-muted d-block mt-1">{{field.help_text|safe}}</small>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- Other Fields -->
             {{field.label_tag}}
             {{field}}
-
+            {% endif %}
         </div>
         {% endfor %}
-
-
-
-
     </div>
     <!-- /.card-body -->
 

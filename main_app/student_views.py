@@ -1,6 +1,6 @@
 import json
 import math
-from datetime import datetime
+from datetime import datetime, date
 from collections import defaultdict
 
 from django.contrib import messages
@@ -16,7 +16,7 @@ from .models import (
     Student, Subject, Attendance, AttendanceReport, StudentResult,
     Announcement, Assignment, AssignmentSubmission, Timetable, Course,
     NotificationStudent, LeaveReportStudent, FeedbackStudent, Book, Regulation,
-    Session, Period, StudyMaterial, StudentCloudFile, StudentCertificate
+    Session, Period, StudyMaterial, StudentCloudFile, StudentCertificate, CustomUser
 )
 from .forms import (
     LeaveReportStudentForm, FeedbackStudentForm, StudentEditForm,
@@ -39,6 +39,7 @@ def student_home(request):
     else:
         current_semester = '1'
         subject_semester = '1'
+        sem_name = '1-1'  # Default semester name when no semester is assigned
 
     current_session = student.session
 
@@ -55,8 +56,8 @@ def student_home(request):
         percent_absent = percent_present = 0
     else:
         # Match report total decimal rounding calculation
-        percent_present = round((total_present / total_attendance) * 100, 1)
-        percent_absent = round(100 - percent_present, 1)
+        percent_present = round((total_present / total_attendance) * 100, 2)
+        percent_absent = round(100 - percent_present, 2)
     subject_name = []
     data_present = []
     data_absent = []
@@ -81,8 +82,7 @@ def student_home(request):
         data_absent.append(stats['absent'])
 
     # Timetable for today
-    from datetime import date as dt_date
-    today_name = dt_date.today().strftime('%A')
+    today_name = date.today().strftime('%A')
     timetable_today = Timetable.objects.filter(
         course=student.course, section=student.section, day=today_name
     ).select_related('period', 'subject', 'staff').order_by('period__number')
@@ -123,10 +123,9 @@ def student_home(request):
     activities.sort(key=lambda x: x['time'], reverse=True)
 
     # Upcoming assignments
-    from datetime import date as dt_date2
     upcoming_assignments = Assignment.objects.filter(
         subject__course=student.course,
-        due_date__gte=dt_date2.today()
+        due_date__gte=date.today()
     ).order_by('due_date')[:5]
 
     # ── CGPA Overview Calculation ──
@@ -225,8 +224,22 @@ def student_home(request):
     else:
         class_awarded = 'N/A'
 
+    # ── Academic Calendar for Current Semester ──
+    from .models import AcademicCalendar, CalendarEvent, SEMESTER_CHOICES
+    
+    # Map sem_name (e.g. "3-1") to calendar semester key (e.g. "5")
+    sem_key_map = {v: k for k, v in SEMESTER_CHOICES}
+    current_calendar_key = sem_key_map.get(sem_name, '1')
+    
+    current_calendar = AcademicCalendar.objects.filter(
+        regulation=student.regulation,
+        session=student.session,
+        semester=current_calendar_key
+    ).prefetch_related('events').first()
+
     context = {
         'page_title': 'Dashboard',
+        'student': student,
         'total_attendance': total_attendance,
         'percent_present': percent_present,
         'percent_absent': percent_absent,
@@ -248,20 +261,50 @@ def student_home(request):
         'total_credits': total_credits,
         'total_earned_credits': total_earned_credits,
         'max_cgpa': max_cgpa,
+        # Current Calendar
+        'current_calendar': current_calendar,
     }
 
     # Grouped Announcements for Latest Updates Grid
-    context['news_announcements'] = Announcement.objects.filter(
+    from django.db.models import Q
+    today = date.today()
+    active_announcements = Announcement.objects.filter(Q(expires_at__isnull=True) | Q(expires_at__gte=today))
+    
+    context['news_announcements'] = active_announcements.filter(
         category='news'
     ).order_by('-created_at')[:5]
     
-    context['exam_announcements'] = Announcement.objects.filter(
+    context['exam_announcements'] = active_announcements.filter(
         category__in=['mid', 'sem']
     ).order_by('-created_at')[:5]
     
-    context['placement_announcements'] = Announcement.objects.filter(
+    context['placement_announcements'] = active_announcements.filter(
         category__in=['event', 'holiday', 'other', 'placement']
     ).order_by('-created_at')[:5]
+    # Academic Calendar Events for the calendar widget
+    from .models import AcademicCalendar, CalendarEvent
+    calendar_events = CalendarEvent.objects.filter(
+        calendar__regulation=student.regulation
+    ).select_related('calendar').order_by('start_date')
+    
+    # Build JSON-serializable events list for JS
+    import json as json_lib
+    calendar_events_json = []
+    for ev in calendar_events:
+        calendar_events_json.append({
+            'title': ev.display_name,
+            'start': str(ev.start_date),
+            'end': str(ev.end_date) if ev.end_date else str(ev.start_date),
+            'type': ev.event_type if hasattr(ev, 'event_type') else 'event',
+        })
+    context['calendar_events_json'] = json_lib.dumps(calendar_events_json)
+    
+    # Upcoming calendar events (next 10)
+    upcoming_cal_events = CalendarEvent.objects.filter(
+        calendar__regulation=student.regulation,
+        start_date__gte=today
+    ).select_related('calendar').order_by('start_date')[:10]
+    context['upcoming_cal_events'] = upcoming_cal_events
 
     return render(request, 'student_template/erpnext_student_home.html', context)
 
@@ -275,7 +318,6 @@ def get_greeting():
         return "Good Evening 🌙"
 
 
-@ csrf_exempt
 def student_view_attendance(request):
     student = get_object_or_404(Student, admin=request.user)
     if request.method != 'POST':
@@ -421,7 +463,6 @@ def student_view_profile(request):
     return render(request, "student_template/student_view_profile.html", context)
 
 
-@csrf_exempt
 def student_fcmtoken(request):
     token = request.POST.get('token')
     student_user = get_object_or_404(CustomUser, id=request.user.id)
@@ -794,14 +835,14 @@ def student_view_results_traditional(request):
     }
 
     semester_labels = {
-        '1': 'I B.Tech. I Sem.',
-        '2': 'I B.Tech. II Sem.',
-        '3': 'II B.Tech. I Sem.',
-        '4': 'II B.Tech. II Sem.',
-        '5': 'III B.Tech. I Sem.',
-        '6': 'III B.Tech. II Sem.',
-        '7': 'IV B.Tech. I Sem.',
-        '8': 'IV B.Tech. II Sem.',
+        '1': 'I BTECH I SEM',
+        '2': 'I BTECH II SEM',
+        '3': 'II BTECH I SEM',
+        '4': 'II BTECH II SEM',
+        '5': 'III BTECH I SEM',
+        '6': 'III BTECH II SEM',
+        '7': 'IV BTECH I SEM',
+        '8': 'IV BTECH II SEM',
     }
 
     context = {
@@ -852,16 +893,90 @@ def student_view_timetable(request):
     lookup = defaultdict(dict)
     for entry in timetable_entries:
         lookup[entry.day][entry.period.number] = entry
-        
+    
     # Build grid rows
     grid_rows = []
     for day in DAY_ORDER:
         cells = [lookup[day].get(p.number) for p in periods]
         grid_rows.append({'day': day, 'cells': cells})
 
+    # Get unique subjects for reference table + count hours allotted
+    unique_subjects = {}
+    subject_period_count = {}
+    for entry in timetable_entries:
+        subject_period_count[entry.subject.id] = subject_period_count.get(entry.subject.id, 0) + 1
+        if entry.subject.id not in unique_subjects:
+            unique_subjects[entry.subject.id] = entry
+    
+    all_timetable_entries = list(unique_subjects.values())
+    # Attach hrs_allotted to each entry for template access
+    for entry in all_timetable_entries:
+        entry.hrs_allotted = subject_period_count.get(entry.subject.id, 0)
+    # Today's schedule
+    import datetime
+    today_day = datetime.datetime.now().strftime('%A')
+    today_classes = []
+    for p in periods:
+        entry = lookup.get(today_day, {}).get(p.number)
+        if entry:
+            today_classes.append({
+                'period': p.number,
+                'start': p.start_time,
+                'end': p.end_time,
+                'subject': entry.subject.short_code or entry.subject.code,
+                'subject_name': entry.subject.name,
+                'faculty': entry.staff.admin.first_name + ' ' + entry.staff.admin.last_name if entry.staff else 'N/A',
+            })
+
+    total_subjects = len(unique_subjects)
+    total_weekly_hrs = len(timetable_entries)
+
+    # Fetch Academic Calendar dates for student's current semester
+    import re
+    from .models import AcademicCalendar, CalendarEvent, SEMESTER_CHOICES
+    sem_name = student.semester.name if student.semester else '1-1'
+    sem_key_map = {v: k for k, v in SEMESTER_CHOICES}
+    calendar_sem_key = sem_key_map.get(sem_name, '1')
+
+    current_calendar = AcademicCalendar.objects.filter(
+        regulation=student.regulation,
+        session=student.session,
+        semester=calendar_sem_key
+    ).prefetch_related('events').first()
+
+    commencement_date = None
+    closure_date = None
+    if current_calendar:
+        commencement_date = current_calendar.commencement_date
+        closure_date = current_calendar.instruction_end_date
+
+    # ── Custom Header Formatting ──
+    # Map Year digits to Roman Numerals (I, II, III, IV)
+    roman_map = {'1': 'I', '2': 'II', '3': 'III', '4': 'IV'}
+    year_digit = sem_name.split('-')[0] if '-' in sem_name else '1'
+    year_roman = roman_map.get(year_digit, 'I')
+    
+    # Format: "III - CSE (AI) - A"
+    year_branch_section = f"{year_roman} - {student.course.name} - {student.section}"
+
+    # Short Name: First Name + Last Name Initial
+    first_name = student.admin.first_name.strip()
+    last_name = student.admin.last_name.strip()
+    short_name = f"{first_name} {last_name[0]}." if last_name else first_name
+
     context = {
+        'student': student,
         'periods': periods,
         'grid_rows': grid_rows,
+        'all_timetable_entries': all_timetable_entries,
+        'today_day': today_day,
+        'today_classes': today_classes,
+        'total_subjects': total_subjects,
+        'total_weekly_hrs': total_weekly_hrs,
+        'commencement_date': commencement_date,
+        'closure_date': closure_date,
+        'year_branch_section': year_branch_section,
+        'short_name': short_name,
         'page_title': 'Class Timetable'
     }
     return render(request, "student_template/student_view_timetable.html", context)
@@ -1104,7 +1219,13 @@ def student_attendance_report(request):
 
 
 def student_view_announcement(request):
-    announcements = Announcement.objects.filter(audience__in=['all', 'student']).order_by('-created_at')
+    from django.db.models import Q
+    today = date.today()
+    announcements = Announcement.objects.filter(
+        Q(audience__in=['all', 'student']) & 
+        (Q(expires_at__isnull=True) | Q(expires_at__gte=today))
+    ).order_by('-created_at')
+    
     context = {
         'announcements': announcements,
         'page_title': 'Announcements',

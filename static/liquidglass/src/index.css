@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 1rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: hsl(0 0% 100%);
+  background: hsl(0 0% 0%);
+}
+
+/* Video background */
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  object-fit: cover;
+}
+
+.video-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Liquid Glass Components */
+@layer components {
+  /* Light liquid glass variant */
+  .liquid-glass {
+    @apply bg-white/[0.01] backdrop-blur-[4px] relative overflow-hidden;
+    background-blend-mode: luminosity;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    border: none;
+  }
+
+  .liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.15) 20%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.15) 80%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+  }
+
+  /* Heavy liquid glass variant */
+  .liquid-glass-strong {
+    @apply bg-white/[0.01] backdrop-blur-[50px] rounded-3xl relative overflow-hidden;
+    background-blend-mode: luminosity;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    border: none;
+  }
+
+  .liquid-glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.2) 80%,
+      rgba(255, 255, 255, 0.5) 100%
+    );
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+  }
+
+  /* Ultra-frosted liquid glass variant */
+  .liquid-glass-ultra {
+    @apply bg-white/[0.06] backdrop-blur-[80px] rounded-3xl relative overflow-hidden;
+    background-blend-mode: luminosity;
+    box-shadow: 
+      8px 8px 16px rgba(0, 0, 0, 0.1),
+      inset 0 1px 2px rgba(255, 255, 255, 0.25),
+      inset -1px -1px 2px rgba(0, 0, 0, 0.1);
+    border: none;
+  }
+
+  .liquid-glass-ultra::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.65) 0%,
+      rgba(255, 255, 255, 0.3) 15%,
+      transparent 35%,
+      transparent 65%,
+      rgba(255, 255, 255, 0.3) 85%,
+      rgba(255, 255, 255, 0.65) 100%
+    );
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+  }
+
+  /* Ultra-frosted hover enhancement */
+  .liquid-glass-ultra:hover {
+    @apply backdrop-blur-[100px];
+    box-shadow: 
+      10px 10px 20px rgba(0, 0, 0, 0.15),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3),
+      inset -1px -1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Utility classes */
+  .text-white-80 {
+    color: hsl(0, 0%, 100%, 0.8);
+  }
+
+  .text-white-60 {
+    color: hsl(0, 0%, 100%, 0.6);
+  }
+
+  .text-white-50 {
+    color: hsl(0, 0%, 100%, 0.5);
+  }
+
+  .bg-white-15 {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .bg-white-10 {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .icon-container {
+    @apply w-8 h-8 rounded-full bg-white/10 flex items-center justify-center;
+  }
+
+  /* Italic accent text with source serif */
+  em, .italic {
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+  }
+
+  /* Interactive element transitions */
+  .interactive {
+    @apply transition-transform;
+  }
+
+  .interactive:hover {
+    @apply scale-105;
+  }
+
+  .interactive:active {
+    @apply scale-95;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .right-panel {
+    @apply hidden;
+  }
+}

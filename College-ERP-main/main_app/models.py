@@ -141,6 +141,9 @@ class Staff(models.Model):
 
 class Subject(models.Model):
     name = models.CharField(max_length=120)
+    show_in_attendance = models.BooleanField(default=True, help_text="Track attendance for this subject")
+    show_in_results = models.BooleanField(default=True, help_text="Show results/grades for this subject")
+    show_in_marks = models.BooleanField(default=True, help_text="Show in marks memo")
     staff = models.ForeignKey(Staff,on_delete=models.CASCADE,)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     updated_at = models.DateTimeField(auto_now=True)

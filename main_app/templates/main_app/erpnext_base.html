@@ -445,6 +445,33 @@
             alert('Sorry ! Right Click No Access.');
         });
     </script>
+    <!-- Global CSRF Setup for AJAX — required for all POST requests -->
+    <script>
+        // Read CSRF token from cookie (Django sets this automatically)
+        function getCsrfToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 'csrftoken='.length) === 'csrftoken=') {
+                        cookieValue = decodeURIComponent(cookie.substring('csrftoken='.length));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Automatically attach CSRF token to every jQuery AJAX request
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+                }
+            }
+        });
+    </script>
 
     {% block custom_js %}{% endblock %}
 </body>

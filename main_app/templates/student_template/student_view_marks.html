@@ -130,6 +130,10 @@
     .dark-mode .text-muted {
         color: #94a3b8 !important;
     }
+
+    .low-marks, .marks-table td.low-marks {
+        color: #ff0000 !important;
+    }
 </style> 
 {% endblock custom_css %}  
 
@@ -177,12 +181,12 @@
                                 {% for mark in row.marks %}                                     
                                     {% if mark %}                                         
                                         {% if row.is_final %}                                             
-                                            <td colspan="4" class="text-center tot-column">{{ mark.total|floatformat }}</td>                                         
+                                            <td colspan="4" class="text-center tot-column {% if mark.total < 15 %}low-marks{% endif %}">{{ mark.total|floatformat }}</td>                                         
                                         {% else %}                                             
                                             <td>{{ mark.des|floatformat|default:'-' }}</td>                                             
                                             <td>{{ mark.obj|floatformat|default:'-' }}</td>                                             
                                             <td>{{ mark.assign|floatformat|default:'-' }}</td>                                             
-                                            <td class="font-weight-bold tot-column" style="background: rgba(0,0,0,0.02)">{{ mark.total|floatformat|default:'-' }}</td>                                         
+                                            <td class="font-weight-bold tot-column {% if mark.total < 15 %}low-marks{% endif %}" style="background: rgba(0,0,0,0.02)">{{ mark.total|floatformat|default:'-' }}</td>                                         
                                         {% endif %}                                     
                                     {% else %}                                         
                                         {% if row.is_final %}                                             

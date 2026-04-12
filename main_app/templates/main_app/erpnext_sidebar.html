@@ -69,6 +69,15 @@
         </a>
     </div>
 
+    <div class="nav-item">
+        {% url 'manage_calendar' as manage_calendar %}
+        <a href="{{ manage_calendar }}"
+            class="nav-link {% if manage_calendar == request.path or 'edit_calendar' in request.path or 'add_calendar' in request.path %}active{% endif %}">
+            <span class="nav-icon-emoji"><i class="fas fa-calendar-alt"></i></span>
+            <span class="nav-text">Academic Calendar</span>
+        </a>
+    </div>
+
 
 
 

@@ -1,17 +1,75 @@
 import json
 import requests
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+from django.conf import settings
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from .EmailBackend import EmailBackend
-from .models import Attendance, Session, Subject 
+from .models import Attendance, Session, Subject, FailedLoginAttempt, SecurityLog
 
-# Create your views here.
 
+# ── Helper: get client IP ──
+def _get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def _get_user_agent(request):
+    return request.META.get('HTTP_USER_AGENT', '')[:500]
+
+
+def _log_security_event(event_type, email, request, user=None, details=''):
+    """Create a SecurityLog entry."""
+    SecurityLog.objects.create(
+        event_type=event_type,
+        email=email,
+        user=user,
+        ip_address=_get_client_ip(request),
+        user_agent=_get_user_agent(request),
+        details=details,
+    )
+
+
+def _is_login_locked(email, ip_address):
+    """Check if login is locked due to too many failed attempts."""
+    max_attempts = getattr(settings, 'LOGIN_MAX_ATTEMPTS', 5)
+    lockout_seconds = getattr(settings, 'LOGIN_LOCKOUT_SECONDS', 900)
+    cutoff = timezone.now() - timedelta(seconds=lockout_seconds)
+
+    recent_failures = FailedLoginAttempt.objects.filter(
+        email__iexact=email,
+        attempted_at__gte=cutoff,
+    ).count()
+
+    return recent_failures >= max_attempts
+
+
+def _record_failed_attempt(email, request):
+    """Record a failed login attempt."""
+    FailedLoginAttempt.objects.create(
+        email=email,
+        ip_address=_get_client_ip(request),
+        user_agent=_get_user_agent(request),
+    )
+
+
+def _clear_failed_attempts(email):
+    """Clear failed attempts after successful login."""
+    FailedLoginAttempt.objects.filter(email__iexact=email).delete()
+
+
+# ── Views ──
 
 @never_cache
 def login_page(request):
@@ -25,52 +83,72 @@ def login_page(request):
     return render(request, 'main_app/login.html')
 
 
-@csrf_exempt
-def doLogin(request, **kwargs):
-    if request.method != 'POST':
-        return HttpResponse("<h4>Denied</h4>")
-    else:
-        #Authenticate
-        user = EmailBackend.authenticate(request, username=request.POST.get('email'), password=request.POST.get('password'))
-        if user != None:
-            # Capture the true last login before Django's login() updates it
-            previous_last_login = user.last_login
+@require_POST
+def doLogin(request):
+    email = request.POST.get('email', '').strip()
+    password = request.POST.get('password', '')
 
-            login(request, user)
-            
-            # Store in session
-            if previous_last_login:
-                request.session['previous_login'] = previous_last_login.strftime("%d %b %Y, %I:%M %p")
-            
-            # Handle "Remember Me" functionality
-            remember_me = request.POST.get('remember')
-            if remember_me:
-                # Set session to expire when browser closes = False
-                # Session will last for 30 days
-                request.session.set_expiry(30 * 24 * 60 * 60)  # 30 days in seconds
-            else:
-                # Set session to expire when browser closes
-                request.session.set_expiry(0)
-            
-            if user.user_type == '1':
-                return redirect(reverse("admin_home"))
-            elif user.user_type == '2':
-                return redirect(reverse("staff_home"))
-            else:
-                return redirect(reverse("student_home"))
+    # ── Rate limiting: check if account is locked ──
+    if _is_login_locked(email, _get_client_ip(request)):
+        lockout_minutes = getattr(settings, 'LOGIN_LOCKOUT_SECONDS', 900) // 60
+        _log_security_event('login_locked', email, request,
+                            details=f'Account locked — too many failed attempts')
+        messages.error(request, f"Too many failed attempts. Please try again after {lockout_minutes} minutes.")
+        return redirect("/")
+
+    # ── Authenticate ──
+    user = EmailBackend.authenticate(request, username=email, password=password)
+
+    if user is not None:
+        # Capture previous login before Django's login() updates it
+        previous_last_login = user.last_login
+
+        # ── Session rotation: prevent session fixation ──
+        request.session.cycle_key()
+
+        login(request, user)
+
+        # Store previous login in session
+        if previous_last_login:
+            request.session['previous_login'] = previous_last_login.strftime("%d %b %Y, %I:%M %p")
+
+        # Handle "Remember Me"
+        remember_me = request.POST.get('remember')
+        if remember_me:
+            request.session.set_expiry(30 * 24 * 60 * 60)  # 30 days
         else:
-            messages.error(request, "Invalid details")
-            return redirect("/")
+            request.session.set_expiry(0)  # Expire on browser close
 
+        # ── Clear failed attempts & log success ──
+        _clear_failed_attempts(email)
+        _log_security_event('login_success', email, request, user=user)
+
+        if user.user_type == '1':
+            return redirect(reverse("admin_home"))
+        elif user.user_type == '2':
+            return redirect(reverse("staff_home"))
+
+        else:
+            return redirect(reverse("student_home"))
+    else:
+        # ── Record failure & log ──
+        _record_failed_attempt(email, request)
+        _log_security_event('login_failed', email, request,
+                            details='Invalid credentials')
+
+        # Generic error — never reveal whether email or password was wrong
+        messages.error(request, "Invalid credentials")
+        return redirect("/")
 
 
 def logout_user(request):
-    if request.user != None:
-        logout(request)
+    if request.user.is_authenticated:
+        _log_security_event('logout', request.user.email, request, user=request.user)
+    logout(request)
     return redirect("/")
 
 
-@csrf_exempt
+@require_POST
 def get_attendance(request):
     subject_id = request.POST.get('subject')
     session_id = request.POST.get('session')
@@ -91,35 +169,50 @@ def get_attendance(request):
         return None
 
 
-@csrf_exempt
+@require_POST
 def get_user_profile_pic(request):
-    if request.method != 'POST':
-        return JsonResponse({"status": "error", "message": "Method not allowed"})
-    
+    """
+    Returns user profile pic for the login page.
+    SECURITY: Returns a generic avatar for ALL requests — never reveals
+    whether an email exists in the system.
+    """
     email = request.POST.get('email', '').strip()
     if not email:
-        return JsonResponse({"status": "error", "message": "Email is required"})
-        
+        return JsonResponse({"status": "error", "message": "Please enter your email"})
+
+    # Validate email format
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({"status": "error", "message": "Please enter a valid email address"})
+
     try:
         from .models import CustomUser
         users = CustomUser.objects.filter(email__iexact=email)
-        if not users.exists():
-            return JsonResponse({"status": "error", "message": f"Account with email '{email}' not found."})
-        
-        user = users.first()
-        full_name = f"{user.first_name} {user.last_name}".strip()
-        if not full_name:
-            full_name = user.username or "User"
-            
-        if user.profile_pic:
-            url = user.profile_pic.url
+        if users.exists():
+            user = users.first()
+            full_name = f"{user.first_name} {user.last_name}".strip()
+            if not full_name:
+                full_name = "User"
+            if user.profile_pic:
+                url = user.profile_pic.url
+            else:
+                url = f"https://ui-avatars.com/api/?name={full_name}&background=6197e6&color=fff"
+            return JsonResponse({"status": "success", "url": url, "full_name": full_name})
         else:
-            url = f"https://ui-avatars.com/api/?name={full_name}&background=6197e6&color=fff"
-            
-        return JsonResponse({"status": "success", "url": url, "full_name": full_name})
-        
-    except Exception as e:
-        return JsonResponse({"status": "error", "message": f"Server Error: {str(e)}"})
+            # ── SECURITY: return a generic response, never confirm email doesn't exist ──
+            return JsonResponse({
+                "status": "success",
+                "url": f"https://ui-avatars.com/api/?name=User&background=6197e6&color=fff",
+                "full_name": "User"
+            })
+
+    except Exception:
+        return JsonResponse({
+            "status": "success",
+            "url": f"https://ui-avatars.com/api/?name=User&background=6197e6&color=fff",
+            "full_name": "User"
+        })
 
 
 def showFirebaseJS(request):
@@ -157,4 +250,3 @@ messaging.setBackgroundMessageHandler(function (payload) {
 });
     """
     return HttpResponse(data, content_type='application/javascript')
-

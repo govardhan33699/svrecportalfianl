@@ -207,6 +207,7 @@ class Staff(models.Model):
     ]
     course = models.ForeignKey(Course, on_delete=models.DO_NOTHING, null=True, blank=False)
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    staff_code = models.CharField(max_length=20, null=True, blank=True)
     # New fields
     father_name = models.CharField(max_length=150, null=True, blank=True)
     mother_name = models.CharField(max_length=150, null=True, blank=True)
@@ -241,8 +242,11 @@ class StaffQualification(models.Model):
 class Subject(models.Model):
     name = models.CharField(max_length=120)
     code = models.CharField(max_length=20, null=True, blank=True)
+    short_code = models.CharField(max_length=10, null=True, blank=True)
     max_marks = models.PositiveIntegerField(default=30)
-    show_in_marks = models.BooleanField(default=True)
+    show_in_attendance = models.BooleanField(default=True, help_text="Track attendance for this subject")
+    show_in_results = models.BooleanField(default=True, help_text="Show results/grades for this subject")
+    show_in_marks = models.BooleanField(default=True, help_text="Show in marks memo")
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     regulation = models.ForeignKey(Regulation, on_delete=models.SET_NULL, null=True, blank=True)
@@ -430,6 +434,7 @@ class Announcement(models.Model):
     ]
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
     audience = models.CharField(max_length=20, choices=[('all', 'All'), ('staff', 'Staff'), ('student', 'Student')], default='all')
+    expires_at = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -443,16 +448,24 @@ class AcademicCalendar(models.Model):
 
     semester = models.CharField(max_length=1, choices=SEMESTER_CHOICES)
     regulation = models.ForeignKey(Regulation, on_delete=models.CASCADE, null=True, blank=True)
-    commencement_date = models.DateField()
-    instruction_end_date = models.DateField()
+    commencement_date = models.DateField(null=True, blank=True)
+    instruction_end_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ['session', 'semester']
+        unique_together = ['session', 'semester', 'regulation']
 
     def __str__(self):
         return f"{self.session} - {self.get_semester_display()}"
+
+    @property
+    def instruction_duration_text(self):
+        if self.commencement_date and self.instruction_end_date:
+            delta = self.instruction_end_date - self.commencement_date
+            weeks = round(delta.days / 7)
+            return f"{weeks} Weeks"
+        return "—"
 
 
 class CalendarEvent(models.Model):
@@ -469,7 +482,7 @@ class CalendarEvent(models.Model):
     calendar = models.ForeignKey(AcademicCalendar, on_delete=models.CASCADE, related_name='events')
     event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
     custom_name = models.CharField(max_length=200, blank=True, help_text='Used when event type is "Other"')
-    start_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     duration_text = models.CharField(max_length=50, blank=True, help_text='e.g. "03 Days", "02 Weeks"')
     order = models.PositiveIntegerField(default=0, help_text='Display order')
@@ -489,29 +502,79 @@ class CalendarEvent(models.Model):
 
     @property
     def date_range_display(self):
+        if not self.start_date:
+            return "Not set"
         if self.end_date and self.end_date != self.start_date:
             return f"{self.start_date.strftime('%d-%m-%Y')} to {self.end_date.strftime('%d-%m-%Y')}"
         return self.start_date.strftime('%d-%m-%Y')
 
 
+# ── Security Models ──
+
+class FailedLoginAttempt(models.Model):
+    """Tracks failed login attempts for rate limiting / brute-force protection."""
+    email = models.EmailField(db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, default='')
+    attempted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-attempted_at']
+        indexes = [
+            models.Index(fields=['email', 'attempted_at']),
+            models.Index(fields=['ip_address', 'attempted_at']),
+        ]
+
+    def __str__(self):
+        return f"Failed login for {self.email} at {self.attempted_at}"
+
+
+class SecurityLog(models.Model):
+    """Audit trail for authentication and security events."""
+    EVENT_TYPES = [
+        ('login_success', 'Login Success'),
+        ('login_failed', 'Login Failed'),
+        ('login_locked', 'Account Locked'),
+        ('logout', 'Logout'),
+        ('password_reset', 'Password Reset'),
+        ('session_expired', 'Session Expired'),
+    ]
+    event_type = models.CharField(max_length=30, choices=EVENT_TYPES, db_index=True)
+    email = models.EmailField(blank=True, default='')
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, default='')
+    details = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['event_type', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.event_type} — {self.email} at {self.created_at}"
+
+
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        if instance.user_type == 1:
+        if str(instance.user_type) == '1':  # ✅ FIX: Compare as strings
             Admin.objects.create(admin=instance)
-        if instance.user_type == 2:
+        if str(instance.user_type) == '2':  # ✅ FIX: Compare as strings
             Staff.objects.create(admin=instance)
-        if instance.user_type == 3:
+        if str(instance.user_type) == '3':  # ✅ FIX: Compare as strings
             Student.objects.create(admin=instance)
 
 
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):
-    if instance.user_type == 1:
+    if str(instance.user_type) == '1':  # ✅ FIX: Compare as strings
         instance.admin.save()
-    if instance.user_type == 2:
+    if str(instance.user_type) == '2':  # ✅ FIX: Compare as strings
         instance.staff.save()
-    if instance.user_type == 3:
+    if str(instance.user_type) == '3':  # ✅ FIX: Compare as strings
         instance.student.save()
 
 class StudentCloudFile(models.Model):

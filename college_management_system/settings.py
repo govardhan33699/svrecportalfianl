@@ -24,13 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7'  # Consider using your secret key
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-# ALLOWED_HOSTS = ['smswithdjango.herokuapp.com']
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
 
 
@@ -105,25 +104,21 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-if not DEBUG:
-    AUTH_PASSWORD_VALIDATORS = []
-else:
-    AUTH_PASSWORD_VALIDATORS = [
-        {
-            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-        },
-    ]
+# Password validation — always active regardless of DEBUG mode
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
 
 
 # Internationalization
@@ -157,22 +152,32 @@ AUTH_USER_MODEL = 'main_app.CustomUser'
 AUTHENTICATION_BACKENDS = ['main_app.EmailBackend.EmailBackend']
 TIME_ZONE = 'Asia/Kolkata'
 
-# Session Configuration for Remember Me functionality
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (default)
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # This will be overridden by remember me
-SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request to extend expiry
+# ── Session Security ──
+SESSION_COOKIE_AGE = 1209600          # 2 weeks (default)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True         # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'       # Prevent CSRF via cross-origin requests
+CSRF_COOKIE_HTTPONLY = False           # JS needs to read CSRF cookie for AJAX
+CSRF_COOKIE_SAMESITE = 'Lax'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-# EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_mails")
+# In production, also set:
+# SESSION_COOKIE_SECURE = True         # Only send cookies over HTTPS
+# CSRF_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
 
+# ── Email Configuration ──
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-
-EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'shivagovardhanreddy1234@gmail.com') 
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'shivagovardhanreddy1234@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', 'rvmjdxyqvxixnfdc')
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'shivagovardhanreddy1234@gmail.com'
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_USER', 'shivagovardhanreddy1234@gmail.com')
+
+# ── Security Rate Limiting ──
+LOGIN_MAX_ATTEMPTS = 5                 # Max failed login attempts
+LOGIN_LOCKOUT_SECONDS = 900            # 15 minute lockout
 
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

@@ -258,14 +258,36 @@
             transition: filter 0.2s, transform 0.1s;
         }
 
-        .btn-next:hover,
-        .btn-submit:hover {
-            filter: brightness(1.1);
+        .neu-button {
+            background-color: #e0e0e0;
+            border-radius: 30px;
+            box-shadow: 5px 5px 10px #c5c5c5, -5px -5px 10px #ffffff;
+            color: #444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 10px 24px;
+            transition: all 0.2s ease-in-out;
+            border: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            gap: 10px;
         }
 
-        .btn-next:active,
-        .btn-submit:active {
-            transform: scale(0.98);
+        .neu-button:hover {
+            box-shadow: 2px 2px 5px #c5c5c5, -2px -2px 5px #ffffff;
+            transform: translateY(1px);
+        }
+
+        .neu-button:active {
+            box-shadow: inset 2px 2px 5px #c5c5c5, inset -2px -2px 5px #ffffff;
+            transform: translateY(2px);
+        }
+
+        .neu-button:focus {
+            outline: none;
         }
 
         .forgot-pass {
@@ -366,7 +388,7 @@
                                 <input type="email" placeholder="User Name" name="email" id="emailInput" required>
                             </div>
                         </div>
-                        <button type="button" class="btn-next" onclick="checkUsername()">
+                        <button type="button" class="btn-next neu-button" onclick="checkUsername()">
                             <span>Next</span>
                             <div class="loading-next" id="nextLoader"></div>
                         </button>
@@ -383,7 +405,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit">Sign In</button>
+                        <button type="submit" class="btn-submit neu-button">Sign In</button>
                     </div>
 
                     <div class="text-center w-100 mt-3">
@@ -405,6 +427,11 @@
 
             if (!email) {
                 showAlert("Please enter your email");
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                showAlert("Please enter a valid email address");
                 return;
             }
 
@@ -496,6 +523,11 @@
                 toggleIcon.classList.remove('fa-eye-slash');
                 toggleIcon.classList.add('fa-eye');
             }
+        }
+
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
         }
 
         // Allow 'Enter' key on Username field to trigger 'Next'

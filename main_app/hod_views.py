@@ -1,4 +1,5 @@
 import json
+from django.db.models import Count, Q
 import requests
 from datetime import date
 from django.contrib import messages
@@ -27,7 +28,6 @@ from .models import (
 def admin_home(request):
     total_staff = Staff.objects.all().count()
     total_students = Student.objects.all().count()
-    from django.db.models import Count
     subjects = Subject.objects.annotate(attendance_count=Count('attendance'))
     total_subject = subjects.count()
     total_course = Course.objects.all().count()
@@ -41,7 +41,6 @@ def admin_home(request):
 
 
     # Total Subjects and students in Each Course
-    from django.db.models import Count, Q
     
     # 1. Total Subjects and students in Each Course (Optimized)
     course_stats = Course.objects.annotate(
@@ -153,16 +152,20 @@ def admin_home(request):
     activities.sort(key=lambda x: x['time'], reverse=True)
     context['recent_activities'] = activities[:10]
 
+
+    today = date.today()
+    active_announcements = Announcement.objects.filter(Q(expires_at__isnull=True) | Q(expires_at__gte=today))
+
     # Grouped Announcements for Latest Updates Grid
-    context['news_announcements'] = Announcement.objects.filter(
+    context['news_announcements'] = active_announcements.filter(
         category='news'
     ).order_by('-created_at')[:5]
     
-    context['exam_announcements'] = Announcement.objects.filter(
+    context['exam_announcements'] = active_announcements.filter(
         category__in=['mid', 'sem']
     ).order_by('-created_at')[:5]
     
-    context['placement_announcements'] = Announcement.objects.filter(
+    context['placement_announcements'] = active_announcements.filter(
         category__in=['event', 'holiday', 'other', 'placement']
     ).order_by('-created_at')[:5]
 
@@ -170,6 +173,11 @@ def admin_home(request):
 
 
 def add_staff(request):
+    # ✅ FIX BUG #2: Add role validation
+    if request.user.user_type != '1':
+        messages.error(request, "Unauthorized access!")
+        return redirect(reverse('login_page'))
+    
     form = StaffForm(request.POST or None, request.FILES or None)
     context = {'form': form, 'page_title': 'Add Staff'}
     if request.method == 'POST':
@@ -187,7 +195,7 @@ def add_staff(request):
             passport_url = fs.url(filename)
             try:
                 user = CustomUser.objects.create_user(
-                    email=email, password=password, user_type=2, first_name=first_name, last_name=last_name, profile_pic=passport_url)
+                    email=email, password=password, user_type='2', first_name=first_name, last_name=last_name, profile_pic=passport_url)
                 user.gender = gender
                 user.address = address
                 user.staff.course = course
@@ -214,6 +222,11 @@ def add_staff(request):
 
 
 def add_student(request):
+    # ✅ FIX BUG #2: Add role validation
+    if request.user.user_type != '1':
+        messages.error(request, "Unauthorized access!")
+        return redirect(reverse('login_page'))
+    
     student_form = StudentForm(request.POST or None, request.FILES or None)
     context = {'form': student_form, 'page_title': 'Add Student'}
     if request.method == 'POST':
@@ -229,7 +242,7 @@ def add_student(request):
             passport = request.FILES.get('profile_pic')
             try:
                 user = CustomUser.objects.create_user(
-                    email=email, password=password, user_type=3, first_name=first_name, last_name=last_name, profile_pic=passport)
+                    email=email, password=password, user_type='3', first_name=first_name, last_name=last_name, profile_pic=passport)
                 user.gender = gender
                 user.address = address
                 user.student.session = session
@@ -300,6 +313,40 @@ def manage_degree(request):
     return render(request, 'hod_template/manage_degree.html', context)
 
 
+def ajax_delete_entity(request):
+    """AJAX endpoint to delete any course-management entity."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+    if request.user.user_type != '1':
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    entity_type = request.POST.get('entity_type', '')
+    entity_id = request.POST.get('entity_id', '')
+
+    MODEL_MAP = {
+        'subject': Subject,
+        'degree': Degree,
+        'year': AcademicLevel,
+        'semester': AcademicSemester,
+        'course': Course,
+        'session': Session,
+        'regulation': Regulation,
+    }
+
+    model = MODEL_MAP.get(entity_type)
+    if not model:
+        return JsonResponse({'success': False, 'error': f'Unknown entity type: {entity_type}'})
+
+    try:
+        obj = model.objects.get(id=entity_id)
+        obj.delete()
+        return JsonResponse({'success': True, 'message': f'{entity_type.title()} deleted successfully!'})
+    except model.DoesNotExist:
+        return JsonResponse({'success': False, 'error': f'{entity_type.title()} not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
 def manage_course_combined(request):
     degrees = Degree.objects.all()
     years = AcademicLevel.objects.all()
@@ -324,6 +371,8 @@ def manage_course_combined(request):
             }
         grouped_calendars[session_key]['calendars'].append(cal)
     
+    subjects = Subject.objects.all().select_related('staff__admin', 'course', 'regulation').order_by('regulation__name', 'name')
+    
     context = {
         'degrees': degrees,
         'years': years,
@@ -331,6 +380,7 @@ def manage_course_combined(request):
         'courses': courses,
         'sessions': sessions,
         'regulations': regulations,
+        'subjects': subjects,
         'grouped_calendars': grouped_calendars,
         'timetables_count': timetables_count,
         'calendars_count': calendars.count(),
@@ -365,9 +415,16 @@ def edit_degree(request, degree_id):
 
 def delete_degree(request, degree_id):
     degree = get_object_or_404(Degree, id=degree_id)
-    degree.delete()
-    messages.success(request, "Course Deleted Successfully")
-    return redirect(reverse('manage_degree'))
+    try:
+        degree.delete()
+        messages.success(request, "Course Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete: " + str(e))
+    
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 
 def add_year(request):
@@ -427,9 +484,16 @@ def edit_year(request, year_id):
 
 def delete_year(request, year_id):
     year = get_object_or_404(AcademicLevel, id=year_id)
-    year.delete()
-    messages.success(request, "Year Deleted Successfully")
-    return redirect(reverse('manage_year'))
+    try:
+        year.delete()
+        messages.success(request, "Year Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete: " + str(e))
+    
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 
 def add_semester(request):
@@ -483,9 +547,16 @@ def edit_semester(request, semester_id):
 
 def delete_semester(request, semester_id):
     semester = get_object_or_404(AcademicSemester, id=semester_id)
-    semester.delete()
-    messages.success(request, "Semester Deleted Successfully")
-    return redirect(reverse('manage_semester'))
+    try:
+        semester.delete()
+        messages.success(request, "Semester Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete: " + str(e))
+    
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 
 def add_course(request):
@@ -545,9 +616,16 @@ def manage_course(request):
 
 def delete_course(request, course_id):
     course = get_object_or_404(Course, id=course_id)
-    course.delete()
-    messages.success(request, "Branch Deleted Successfully")
-    return redirect(reverse('manage_course'))
+    try:
+        course.delete()
+        messages.success(request, "Branch Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete: " + str(e))
+    
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 
 def add_subject(request):
@@ -571,7 +649,7 @@ def add_subject(request):
 
 
 def manage_staff(request):
-    allStaff = CustomUser.objects.filter(user_type=2)
+    allStaff = CustomUser.objects.filter(user_type='2')
     context = {
         'allStaff': allStaff,
         'page_title': 'Manage Staff'
@@ -580,13 +658,14 @@ def manage_staff(request):
 
 
 def manage_student(request):
+    from django.db.models import Q
     enrollment_number = request.GET.get('enrollment_number')
     name = request.GET.get('name')
     semester = request.GET.get('semester')
     course_id = request.GET.get('course')
     regulation_id = request.GET.get('regulation')
 
-    students = CustomUser.objects.filter(user_type=3).select_related(
+    students = CustomUser.objects.filter(user_type='3').select_related(
         'student', 'student__course', 'student__semester', 'student__regulation', 'student__academic_year'
     )
 
@@ -595,7 +674,7 @@ def manage_student(request):
     if enrollment_number:
         students = students.filter(student__roll_number__icontains=enrollment_number)
     if name:
-        students = students.filter(models.Q(first_name__icontains=name) | models.Q(last_name__icontains=name))
+        students = students.filter(Q(first_name__icontains=name) | Q(last_name__icontains=name))
     if semester:
         students = students.filter(student__semester=semester)
     if course_id:
@@ -622,7 +701,6 @@ def view_student_detail(request, student_id):
     certificates = StudentCertificate.objects.filter(student=student).order_by('-issue_date')
 
     # ── CGPA Overview Calculation (Reused from student_views.py) ──
-    from django.db.models import Q
     from .models import Subject, StudentResult
     all_results = StudentResult.objects.filter(student=student).select_related('subject')
     all_subjects = Subject.objects.filter(
@@ -866,7 +944,6 @@ def workflow_builder(request, workflow_id=None):
     return render(request, "hod_template/workflow_builder.html", context)
 
 
-@csrf_exempt
 def save_workflow(request):
     if request.method == 'POST':
         try:
@@ -1153,7 +1230,6 @@ def edit_session(request, session_id):
         return render(request, "hod_template/edit_session_template.html", context)
 
 
-@csrf_exempt
 def check_email_availability(request):
     email = request.POST.get("email")
     try:
@@ -1165,8 +1241,13 @@ def check_email_availability(request):
         return HttpResponse(False)
 
 
-@csrf_exempt
 def student_feedback_message(request):
+    # ✅ FIX BUG #3: Add role validation
+    if request.user.user_type != '1':
+        if request.method == 'POST':
+            return HttpResponse(False)
+        return redirect(reverse('login_page'))
+    
     if request.method != 'POST':
         feedbacks = FeedbackStudent.objects.all()
         context = {
@@ -1186,8 +1267,13 @@ def student_feedback_message(request):
             return HttpResponse(False)
 
 
-@csrf_exempt
 def staff_feedback_message(request):
+    # ✅ FIX BUG #3: Add role validation
+    if request.user.user_type != '1':
+        if request.method == 'POST':
+            return HttpResponse(False)
+        return redirect(reverse('login_page'))
+    
     if request.method != 'POST':
         feedbacks = FeedbackStaff.objects.all()
         context = {
@@ -1207,8 +1293,13 @@ def staff_feedback_message(request):
             return HttpResponse(False)
 
 
-@csrf_exempt
 def view_staff_leave(request):
+    # ✅ FIX BUG #3: Add role validation to CSRF-exempt endpoint
+    if request.user.user_type != '1':
+        if request.method == 'POST':
+            return HttpResponse(False)
+        return redirect(reverse('login_page'))
+    
     if request.method != 'POST':
         allLeave = LeaveReportStaff.objects.all()
         context = {
@@ -1232,8 +1323,13 @@ def view_staff_leave(request):
             return False
 
 
-@csrf_exempt
 def view_student_leave(request):
+    # ✅ FIX BUG #3: Add role validation to CSRF-exempt endpoint
+    if request.user.user_type != '1':
+        if request.method == 'POST':
+            return HttpResponse(False)
+        return redirect(reverse('login_page'))
+    
     if request.method != 'POST':
         allLeave = LeaveReportStudent.objects.all()
         context = {
@@ -1483,7 +1579,6 @@ def admin_view_marks_report(request):
     return render(request, "hod_template/admin_view_marks_report.html", context)
 
 
-@csrf_exempt
 def get_admin_attendance(request):
     subject_id = request.POST.get('subject')
     session_id = request.POST.get('session')
@@ -1543,7 +1638,7 @@ def admin_view_profile(request):
 
 
 def admin_notify_staff(request):
-    staff = CustomUser.objects.filter(user_type=2)
+    staff = CustomUser.objects.filter(user_type='2')
     context = {
         'page_title': "Send Notifications To Staff",
         'allStaff': staff
@@ -1552,7 +1647,7 @@ def admin_notify_staff(request):
 
 
 def admin_notify_student(request):
-    student = CustomUser.objects.filter(user_type=3)
+    student = CustomUser.objects.filter(user_type='3')
     context = {
         'page_title': "Send Notifications To Students",
         'students': student
@@ -1560,8 +1655,11 @@ def admin_notify_student(request):
     return render(request, "hod_template/student_notification.html", context)
 
 
-@csrf_exempt
 def send_student_notification(request):
+    # ✅ FIX BUG #3: Add role validation
+    if request.user.user_type != '1':
+        return HttpResponse("False")
+    
     id = request.POST.get('id')
     message = request.POST.get('message')
     student = get_object_or_404(Student, admin_id=id)
@@ -1587,8 +1685,11 @@ def send_student_notification(request):
         return HttpResponse("False")
 
 
-@csrf_exempt
 def send_staff_notification(request):
+    # ✅ FIX BUG #3: Add role validation
+    if request.user.user_type != '1':
+        return HttpResponse("False")
+    
     id = request.POST.get('id')
     message = request.POST.get('message')
     staff = get_object_or_404(Staff, admin_id=id)
@@ -1615,6 +1716,11 @@ def send_staff_notification(request):
 
 
 def delete_staff(request, staff_id):
+    # ✅ FIX BUG #2: Add role validation
+    if request.user.user_type != '1':
+        messages.error(request, "Unauthorized access!")
+        return redirect(reverse('login_page'))
+    
     staff = get_object_or_404(CustomUser, staff__id=staff_id)
     staff.delete()
     messages.success(request, "Staff deleted successfully!")
@@ -1622,6 +1728,11 @@ def delete_staff(request, staff_id):
 
 
 def delete_student(request, student_id):
+    # ✅ FIX BUG #2: Add role validation
+    if request.user.user_type != '1':
+        messages.error(request, "Unauthorized access!")
+        return redirect(reverse('login_page'))
+    
     student = get_object_or_404(Student, id=student_id)
     try:
         # Manually delete related records that might cause FK issues
@@ -1640,22 +1751,21 @@ def delete_student(request, student_id):
     return redirect(reverse('manage_student'))
 
 
-def delete_course(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
-    try:
-        course.delete()
-        messages.success(request, "Branch deleted successfully!")
-    except Exception:
-        messages.error(
-            request, "Sorry, some students are assigned to this branch already. Kindly change the affected student branch and try again")
-    return redirect(reverse('manage_course'))
+# Removed duplicate delete_course (already defined above)
 
 
 def delete_subject(request, subject_id):
     subject = get_object_or_404(Subject, id=subject_id)
-    subject.delete()
-    messages.success(request, "Subject deleted successfully!")
-    return redirect(reverse('manage_subject'))
+    try:
+        subject.delete()
+        messages.success(request, "Subject deleted successfully!")
+    except Exception as e:
+        messages.error(request, "Could Not Delete: " + str(e))
+        
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 
 def delete_session(request, session_id):
@@ -1663,10 +1773,14 @@ def delete_session(request, session_id):
     try:
         session.delete()
         messages.success(request, "Academic Year deleted successfully!")
-    except Exception:
+    except Exception as e:
         messages.error(
-            request, "There are students assigned to this Academic Year. Please move them to another Academic Year.")
-    return redirect(reverse('manage_session'))
+            request, "Error occurred: " + str(e))
+            
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 def import_student(request):
     if request.method == 'POST':
@@ -1747,7 +1861,7 @@ def import_student(request):
                     user = CustomUser.objects.create_user(
                         email=email, 
                         password=password, 
-                        user_type=3, 
+                        user_type='3', 
                         first_name=first_name, 
                         last_name=last_name
                     )
@@ -1903,8 +2017,15 @@ def edit_timetable(request, timetable_id):
 
 def delete_timetable(request, timetable_id):
     timetable = get_object_or_404(Timetable, id=timetable_id)
-    timetable.delete()
-    messages.success(request, "Timetable Entry Deleted Successfully")
+    try:
+        timetable.delete()
+        messages.success(request, "Timetable Entry Deleted Successfully")
+    except Exception as e:
+        messages.error(request, "Could Not Delete: " + str(e))
+        
+    referer = request.META.get('HTTP_REFERER')
+    if referer and ('course_management' in referer or 'timetable' in referer):
+        return redirect(referer)
     return redirect(reverse('manage_timetable'))
 
 
@@ -1977,6 +2098,10 @@ def add_announcement(request):
 
 
 def manage_announcement(request):
+    # Auto-delete expired announcements
+    from datetime import date
+    Announcement.objects.filter(expires_at__lt=date.today()).delete()
+    
     announcements = Announcement.objects.all().order_by('-created_at')
     context = {
         'announcements': announcements,
@@ -2013,6 +2138,10 @@ def delete_announcement(request, announcement_id):
         messages.success(request, "Announcement Deleted Successfully!")
     except Exception as e:
         messages.error(request, "Could not delete: " + str(e))
+        
+    referer = request.META.get('HTTP_REFERER')
+    if referer and ('course_management' in referer or 'announcement' in referer):
+        return redirect(referer)
     return redirect(reverse('manage_announcement'))
 
 def add_regulation(request):
@@ -2071,29 +2200,94 @@ def delete_regulation(request, regulation_id):
         messages.success(request, "Regulation Deleted Successfully!")
     except Exception as e:
         messages.error(request, "Could not delete: " + str(e))
-    return redirect(reverse('manage_regulation'))
+        
+    referer = request.META.get('HTTP_REFERER')
+    if referer and 'course_management' in referer:
+        return redirect(referer)
+    return redirect(reverse('manage_course_combined'))
 
 
 
 def manage_calendar(request):
+    from collections import OrderedDict
+    from datetime import date as date_cls
+
+    # Gather all current calendars
     calendars = AcademicCalendar.objects.all().select_related(
         'session', 'regulation'
     ).prefetch_related('events').order_by('-session__start_year', 'semester')
-    
-    # Group calendars by session
-    from collections import OrderedDict
-    grouped = OrderedDict()
+
+    # Group by Regulation -> Session
+    reg_grouped = OrderedDict()
+
+    # Pre-populate all regulations so empty folders are shown
+    all_regulations = Regulation.objects.all().order_by('name')
+    for reg in all_regulations:
+        reg_grouped[reg.name] = OrderedDict()
+
+    # Determine which (Regulation, Session) pairs to generate for
+    # We now loop through all Regulations to ensure R24, R25, etc., get their semesters
+    reg_session_pairs = {}
+    for r in all_regulations:
+        if r.session:
+            key = (r.id, r.session_id)
+            if key not in reg_session_pairs:
+                reg_session_pairs[key] = {
+                    'regulation': r,
+                    'session': r.session,
+                }
+
+    # Standard set of events to pre-populate (matching the user's provided image)
+    standard_event_types = [
+        ('mid1', 1),
+        ('mid2', 2),
+        ('lab_exam', 3),
+        ('end_exam', 4),
+        ('next_commencement', 5)
+    ]
+    all_semester_keys = [s[0] for s in SEMESTER_CHOICES]  # ['1','2',..,'8']
+
+    # For each active pair, ensure all 8 semesters exist and have standard event rows
+    for (reg_id, session_id), info in reg_session_pairs.items():
+        for sem_key in all_semester_keys:
+            cal_obj, created = AcademicCalendar.objects.get_or_create(
+                session_id=session_id,
+                regulation_id=reg_id,
+                semester=sem_key
+            )
+            
+            # Add missing standard event rows if they don't exist
+            existing_event_types = set(cal_obj.events.all().values_list('event_type', flat=True))
+            for etype, order in standard_event_types:
+                if etype not in existing_event_types:
+                    CalendarEvent.objects.create(
+                        calendar=cal_obj,
+                        event_type=etype,
+                        order=order,
+                        start_date=None,
+                        end_date=None
+                    )
+
+    # Re-fetch everything after generation for display
+    calendars = AcademicCalendar.objects.all().select_related(
+        'session', 'regulation'
+    ).prefetch_related('events').order_by('-session__start_year', 'semester')
+
     for cal in calendars:
+        reg_name = cal.regulation.name if cal.regulation else 'General'
+        if reg_name not in reg_grouped:
+            reg_grouped[reg_name] = OrderedDict()
+
         session_key = cal.session_id
-        if session_key not in grouped:
-            grouped[session_key] = {
+        if session_key not in reg_grouped[reg_name]:
+            reg_grouped[reg_name][session_key] = {
                 'session': cal.session,
                 'calendars': []
             }
-        grouped[session_key]['calendars'].append(cal)
-    
+        reg_grouped[reg_name][session_key]['calendars'].append(cal)
+
     context = {
-        'grouped_calendars': grouped,
+        'reg_grouped': reg_grouped,
         'calendars': calendars,
         'page_title': 'Manage Academic Calendar'
     }
@@ -2164,7 +2358,84 @@ def delete_calendar(request, calendar_id):
         messages.success(request, "Calendar Entry Deleted Successfully")
     except Exception as e:
         messages.error(request, "Could Not Delete Calendar Entry: " + str(e))
+        
+    referer = request.META.get('HTTP_REFERER')
+    if referer and ('course_management' in referer or 'calendar' in referer):
+        return redirect(referer)
     return redirect(reverse('manage_calendar'))
+
+
+def inline_update_calendar(request, calendar_id):
+    """AJAX endpoint to update commencement/instruction dates inline from manage_calendar view."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+    try:
+        from datetime import datetime
+        cal = get_object_or_404(AcademicCalendar, id=calendar_id)
+        field = request.POST.get('field')
+        value = request.POST.get('value', '').strip()
+        
+        if field not in ('commencement_date', 'instruction_end_date'):
+            return JsonResponse({'success': False, 'error': 'Invalid field'}, status=400)
+        
+        if value:
+            parsed = datetime.strptime(value, '%Y-%m-%d').date()
+            setattr(cal, field, parsed)
+        else:
+            setattr(cal, field, None)
+            
+        cal.save()
+        
+        # Format display dates safely for the frontend response
+        comm_disp = cal.commencement_date.strftime('%d-%m-%Y') if cal.commencement_date else 'Not set'
+        instr_end_disp = cal.instruction_end_date.strftime('%d-%m-%Y') if cal.instruction_end_date else 'Not set'
+        
+        combined_disp = 'Not set'
+        if cal.commencement_date and cal.instruction_end_date:
+            combined_disp = f"{comm_disp} to {instr_end_disp}"
+        elif cal.commencement_date or cal.instruction_end_date:
+            combined_disp = f"{comm_disp} / {instr_end_disp}"
+
+        return JsonResponse({
+            'success': True,
+            'commencement_display': comm_disp,
+            'instruction_display': combined_disp,
+            'duration': cal.instruction_duration_text,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def inline_update_calendar_event(request, event_id):
+    """AJAX endpoint to update a CalendarEvent's start/end date and duration inline."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+    try:
+        from datetime import datetime
+        event = get_object_or_404(CalendarEvent, id=event_id)
+        start_val = request.POST.get('start_date', '').strip()
+        end_val = request.POST.get('end_date', '').strip()
+        duration_val = request.POST.get('duration_text', '').strip()
+        if start_val:
+            event.start_date = datetime.strptime(start_val, '%Y-%m-%d').date()
+        else:
+            event.start_date = None
+            
+        if end_val:
+            event.end_date = datetime.strptime(end_val, '%Y-%m-%d').date()
+        else:
+            event.end_date = None
+            
+        event.duration_text = duration_val
+        event.save()
+        
+        return JsonResponse({
+            'success': True,
+            'date_display': event.date_range_display,
+            'duration': event.duration_text or '—',
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 def admin_view_marks_memo(request, student_id):
@@ -2173,7 +2444,6 @@ def admin_view_marks_memo(request, student_id):
     results_lookup = {res.subject_id: res for res in results}
 
 
-    from django.db.models import Q
     from collections import OrderedDict
 
     # Get all subjects for the student's course and regulation + any subject they have results for
@@ -2290,7 +2560,6 @@ def admin_view_marks_memo(request, student_id):
 
 def admin_edit_marks_memo(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    from django.db.models import Q
     from collections import OrderedDict
     
     # Get all subjects for student + any subject they have results for
@@ -2397,7 +2666,6 @@ def admin_view_results_traditional(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     results = StudentResult.objects.filter(student=student).select_related('subject')
 
-    from django.db.models import Q
     from collections import OrderedDict
 
     # Get all subjects for the student's course and regulation
@@ -2469,6 +2737,7 @@ def admin_view_results_traditional(request, student_id):
             sem_subjects[sem].append({
                 'name': sub.name,
                 'code': sub.code or '',
+                'subject_id': sub.id,
                 'im': im,
                 'em': em,
                 'tot': tot,
@@ -2492,6 +2761,9 @@ def admin_view_results_traditional(request, student_id):
         '5': 'III B.Tech. I Sem.', '6': 'III B.Tech. II Sem.', '7': 'IV B.Tech. I Sem.', '8': 'IV B.Tech. II Sem.',
     }
 
+    # Check if current user is admin
+    is_admin = request.user.is_authenticated and str(request.user.user_type) == '1'
+
     context = {
         'student': student,
         'sem_subjects': sem_subjects,
@@ -2499,8 +2771,10 @@ def admin_view_results_traditional(request, student_id):
         'semester_labels_short': semester_labels_short,
         'semester_labels': semester_labels,
         'page_title': 'Sem-wise Results',
+        'is_admin': is_admin,
     }
     return render(request, "student_template/student_view_results_traditional.html", context)
+
 
 
 def admin_add_marks_memo_subject(request, student_id):
@@ -2613,3 +2887,151 @@ def calculate_final_internal(request):
     return redirect(f"{reverse('admin_view_marks_report')}?{query_params}")
 
 
+def ajax_update_student_mark(request):
+    """AJAX endpoint to update a student's INT or EXT mark inline from the results page."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+
+    # Only admin can edit
+    if not request.user.is_authenticated or str(request.user.user_type) != '1':
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    try:
+        student_id = request.POST.get('student_id')
+        subject_id = request.POST.get('subject_id')
+        field = request.POST.get('field')  # 'internal_marks' or 'external_marks'
+        value = request.POST.get('value', '').strip()
+
+        if field not in ('internal_marks', 'external_marks'):
+            return JsonResponse({'success': False, 'error': 'Invalid field'}, status=400)
+
+        student = get_object_or_404(Student, id=student_id)
+        subject = get_object_or_404(Subject, id=subject_id)
+
+        # Parse value
+        if value == '' or value == '-':
+            parsed_value = 0
+        else:
+            parsed_value = float(value)
+
+        # Clamp: IM max 30, EM max 70
+        if field == 'internal_marks':
+            parsed_value = max(0, min(parsed_value, 30))
+        else:
+            parsed_value = max(0, min(parsed_value, 70))
+
+        # Get or create the "Final Internal" result record
+        sem = subject.semester or '1'
+        res, created = StudentResult.objects.get_or_create(
+            student=student,
+            subject=subject,
+            exam_name='Final Internal',
+            defaults={'semester': sem}
+        )
+
+        setattr(res, field, parsed_value)
+        res.semester = sem
+        res.save()
+
+        # Recalculate derived values
+        im = float(res.internal_marks or 0)
+        em = float(res.external_marks or 0)
+        tot = im + em
+
+        # Grade calculation
+        if em == 0 and im == 0:
+            status = ''
+            grade = ''
+        else:
+            status = 'Pass' if tot >= 40 else 'Fail'
+            if tot >= 90: grade = 'S'
+            elif tot >= 80: grade = 'A'
+            elif tot >= 70: grade = 'B'
+            elif tot >= 60: grade = 'C'
+            elif tot >= 50: grade = 'D'
+            elif tot >= 40: grade = 'E'
+            else: grade = 'F'
+
+        # Recalculate SGPA for this semester
+        grade_points_map = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
+
+        # Get all subjects for this semester
+        all_subjects = Subject.objects.filter(
+            course=student.course, show_in_marks=True, semester=sem
+        ).filter(
+            Q(regulation=student.regulation) | Q(regulation__isnull=True)
+        ).order_by('order', 'name')
+
+        all_results = StudentResult.objects.filter(student=student).select_related('subject')
+        marks_lookup = {}
+        for r in all_results:
+            if r.subject_id not in marks_lookup:
+                marks_lookup[r.subject_id] = {}
+            if r.exam_name:
+                marks_lookup[r.subject_id][r.exam_name] = r.total
+
+        sem_cr = 0.0
+        sem_gp = 0.0
+        sem_tot = 0.0
+        sem_sub_count = 0
+        sem_backlogs = 0
+
+        for sub in all_subjects:
+            sub_res = all_results.filter(subject=sub).filter(
+                Q(semester=sem) | Q(semester__isnull=True)
+            ).first()
+            if not sub_res:
+                sub_res = all_results.filter(subject=sub).first()
+
+            if sub_res and sub_res.internal_marks:
+                s_im = float(sub_res.internal_marks)
+            else:
+                sub_marks = marks_lookup.get(sub.id, {})
+                int1 = float(sub_marks.get('Mid 1', sub_marks.get('INT-1', sub_marks.get('MID-1', 0))) or 0)
+                int2 = float(sub_marks.get('Mid 2', sub_marks.get('INT-2', sub_marks.get('MID-2', 0))) or 0)
+                m_max = max(int1, int2)
+                m_min = min(int1, int2)
+                s_im = round((0.8 * m_max) + (0.2 * m_min))
+
+            s_em = float(sub_res.external_marks) if sub_res and sub_res.external_marks else 0
+            s_tot = s_im + s_em
+
+            if s_em == 0 and s_im == 0:
+                continue
+
+            s_status = 'Pass' if s_tot >= 40 else 'Fail'
+            if s_tot >= 90: s_grade = 'S'
+            elif s_tot >= 80: s_grade = 'A'
+            elif s_tot >= 70: s_grade = 'B'
+            elif s_tot >= 60: s_grade = 'C'
+            elif s_tot >= 50: s_grade = 'D'
+            elif s_tot >= 40: s_grade = 'E'
+            else: s_grade = 'F'
+
+            cr_val = float(sub.credits or 0)
+            gp_weight = grade_points_map.get(s_grade, 0)
+            sem_cr += cr_val
+            sem_gp += gp_weight * cr_val
+            sem_tot += s_tot
+            sem_sub_count += 1
+            if s_status == 'Fail':
+                sem_backlogs += 1
+
+        sgpa = round(sem_gp / sem_cr, 2) if sem_cr > 0 else 0.00
+        percentage = round(sem_tot / sem_sub_count, 1) if sem_sub_count > 0 else 0.0
+
+        return JsonResponse({
+            'success': True,
+            'im': int(im) if im == int(im) else im,
+            'em': int(em) if em == int(em) else em,
+            'tot': int(tot) if tot == int(tot) else tot,
+            'grade': grade,
+            'status': status,
+            'sgpa': sgpa,
+            'percentage': percentage,
+            'backlogs': sem_backlogs,
+            'sem_key': sem,
+        })
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

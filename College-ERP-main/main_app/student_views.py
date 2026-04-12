@@ -22,8 +22,8 @@ def student_home(request):
     if total_attendance == 0:  # Don't divide. DivisionByZero
         percent_absent = percent_present = 0
     else:
-        percent_present = math.floor((total_present/total_attendance) * 100)
-        percent_absent = math.ceil(100 - percent_present)
+        percent_present = round((total_present/total_attendance) * 100, 2)
+        percent_absent = round(100 - percent_present, 2)
     subject_name = []
     data_present = []
     data_absent = []

@@ -136,6 +136,10 @@ def staff_take_attendance(request):
 
 @csrf_exempt
 def get_faculty_attendance_grid(request):
+    # ✅ Add role validation
+    if request.user.user_type != '2':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
     staff = get_object_or_404(Staff, admin=request.user)
     date_str = request.POST.get('date')
     
@@ -350,7 +354,6 @@ def staff_update_attendance(request):
     return render(request, 'staff_template/staff_update_attendance.html', context)
 
 
-@csrf_exempt
 def get_student_attendance(request):
     attendance_date_id = request.POST.get('attendance_date_id')
     try:
@@ -368,7 +371,6 @@ def get_student_attendance(request):
         return e
 
 
-@csrf_exempt
 def update_attendance(request):
     student_data = request.POST.get('student_ids')
     date = request.POST.get('date')
@@ -491,7 +493,6 @@ def staff_view_profile(request):
     return render(request, "staff_template/staff_view_profile.html", context)
 
 
-@csrf_exempt
 def staff_fcmtoken(request):
     token = request.POST.get('token')
     try:
@@ -514,11 +515,15 @@ def staff_view_notification(request):
 
 
 def staff_add_result(request):
-    if request.user.user_type == '1': # Admin
-        subjects = Subject.objects.all()
-    else:
+    # ✅ FIX BUG #4: Correct role check - staff view should only allow staff type '2'
+    if request.user.user_type == '2':  # Staff member
         staff = get_object_or_404(Staff, admin=request.user)
         subjects = Subject.objects.filter(staff=staff)
+    else:
+        # Non-staff users should not access this view
+        messages.error(request, "Unauthorized access!")
+        return redirect(reverse('login_page'))
+    
     courses = Course.objects.all()
     sections = Student.SECTION
     semesters = SEMESTER_CHOICES
@@ -580,7 +585,6 @@ def staff_add_result(request):
     return render(request, "staff_template/staff_add_result.html", context)
 
 
-@csrf_exempt
 def fetch_student_result(request):
     try:
         subject_id = request.POST.get('subject')
@@ -905,7 +909,13 @@ def staff_manage_timetable(request):
 
 
 def staff_view_announcement(request):
-    announcements = Announcement.objects.filter(audience__in=['all', 'staff']).order_by('-created_at')
+    from django.db.models import Q
+    today = date.today()
+    announcements = Announcement.objects.filter(
+        Q(audience__in=['all', 'staff']) & 
+        (Q(expires_at__isnull=True) | Q(expires_at__gte=today))
+    ).order_by('-created_at')
+    
     context = {
         'announcements': announcements,
         'page_title': 'Announcements'
