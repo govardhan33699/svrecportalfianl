@@ -176,6 +176,19 @@ class Student(models.Model):
     mother_tongue = models.CharField(max_length=50, null=True, blank=True)
     admission_date = models.DateField(null=True, blank=True)
     admission_type = models.CharField(max_length=20, choices=ADMISSION_TYPE_CHOICES, null=True, blank=True)
+    
+    # Contact Details
+    landline = models.CharField(max_length=15, null=True, blank=True, verbose_name="LandLine")
+    parent_email = models.EmailField(null=True, blank=True, verbose_name="Parent Email")
+    
+    # Address Details
+    door_no = models.CharField(max_length=50, null=True, blank=True, verbose_name="Door No")
+    street = models.CharField(max_length=200, null=True, blank=True)
+    area_village = models.CharField(max_length=100, null=True, blank=True, verbose_name="Area (Village)")
+    mandal = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    district = models.CharField(max_length=100, null=True, blank=True)
+    pincode = models.CharField(max_length=10, null=True, blank=True, verbose_name="PinCode")
 
     def __str__(self):
         return self.admin.last_name + ", " + self.admin.first_name

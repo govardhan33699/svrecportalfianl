@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from django.utils import timezone
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import (
     Student, Subject, Attendance, AttendanceReport, StudentResult,
     Announcement, Assignment, AssignmentSubmission, Timetable, Course,
@@ -22,6 +23,17 @@ from .forms import (
     LeaveReportStudentForm, FeedbackStudentForm, StudentEditForm,
     AssignmentSubmissionForm, StudentChangePasswordForm
 )
+
+
+def _paginate_queryset(request, queryset, per_page=12):
+    """Shared paginator for student list pages."""
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(queryset, per_page)
+    try:
+        page_obj = paginator.page(page_number)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+    return page_obj
 
 
 def student_home(request):
@@ -83,9 +95,24 @@ def student_home(request):
 
     # Timetable for today
     today_name = date.today().strftime('%A')
-    timetable_today = Timetable.objects.filter(
-        course=student.course, section=student.section, day=today_name
-    ).select_related('period', 'subject', 'staff').order_by('period__number')
+    
+    # Map AcademicSemester name to Timetable semester value
+    semester_mapping = {
+        '1-1': '1', '1-2': '2',
+        '2-1': '3', '2-2': '4',
+        '3-1': '5', '3-2': '6',
+        '4-1': '7', '4-2': '8',
+    }
+    
+    # Get timetable semester value
+    timetable_semester = semester_mapping.get(student.semester.name) if student.semester else None
+    
+    # Filter timetable
+    filter_args = {'course': student.course, 'section': student.section, 'day': today_name}
+    if timetable_semester:
+        filter_args['semester'] = timetable_semester
+    
+    timetable_today = Timetable.objects.filter(**filter_args).select_related('period', 'subject', 'staff').order_by('period__number')
 
     # Recent Activities for Student
     recent_attendance = AttendanceReport.objects.filter(
@@ -147,7 +174,7 @@ def student_home(request):
 
     grade_points_map = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
     total_credits = 0.0
-    total_earned_credits = 0.0
+    passed_credits = 0.0
     total_grade_points = 0.0
     total_marks_sum = 0.0
     total_sub_count = 0
@@ -176,35 +203,47 @@ def student_home(request):
                 im = round((0.8 * m_max) + (0.2 * m_min))
 
             em = res.external_marks if res else ''
-            tot = im + (float(em) if em else 0)
+            
+            # Convert to float safely
+            try:
+                em_val = float(em) if em and em != '' and em != '0' else 0
+            except (ValueError, TypeError):
+                em_val = 0
 
-            if em == '' and im == 0:
-                continue
+            tot = im + em_val
 
             sem_has_data = True
-            status = 'P' if tot >= 40 else 'F'
-            if tot >= 90: grade = 'S'
-            elif tot >= 80: grade = 'A'
-            elif tot >= 70: grade = 'B'
-            elif tot >= 60: grade = 'C'
-            elif tot >= 50: grade = 'D'
-            elif tot >= 40: grade = 'E'
-            else: grade = 'F'
+            # Only show status if external marks ARE entered
+            if em_val == 0:
+                status = ''
+                grade = ''
+            else:
+                status = 'P' if tot >= 40 else 'F'
+                if tot >= 90: grade = 'S'
+                elif tot >= 80: grade = 'A'
+                elif tot >= 70: grade = 'B'
+                elif tot >= 60: grade = 'C'
+                elif tot >= 50: grade = 'D'
+                elif tot >= 40: grade = 'E'
+                else: grade = 'F'
 
             cr_val = float(sub.credits or 0)
+            
             gp_weight = grade_points_map.get(grade, 0)
             sem_cr += cr_val
             sem_gp += gp_weight * cr_val
-            total_marks_sum += tot
-            total_sub_count += 1
-            if status == 'F':
+            if tot > 0:
+                total_marks_sum += tot
+                total_sub_count += 1
+            total_credits += cr_val
+            # Only count as backlog if external marks entered AND fails
+            if status == 'F' and em_val > 0:
                 total_backlogs += 1
-            else:
-                total_earned_credits += cr_val
+            elif status == 'P':
+                passed_credits += cr_val
 
         if sem_has_data:
             semesters_with_data += 1
-            total_credits += sem_cr
             total_grade_points += sem_gp
 
     cgpa = round(total_grade_points / total_credits, 2) if total_credits > 0 else 0.0
@@ -259,7 +298,7 @@ def student_home(request):
         'class_awarded': class_awarded,
         'total_semesters_with_data': semesters_with_data,
         'total_credits': total_credits,
-        'total_earned_credits': total_earned_credits,
+        'passed_credits': passed_credits,
         'max_cgpa': max_cgpa,
         # Current Calendar
         'current_calendar': current_calendar,
@@ -354,9 +393,12 @@ def student_view_attendance(request):
 def student_apply_leave(request):
     form = LeaveReportStudentForm(request.POST or None)
     student = get_object_or_404(Student, admin_id=request.user.id)
+    leave_history_qs = LeaveReportStudent.objects.filter(student=student).order_by('-created_at')
+    leave_history_page = _paginate_queryset(request, leave_history_qs, per_page=10)
     context = {
         'form': form,
-        'leave_history': LeaveReportStudent.objects.filter(student=student),
+        'leave_history': leave_history_page.object_list,
+        'page_obj': leave_history_page,
         'page_title': 'Apply for leave'
     }
     if request.method == 'POST':
@@ -378,9 +420,12 @@ def student_apply_leave(request):
 def student_feedback(request):
     form = FeedbackStudentForm(request.POST or None)
     student = get_object_or_404(Student, admin_id=request.user.id)
+    feedback_qs = FeedbackStudent.objects.filter(student=student).order_by('-id')
+    feedback_page = _paginate_queryset(request, feedback_qs, per_page=10)
     context = {
         'form': form,
-        'feedbacks': FeedbackStudent.objects.filter(student=student),
+        'feedbacks': feedback_page.object_list,
+        'page_obj': feedback_page,
         'page_title': 'Student Feedback'
 
     }
@@ -476,9 +521,11 @@ def student_fcmtoken(request):
 
 def student_view_notification(request):
     student = get_object_or_404(Student, admin=request.user)
-    notifications = NotificationStudent.objects.filter(student=student)
+    notifications_qs = NotificationStudent.objects.filter(student=student).order_by('-id')
+    page_obj = _paginate_queryset(request, notifications_qs, per_page=15)
     context = {
-        'notifications': notifications,
+        'notifications': page_obj.object_list,
+        'page_obj': page_obj,
         'page_title': "View Notifications"
     }
     return render(request, "student_template/student_view_notification.html", context)
@@ -782,35 +829,54 @@ def student_view_results_traditional(request):
                 m_min = min(int1, int2)
                 im = round((0.8 * m_max) + (0.2 * m_min))
 
-            # Use external_marks from StudentResult
-            em = res.external_marks if res else ''
-            tot = im + (float(em) if em else 0)
+            # Use external_marks from StudentResult - Handle None, 0, '', '0'
+            em = res.external_marks if res else None
+            
+            # Convert to float safely - treat None/0/empty as 0
+            try:
+                if em and em != '0' and em != '':
+                    em_val = float(em)
+                else:
+                    em_val = 0
+            except (ValueError, TypeError):
+                em_val = 0
 
-            # Result Status (RS) and Grade based on TOTAL
-            if em == '' and im == 0:
+            tot = im + em_val
+
+            # Result Status (RS) and Grade based on TOTAL - Show subject even if no marks
+            # Only show status if external marks were entered
+            if em_val == 0:
                 status = ''
                 grade = ''
             else:
                 status = 'Pass' if tot >= 40 else 'Fail'
-                if tot >= 90: grade = 'S'
-                elif tot >= 80: grade = 'A'
-                elif tot >= 70: grade = 'B'
-                elif tot >= 60: grade = 'C'
-                elif tot >= 50: grade = 'D'
-                elif tot >= 40: grade = 'E'
-                else: grade = 'F'
-                
-                # Stats calculation
-                grade_points = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
-                gp_weight = grade_points.get(grade, 0)
-                cr_val = float(sub.credits or 0)
-                
-                sem_stats[sem]['cr'] += cr_val
-                sem_stats[sem]['gp'] += gp_weight * cr_val
-                sem_stats[sem]['tot'] += tot
-                sem_stats[sem]['sub_count'] += 1
-                if status == 'Fail':
-                    sem_stats[sem]['backlogs'] += 1
+                if tot >= 90:
+                    grade = 'S'
+                elif tot >= 80:
+                    grade = 'A'
+                elif tot >= 70:
+                    grade = 'B'
+                elif tot >= 60:
+                    grade = 'C'
+                elif tot >= 50:
+                    grade = 'D'
+                elif tot >= 40:
+                    grade = 'E'
+                else:
+                    grade = 'F'
+            
+            # Stats calculation
+            grade_points = {'S': 10, 'A': 9, 'B': 8, 'C': 7, 'D': 6, 'E': 5, 'F': 0}
+            gp_weight = grade_points.get(grade, 0)
+            cr_val = float(sub.credits or 0)
+            
+            sem_stats[sem]['cr'] += cr_val
+            sem_stats[sem]['gp'] += gp_weight * cr_val
+            sem_stats[sem]['tot'] += tot
+            sem_stats[sem]['sub_count'] += 1
+            # Only count as backlog if external marks entered AND fails
+            if status == 'Fail' and em_val > 0:
+                sem_stats[sem]['backlogs'] += 1
 
             sem_subjects[sem].append({
                 'name': sub.name,
@@ -861,11 +927,13 @@ def student_view_material(request):
     student = get_object_or_404(Student, admin=request.user)
     # Get subjects for student's course and semester
     subjects = Subject.objects.filter(course=student.course, semester=student.semester)
-    materials = StudyMaterial.objects.filter(subject__in=subjects).order_by('-created_at')
+    materials_qs = StudyMaterial.objects.filter(subject__in=subjects).select_related('subject').order_by('-created_at')
+    page_obj = _paginate_queryset(request, materials_qs, per_page=15)
     
     context = {
         'page_title': 'Study Materials',
-        'materials': materials,
+        'materials': page_obj.object_list,
+        'page_obj': page_obj,
         'hide_sidebar': True,
     }
     return render(request, 'student_template/student_view_material.html', context)
@@ -877,10 +945,23 @@ def student_view_timetable(request):
     # Get all periods
     periods = list(Period.objects.all().order_by('number'))
     
-    # Get timetable entries matching student regulation
+    # Map AcademicSemester name to Timetable semester value
+    semester_mapping = {
+        '1-1': '1', '1-2': '2',
+        '2-1': '3', '2-2': '4',
+        '3-1': '5', '3-2': '6',
+        '4-1': '7', '4-2': '8',
+    }
+    
+    # Get timetable semester value
+    timetable_semester = semester_mapping.get(student.semester.name) if student.semester else None
+    
+    # Get timetable entries matching student regulation and semester
     filters = {'course': student.course, 'section': student.section}
     if student.regulation:
         filters['subject__regulation'] = student.regulation
+    if timetable_semester:
+        filters['semester'] = timetable_semester
         
     timetable_entries = Timetable.objects.filter(**filters).select_related(
         'period', 'subject', 'staff', 'staff__admin'
@@ -984,16 +1065,20 @@ def student_view_timetable(request):
 
 def student_view_assignments(request):
     student = get_object_or_404(Student, admin=request.user)
-    assignments = Assignment.objects.filter(
+    assignments_qs = Assignment.objects.filter(
         subject__course=student.course
-    ).order_by('-due_date')
+    ).select_related('subject').order_by('-due_date')
+    page_obj = _paginate_queryset(request, assignments_qs, per_page=12)
+    assignments = page_obj.object_list
     # Get submissions for this student
-    submissions = AssignmentSubmission.objects.filter(student=student)
+    assignment_ids = [a.id for a in assignments]
+    submissions = AssignmentSubmission.objects.filter(student=student, assignment_id__in=assignment_ids)
     # Map assignment_id to submission object for easy lookup
     submission_map = {sub.assignment_id: sub for sub in submissions}
     context = {
         'assignments': assignments,
         'submission_map': submission_map,
+        'page_obj': page_obj,
         'page_title': 'Assignments'
     }
     return render(request, "student_template/student_view_assignments.html", context)
@@ -1090,7 +1175,7 @@ def student_attendance_report(request):
         current_semester = '1'
         subject_semester = '1'
         
-    subjects = Subject.objects.filter(course=student.course, semester=subject_semester)
+    subjects = Subject.objects.filter(course=student.course, semester=subject_semester, show_in_attendance=True)
 
 
 
@@ -1221,13 +1306,15 @@ def student_attendance_report(request):
 def student_view_announcement(request):
     from django.db.models import Q
     today = date.today()
-    announcements = Announcement.objects.filter(
+    announcements_qs = Announcement.objects.filter(
         Q(audience__in=['all', 'student']) & 
         (Q(expires_at__isnull=True) | Q(expires_at__gte=today))
     ).order_by('-created_at')
+    page_obj = _paginate_queryset(request, announcements_qs, per_page=12)
     
     context = {
-        'announcements': announcements,
+        'announcements': page_obj.object_list,
+        'page_obj': page_obj,
         'page_title': 'Announcements',
         'hide_sidebar': True,
     }
@@ -1236,19 +1323,13 @@ def student_view_announcement(request):
 
 def student_cloud_storage(request):
     student = get_object_or_404(Student, admin=request.user)
-    files = StudentCloudFile.objects.filter(student=student).order_by('-created_at')
-    
-    # Categorize files for easier display
-    categorized_files = {
-        'notes': files.filter(category='notes'),
-        'pdf': files.filter(category='pdf'),
-        'question_paper': files.filter(category='question_paper'),
-        'important': files.filter(category='important'),
-    }
+    files_qs = StudentCloudFile.objects.filter(student=student).order_by('-created_at')
+    page_obj = _paginate_queryset(request, files_qs, per_page=20)
+    files = page_obj.object_list
     
     context = {
         'files': files,
-        'categorized_files': categorized_files,
+        'page_obj': page_obj,
         'page_title': 'Cloud Storage'
     }
     return render(request, "student_template/student_cloud_storage.html", context)
@@ -1302,9 +1383,11 @@ def student_delete_file(request, file_id):
     return redirect(reverse('student_cloud_storage'))
 def student_view_certificates(request):
     student = get_object_or_404(Student, admin=request.user)
-    certificates = StudentCertificate.objects.filter(student=student).order_by('-issue_date')
+    cert_qs = StudentCertificate.objects.filter(student=student).order_by('-issue_date')
+    page_obj = _paginate_queryset(request, cert_qs, per_page=12)
     context = {
-        'certificates': certificates,
+        'certificates': page_obj.object_list,
+        'page_obj': page_obj,
         'page_title': 'My Certificates'
     }
     return render(request, 'student_template/student_view_certificates.html', context)

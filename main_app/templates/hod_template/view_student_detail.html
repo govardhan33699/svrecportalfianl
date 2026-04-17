@@ -414,9 +414,26 @@
                         <div class="vsd-info-label"><i class="fas fa-id-card"></i> Aadhar Number</div>
                         <div class="vsd-info-val {% if not student.aadhar_number %}empty{% endif %}">{{ student.aadhar_number|default:"—" }}</div>
                     </div>
+                    <div class="vsd-info-item">
+                        <div class="vsd-info-label"><i class="fas fa-phone"></i> Landline</div>
+                        <div class="vsd-info-val {% if not student.landline %}empty{% endif %}">{{ student.landline|default:"—" }}</div>
+                    </div>
                     <div class="vsd-info-item full">
                         <div class="vsd-info-label"><i class="fas fa-map-marker-alt"></i> Address</div>
-                        <div class="vsd-info-val {% if not student.admin.address %}empty{% endif %}">{{ student.admin.address|default:"—" }}</div>
+                        <div class="vsd-info-val">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; line-height: 1.8;">
+                                {% if student.door_no %}<div><strong>Door No:</strong> {{ student.door_no }}</div>{% endif %}
+                                {% if student.street %}<div><strong>Street:</strong> {{ student.street }}</div>{% endif %}
+                                {% if student.area_village %}<div><strong>Area/Village:</strong> {{ student.area_village }}</div>{% endif %}
+                                {% if student.mandal %}<div><strong>Mandal:</strong> {{ student.mandal }}</div>{% endif %}
+                                {% if student.district %}<div><strong>District:</strong> {{ student.district }}</div>{% endif %}
+                                {% if student.state %}<div><strong>State:</strong> {{ student.state }}</div>{% endif %}
+                                {% if student.pincode %}<div><strong>Pincode:</strong> {{ student.pincode }}</div>{% endif %}
+                                {% if not student.door_no and not student.street and not student.area_village and not student.mandal and not student.district and not student.state and not student.pincode %}
+                                    —
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -441,6 +458,10 @@
                     <div class="vsd-info-item">
                         <div class="vsd-info-label"><i class="fas fa-phone"></i> Parent Mobile</div>
                         <div class="vsd-info-val {% if not student.parent_mobile_number %}empty{% endif %}">{{ student.parent_mobile_number|default:"—" }}</div>
+                    </div>
+                    <div class="vsd-info-item">
+                        <div class="vsd-info-label"><i class="fas fa-envelope"></i> Parent Email</div>
+                        <div class="vsd-info-val {% if not student.parent_email %}empty{% endif %}">{{ student.parent_email|default:"—" }}</div>
                     </div>
                     <div class="vsd-info-item">
                         <div class="vsd-info-label"><i class="fas fa-user"></i> Mother's Name</div>

@@ -1,0 +1,170 @@
+<!-- INFINITE SCROLL / LOAD MORE COMPONENT -->
+<!-- Use this for modern infinite scroll experience -->
+<!-- Include at the bottom of student template files -->
+
+<div id="load-more-container" style="margin-top: 30px; text-align: center;">
+    {% if has_next %}
+    <button id="load-more-btn" class="btn btn-primary btn-lg" onclick="loadMoreItems()">
+        <i class="fas fa-chevron-down"></i> Load More
+    </button>
+    {% else %}
+    <div class="alert alert-info" style="margin-top: 20px;">
+        <i class="fas fa-info-circle"></i> No more items to load
+    </div>
+    {% endif %}
+</div>
+
+<style>
+#load-more-container {
+    padding: 20px;
+}
+
+#load-more-btn {
+    padding: 12px 30px;
+    font-size: 1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+#load-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+#load-more-btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+#load-more-btn.loading::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.load-more-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.spinner-animation {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(59, 130, 246, 0.1);
+    border-radius: 50%;
+    border-top-color: #3b82f6;
+    animation: spin 0.8s linear infinite;
+}
+</style>
+
+<script>
+let currentPage = {{ page }};
+let hasNext = {{ has_next|lower }};
+const ENDPOINT = '{{ load_more_url|default:"" }}';
+
+function loadMoreItems() {
+    if (!hasNext) {
+        alert('No more items to load');
+        return;
+    }
+
+    const btn = document.getElementById('load-more-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const nextPage = currentPage + 1;
+    
+    fetch(`${ENDPOINT}?page=${nextPage}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add new items to the DOM
+            const container = document.getElementById('items-container');
+            if (container) {
+                addItemsToDOM(data.items, container);
+            }
+
+            currentPage = data.page;
+            hasNext = data.has_next;
+
+            // Update button
+            if (hasNext) {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            } else {
+                // Hide button and show "no more items" message
+                btn.style.display = 'none';
+                const nomore = document.createElement('div');
+                nomore.className = 'alert alert-info';
+                nomore.innerHTML = '<i class="fas fa-info-circle"></i> No more items to load';
+                btn.parentElement.appendChild(nomore);
+            }
+        } else {
+            alert('Error loading items');
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error loading items');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    });
+}
+
+function addItemsToDOM(items, container) {
+    // This function should be customized per page
+    // Example for announcements:
+    items.forEach(item => {
+        const itemHTML = `
+            <div class="announcement-item" style="margin-bottom: 15px; padding: 15px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                <h6 style="margin: 0 0 10px 0;">${item.title}</h6>
+                <p style="margin: 0 0 10px 0; color: #94a3b8;">${item.description}</p>
+                <small style="color: #64748b;">${item.created_at}</small>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', itemHTML);
+    });
+}
+
+// Optional: Infinite scroll support
+function observeLoadMore() {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'load-more-sentinel';
+    document.getElementById('load-more-container').appendChild(sentinel);
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && hasNext) {
+                loadMoreItems();
+            }
+        });
+    }, {
+        rootMargin: '200px'
+    });
+
+    observer.observe(sentinel);
+}
+
+// Uncomment to enable automatic infinite scroll
+// document.addEventListener('DOMContentLoaded', observeLoadMore);
+</script>

@@ -350,16 +350,17 @@
 
     .inline-edit-popup {
         display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
+        position: fixed;
         z-index: 9999;
         background: #fff;
         border: 1px solid rgba(99,102,241,0.3);
         border-radius: 10px;
         padding: 14px 16px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        min-width: 280px;
+        min-width: 300px;
+        max-width: 92vw;
+        max-height: 70vh;
+        overflow-y: auto;
     }
 
     .inline-edit-popup.active {
@@ -659,6 +660,25 @@ function closeAllPopups() {
     document.querySelectorAll('.inline-edit-popup').forEach(p => p.remove());
 }
 
+function positionInlinePopup(popup, anchorCell) {
+    const rect = anchorCell.getBoundingClientRect();
+    const popupWidth = Math.min(340, window.innerWidth - 24);
+    const left = Math.max(12, Math.min(rect.left, window.innerWidth - popupWidth - 12));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    popup.style.width = popupWidth + 'px';
+    popup.style.left = left + 'px';
+
+    if (spaceBelow < 280 && spaceAbove > 280) {
+        popup.style.top = Math.max(12, rect.top - 12) + 'px';
+        popup.style.transform = 'translateY(-100%)';
+    } else {
+        popup.style.top = Math.min(window.innerHeight - 12, rect.bottom + 8) + 'px';
+        popup.style.transform = 'none';
+    }
+}
+
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.editable-date-cell') && !e.target.closest('.editable-event-cell') && !e.target.closest('.inline-edit-popup')) {
         closeAllPopups();
@@ -704,15 +724,16 @@ document.querySelectorAll('.editable-date-cell').forEach(function(cell) {
         popup.dataset.calId  = calId;
         popup.dataset.mode   = mode;
 
-        cell.style.position = 'relative';
-        cell.appendChild(popup);
+        popup._anchorCell = cell;
+        document.body.appendChild(popup);
+        positionInlinePopup(popup, cell);
         popup.querySelector('input').focus();
     });
 });
 
 function saveCalendarField(btn) {
     const popup = btn.closest('.inline-edit-popup');
-    const cell  = popup.parentElement;
+    const cell  = popup._anchorCell || popup.parentElement;
     const field = popup.dataset.field;
     const url   = popup.dataset.url;
     const calId = popup.dataset.calId;
@@ -790,15 +811,16 @@ document.querySelectorAll('.editable-event-cell').forEach(function(cell) {
         popup.dataset.url     = url;
         popup.dataset.eventId = eventId;
 
-        cell.style.position = 'relative';
-        cell.appendChild(popup);
+        popup._anchorCell = cell;
+        document.body.appendChild(popup);
+        positionInlinePopup(popup, cell);
         popup.querySelector('#ie-start').focus();
     });
 });
 
 function saveEventDates(btn) {
     const popup   = btn.closest('.inline-edit-popup');
-    const cell    = popup.parentElement;
+    const cell    = popup._anchorCell || popup.parentElement;
     const url     = popup.dataset.url;
     const eventId = popup.dataset.eventId;
     const start   = popup.querySelector('#ie-start').value;

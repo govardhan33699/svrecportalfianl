@@ -1,2 +1,54 @@
-{% extends 'main_app/base.html' %} {% load static %} {% block page_title %}{{page_title}}{% endblock page_title %} {% block content %}  <section class="content">     <div class="container-fluid">         <div class="row">             <div class="col-md-12">                 <!-- general form elements -->                 <div class="card card-dark">                     <div class="card-header">                         <h3 class="card-title">{{page_title}}</h3>                     </div>                       <!-- /.card-header -->                     <!-- form start -->                     <div class="card-body">                                                      <div class="form-group table">               <table class="table table-bordered">                   <tr>                       <th>#</th>                       <th>Date</th>                       <th>Message</th>                   </tr>                   {% for notification in  notifications %}                     <tr>                         <td>{{forloop.counter}}</td>                         <td>{{notification.created_at}}</td>                         <td>{{notification.message}}</td>                     </tr>                   {% endfor %}               </table>                         </div>                                         </div>                     <!-- /.card-body -->                  <!-- /.card -->              </div>         </div>     </div> </section> {% endblock content %}
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
 
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group table">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Message</th>
+                                </tr>
+                                {% for notification in notifications %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{notification.created_at}}</td>
+                                    <td>{{notification.message}}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                    {% if page_obj and page_obj.has_other_pages %}
+                    <div class="card-footer bg-white">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            {% endif %}
+                            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                            {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

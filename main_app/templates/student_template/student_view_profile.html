@@ -1183,6 +1183,24 @@
                     </div>
                 </div>
                 <div class="field-item">
+                    <div class="field-label">Student Mobile No</div>
+                    <div class="field-value {% if not form.instance.student_mobile_number %}field-value-dim{% endif %}">
+                        {{ form.instance.student_mobile_number|default:"—" }}
+                    </div>
+                </div>
+                <div class="field-item">
+                    <div class="field-label">Landline</div>
+                    <div class="field-value {% if not form.instance.landline %}field-value-dim{% endif %}">
+                        {{ form.instance.landline|default:"—" }}
+                    </div>
+                </div>
+                <div class="field-item">
+                    <div class="field-label">Parent Email</div>
+                    <div class="field-value {% if not form.instance.parent_email %}field-value-dim{% endif %}">
+                        {{ form.instance.parent_email|default:"—" }}
+                    </div>
+                </div>
+                <div class="field-item">
                     <div class="field-label">Annual Income</div>
                     <div class="field-value {% if not form.instance.annual_income %}field-value-dim{% endif %}">
                         {{ form.instance.annual_income|default:"—" }}
@@ -1247,7 +1265,24 @@
                 </div>
             </div>
             <div class="field-item field-item-wide">
-                <div class="field-label">Address</div>
+                <div class="field-label">Address Details</div>
+                <div class="field-value">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; line-height: 1.8; padding: 8px 0;">
+                        {% if form.instance.door_no %}<div><strong>Door No:</strong> {{ form.instance.door_no }}</div>{% endif %}
+                        {% if form.instance.street %}<div><strong>Street:</strong> {{ form.instance.street }}</div>{% endif %}
+                        {% if form.instance.area_village %}<div><strong>Area/Village:</strong> {{ form.instance.area_village }}</div>{% endif %}
+                        {% if form.instance.mandal %}<div><strong>Mandal:</strong> {{ form.instance.mandal }}</div>{% endif %}
+                        {% if form.instance.district %}<div><strong>District:</strong> {{ form.instance.district }}</div>{% endif %}
+                        {% if form.instance.state %}<div><strong>State:</strong> {{ form.instance.state }}</div>{% endif %}
+                        {% if form.instance.pincode %}<div><strong>Pincode:</strong> {{ form.instance.pincode }}</div>{% endif %}
+                        {% if not form.instance.door_no and not form.instance.street and not form.instance.area_village and not form.instance.mandal and not form.instance.district and not form.instance.state and not form.instance.pincode %}
+                            <div class="field-value-dim">—</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="field-item field-item-wide">
+                <div class="field-label">Other Address</div>
                 <div class="field-value {% if not form.instance.admin.address %}field-value-dim{% endif %}">
                     {{ form.instance.admin.address|default:"—" }}
                 </div>

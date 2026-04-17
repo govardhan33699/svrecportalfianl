@@ -1,0 +1,629 @@
+{% extends 'main_app/erpnext_base.html' %}
+{% load static %}
+
+{% block page_title %}Bulk Update Semester{% endblock page_title %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'manage_student' %}">Students</a></li>
+<li class="breadcrumb-item active">Bulk Update Semester</li>
+{% endblock breadcrumb %}
+
+{% block custom_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+.bus-root { font-family: 'Inter', sans-serif; }
+
+/* ── Top Header Bar ── */
+.bus-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+}
+
+.bus-page-title {
+    font-size: 1.5rem; font-weight: 800; color: #0f172a;
+    display: flex; align-items: center; gap: 12px;
+}
+
+.dark-mode .bus-page-title { color: #f8fafc !important; }
+
+.bus-page-title-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+}
+
+.bus-topbar-actions { display: flex; gap: 10px; }
+
+.bus-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; font-size: 0.82rem;
+    font-weight: 700; cursor: pointer; border: none;
+    text-decoration: none; transition: all 0.2s; white-space: nowrap;
+}
+
+.bus-btn-primary { background: #f97316; color: #fff; }
+.bus-btn-primary:hover { background: #ea580c; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35); }
+.bus-btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+
+.bus-btn-secondary { background: #3b82f6; color: #fff; }
+.bus-btn-secondary:hover { background: #2563eb; transform: translateY(-1px); }
+
+.bus-btn-outline { background: #fff; color: #475569; border: 1.5px solid #e2e8f0; }
+.bus-btn-outline:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+
+.dark-mode .bus-btn-outline {
+    background: rgba(30, 41, 59, 0.4) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark-mode .bus-btn-outline:hover { background: rgba(30, 41, 59, 0.8) !important; color: #fff !important; }
+
+/* ── Control Panel ── */
+.bus-control-panel {
+    background: #fff; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.07);
+    padding: 18px 22px; margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+}
+
+.dark-mode .bus-control-panel {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.bus-control-group {
+    display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto;
+}
+
+.bus-control-label {
+    font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #94a3b8;
+}
+
+.bus-control-group select {
+    padding: 9px 13px; font-size: 0.82rem; font-weight: 600;
+    border: 1.5px solid #e2e8f0; border-radius: 10px; color: #334155;
+    background: #f8fafc; transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none; min-width: 200px;
+}
+
+.dark-mode .bus-control-group select {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+}
+
+.bus-control-group select:focus {
+    border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+    background: #fff;
+}
+
+.bus-control-actions { display: flex; gap: 8px; margin-left: auto; }
+
+.bus-stats {
+    display: flex; gap: 16px; margin-left: auto;
+}
+
+.bus-stat-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+
+.bus-stat-count {
+    font-size: 1.25rem; font-weight: 900; color: #0f172a;
+}
+.dark-mode .bus-stat-count { color: #f8fafc !important; }
+
+.bus-stat-label {
+    font-size: 0.65rem; font-weight: 700; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.3px;
+}
+
+/* ── Student Table Card ── */
+.bus-table-card {
+    background: #fff; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.07);
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.dark-mode .bus-table-card {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.bus-table-header {
+    padding: 16px 24px; border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fafbfc;
+}
+
+.dark-mode .bus-table-header {
+    background: rgba(30, 41, 59, 0.4) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.bus-table-header-title {
+    font-size: 0.88rem; font-weight: 800; color: #1e293b;
+    display: flex; align-items: center; gap: 8px;
+}
+.dark-mode .bus-table-header-title { color: #f8fafc !important; }
+
+.bus-header-actions { display: flex; gap: 10px; align-items: center; }
+
+.bus-result-count {
+    font-size: 0.75rem; font-weight: 700; padding: 3px 12px;
+    border-radius: 100px; background: #fff7ed; color: #ea580c;
+}
+.dark-mode .bus-result-count { background: rgba(249, 115, 22, 0.15) !important; color: #fb923c !important; }
+
+/* ── Table Styles ── */
+.bus-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+
+.bus-table th {
+    padding: 11px 16px; font-size: 0.67rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #64748b; background: #f8fafc; text-align: left;
+    border-bottom: 1px solid #f1f5f9; white-space: nowrap;
+}
+
+.dark-mode .bus-table th {
+    background: rgba(30, 41, 59, 0.6) !important;
+    color: #94a3b8 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.bus-table th:first-child { padding-left: 24px; }
+.bus-table th:last-child { text-align: right; padding-right: 24px; }
+
+.bus-table td {
+    padding: 13px 16px; border-bottom: 1px solid #f1f5f9;
+    color: #334155; vertical-align: middle;
+}
+
+.dark-mode .bus-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+    color: #cbd5e1 !important;
+}
+
+.bus-table td:first-child { padding-left: 24px; }
+.bus-table td:last-child { padding-right: 24px; }
+
+.bus-table tbody tr { transition: background 0.15s; }
+.bus-table tbody tr:hover { background: #f8fafc; }
+.dark-mode .bus-table tbody tr:hover { background: rgba(255, 255, 255, 0.02) !important; }
+.bus-table tbody tr:last-child td { border-bottom: none; }
+
+.bus-checkbox {
+    width: 20px; height: 20px; cursor: pointer;
+    accent-color: #f97316;
+}
+
+.bus-student-name {
+    font-weight: 800; color: #0f172a; font-size: 0.85rem;
+}
+.dark-mode .bus-student-name { color: #f8fafc !important; }
+
+.bus-student-roll {
+    font-size: 0.72rem; color: #94a3b8; font-weight: 600; margin-top: 2px;
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Badges ── */
+.bus-badge {
+    display: inline-flex; align-items: center; padding: 3px 10px;
+    border-radius: 7px; font-size: 0.7rem; font-weight: 700;
+    white-space: nowrap;
+}
+
+.bus-badge-orange { background: #fff7ed; color: #c2410c; }
+.bus-badge-blue { background: #eff6ff; color: #2563eb; }
+.bus-badge-green { background: #f0fdf4; color: #15803d; }
+
+.dark-mode .bus-badge-orange { background: rgba(249, 115, 22, 0.15) !important; color: #fb923c !important; }
+.dark-mode .bus-badge-blue { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+.dark-mode .bus-badge-green { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+
+/* ── Empty State ── */
+.bus-empty {
+    text-align: center; padding: 60px 32px;
+}
+
+.bus-empty-icon {
+    width: 70px; height: 70px; border-radius: 20px;
+    background: #f1f5f9; display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 16px;
+    font-size: 1.8rem; color: #94a3b8;
+}
+.dark-mode .bus-empty-icon { background: rgba(255, 255, 255, 0.05) !important; }
+
+.bus-empty-title {
+    font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;
+}
+.dark-mode .bus-empty-title { color: #f8fafc !important; }
+
+.bus-empty-text {
+    font-size: 0.85rem; color: #94a3b8;
+}
+
+/* ── Alert Messages ── */
+.bus-alert {
+    padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px; font-size: 0.82rem;
+}
+
+.bus-alert-success {
+    background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
+}
+
+.bus-alert-error {
+    background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;
+}
+
+.dark-mode .bus-alert-success { background: rgba(16, 185, 129, 0.1) !important; color: #34d399 !important; border-color: rgba(34, 197, 94, 0.3) !important; }
+.dark-mode .bus-alert-error { background: rgba(239, 68, 68, 0.1) !important; color: #f87171 !important; border-color: rgba(220, 38, 38, 0.3) !important; }
+
+/* ── Filter Card ── */
+.bus-filter-card {
+    background: #fff; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.07);
+    padding: 18px 22px; margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.dark-mode .bus-filter-card {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.bus-filter-grid {
+    display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr auto;
+    gap: 12px; align-items: end;
+}
+
+.bus-filter-group label {
+    display: block; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #94a3b8; margin-bottom: 6px;
+}
+
+.bus-filter-group input,
+.bus-filter-group select {
+    width: 100%; padding: 9px 13px; font-size: 0.82rem; font-weight: 500;
+    border: 1.5px solid #e2e8f0; border-radius: 10px; color: #334155;
+    background: #f8fafc; transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.dark-mode .bus-filter-group input,
+.dark-mode .bus-filter-group select {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+}
+
+.bus-filter-group input:focus,
+.bus-filter-group select:focus {
+    border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+    background: #fff;
+}
+.dark-mode .bus-filter-group input:focus,
+.dark-mode .bus-filter-group select:focus { background: rgba(30, 41, 59, 0.9) !important; }
+
+.bus-filter-actions { display: flex; gap: 8px; }
+
+/* ── Responsive ── */
+@media(max-width: 900px) {
+    .bus-control-panel { flex-direction: column; align-items: stretch; }
+    .bus-control-actions, .bus-stats { margin-left: 0; width: 100%; justify-content: flex-start; }
+    .bus-control-group select { min-width: 100%; }
+}
+
+@media(max-width: 600px) {
+    .bus-page-title { font-size: 1.2rem; }
+    .bus-topbar { flex-direction: column; align-items: stretch; }
+    .bus-topbar-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+    .bus-table { font-size: 0.75rem; }
+    .bus-table th, .bus-table td { padding: 8px 12px; }
+    .bus-table th:first-child, .bus-table td:first-child { padding-left: 16px; }
+    .bus-table th:last-child, .bus-table td:last-child { padding-right: 16px; }
+}
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="bus-root">
+
+    <!-- ══ Top Bar ══ -->
+    <div class="bus-topbar">
+        <div class="bus-page-title">
+            <div class="bus-page-title-icon"><i class="fas fa-sync-alt"></i></div>
+            Bulk Update Semester
+        </div>
+        <div class="bus-topbar-actions">
+            <a href="{% url 'manage_student' %}" class="bus-btn bus-btn-outline">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Alert Messages ══ -->
+    <div id="alertContainer"></div>
+
+    <!-- ══ Filter Card ══ -->
+    <div class="bus-filter-card">
+        <form method="GET" action="{% url 'bulk_update_students_semester' %}">
+            <div class="bus-filter-grid">
+                <div class="bus-filter-group">
+                    <label><i class="fas fa-id-badge" style="margin-right:4px;"></i> Roll Number</label>
+                    <input type="text" name="enrollment_number" placeholder="e.g. 23AM1A3101"
+                           value="{{ request.GET.enrollment_number }}">
+                </div>
+                <div class="bus-filter-group">
+                    <label><i class="fas fa-user" style="margin-right:4px;"></i> Student Name</label>
+                    <input type="text" name="name" placeholder="Search by name..."
+                           value="{{ request.GET.name }}">
+                </div>
+                <div class="bus-filter-group">
+                    <label><i class="fas fa-book" style="margin-right:4px;"></i> Semester</label>
+                    <select name="semester">
+                        <option value="">All Semesters</option>
+                        {% for sem in semesters %}
+                        <option value="{{ sem.id }}" {% if request.GET.semester|slugify == sem.id|slugify %}selected{% endif %}>{{ sem.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="bus-filter-group">
+                    <label><i class="fas fa-code-branch" style="margin-right:4px;"></i> Course</label>
+                    <select name="course">
+                        <option value="">All Courses</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}"
+                            {% if request.GET.course|slugify == course.id|slugify %}selected{% endif %}>
+                            {{ course.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="bus-filter-group">
+                    <label><i class="fas fa-gavel" style="margin-right:4px;"></i> Regulation</label>
+                    <select name="regulation">
+                        <option value="">All Regulations</option>
+                        {% for reg in regulations %}
+                        <option value="{{ reg.id }}"
+                            {% if request.GET.regulation|slugify == reg.id|slugify %}selected{% endif %}>
+                            {{ reg.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="bus-filter-actions">
+                    <button type="submit" class="bus-btn bus-btn-secondary" style="height:40px;">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'bulk_update_students_semester' %}" class="bus-btn bus-btn-outline" style="height:40px;">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ Control Panel ══ -->
+    <div class="bus-control-panel">
+        <div class="bus-control-group">
+            <label class="bus-control-label"><i class="fas fa-book" style="margin-right:4px;"></i> Target Semester</label>
+            <select id="semesterSelect">
+                <option value="">-- Select Target Semester --</option>
+                {% for semester in semesters %}
+                <option value="{{ semester.id }}">{{ semester.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="bus-stats">
+            <div class="bus-stat-item">
+                <div class="bus-stat-count" id="selectedCount">0</div>
+                <div class="bus-stat-label">Selected</div>
+            </div>
+            <div class="bus-stat-item">
+                <div class="bus-stat-count" id="totalCount">{{ students|length }}</div>
+                <div class="bus-stat-label">Total</div>
+            </div>
+        </div>
+        <div class="bus-control-actions">
+            <button type="button" class="bus-btn bus-btn-outline" id="selectAllBtn">
+                <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button type="button" class="bus-btn bus-btn-primary" id="updateBtn" disabled>
+                <i class="fas fa-sync"></i> Update Selected
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ Table Card ══ -->
+    <div class="bus-table-card">
+        <div class="bus-table-header">
+            <div class="bus-table-header-title">
+                <i class="fas fa-list" style="color:#f97316;"></i>
+                Student Selection
+            </div>
+            <div class="bus-header-actions">
+                <span class="bus-result-count">{{ students|length }} student{% if students|length != 1 %}s{% endif %}</span>
+            </div>
+        </div>
+
+        {% if students %}
+        <div style="overflow-x: auto;">
+            <table class="bus-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" class="bus-checkbox" id="selectAllCheckbox"></th>
+                        <th>#</th>
+                        <th>Student Name</th>
+                        <th>Roll Number</th>
+                        <th>Course</th>
+                        <th>Current Semester</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTable">
+                    {% for student in students %}
+                    <tr>
+                        <td><input type="checkbox" class="bus-checkbox student-checkbox" value="{{ student.id }}" data-name="{{ student.admin.get_full_name }}"></td>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="bus-student-name">{{ student.admin.get_full_name|upper }}</div>
+                            <div class="bus-student-roll">{{ student.admin.email }}</div>
+                        </td>
+                        <td><span class="bus-badge bus-badge-blue">{{ student.roll_number }}</span></td>
+                        <td><span class="bus-badge bus-badge-green">{{ student.course.name }}</span></td>
+                        <td>
+                            {% if student.semester %}
+                                <span class="bus-badge bus-badge-orange">{{ student.semester.name }}</span>
+                            {% else %}
+                                <span style="color: #94a3b8; font-size: 0.75rem;">Not set</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="bus-empty">
+            <div class="bus-empty-icon"><i class="fas fa-inbox"></i></div>
+            <div class="bus-empty-title">No Students Found</div>
+            <div class="bus-empty-text">There are no students in the system yet.</div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+const selectAllBtn = document.getElementById('selectAllBtn');
+const updateBtn = document.getElementById('updateBtn');
+const semesterSelect = document.getElementById('semesterSelect');
+const selectedCount = document.getElementById('selectedCount');
+const alertContainer = document.getElementById('alertContainer');
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Update selected count
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.student-checkbox:checked').length;
+    selectedCount.textContent = checked;
+    updateBtn.disabled = checked === 0 || !semesterSelect.value;
+}
+
+// Select all functionality
+selectAllCheckbox.addEventListener('change', function() {
+    studentCheckboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+    });
+    updateSelectedCount();
+});
+
+selectAllBtn.addEventListener('click', function() {
+    selectAllCheckbox.checked = true;
+    studentCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateSelectedCount();
+});
+
+// Update button disable state
+studentCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCount);
+});
+
+semesterSelect.addEventListener('change', function() {
+    updateBtn.disabled = document.querySelectorAll('.student-checkbox:checked').length === 0 || !this.value;
+});
+
+// Show alert
+function showAlert(message, type = 'success') {
+    const alertClass = type === 'success' ? 'bus-alert-success' : 'bus-alert-error';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    const alertEl = document.createElement('div');
+    alertEl.className = `bus-alert ${alertClass}`;
+    alertEl.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+    `;
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertEl);
+    
+    setTimeout(() => {
+        alertEl.remove();
+    }, 5000);
+}
+
+// Bulk update
+updateBtn.addEventListener('click', async function() {
+    const selectedIds = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+        .map(cb => cb.value);
+    const semesterId = semesterSelect.value;
+    
+    if (selectedIds.length === 0 || !semesterId) {
+        showAlert('Please select students and target semester', 'error');
+        return;
+    }
+    
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    
+    try {
+        const response = await fetch('{% url "ajax_bulk_update_semester" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                student_ids: selectedIds,
+                semester_id: semesterId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(data.error || 'Error updating students', 'error');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-sync"></i> Update Selected';
+        }
+    } catch (error) {
+        showAlert('Network error: ' + error.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-sync"></i> Update Selected';
+    }
+});
+</script>
+{% endblock content %}

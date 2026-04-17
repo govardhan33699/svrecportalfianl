@@ -208,11 +208,16 @@ body,
 }
 
 .sidebar-collapsed .erpnext-sidebar {
-  transform: translateX(-100%);
+  transform: translateX(-100%) !important;
   width: 0 !important;
   overflow: hidden !important;
   padding: 0 !important;
   border-right: none !important;
+}
+
+/* Sidebar open state */
+body:not(.sidebar-collapsed) .erpnext-sidebar {
+  transform: translateX(0) !important;
 }
 
 /* Sidebar user area */

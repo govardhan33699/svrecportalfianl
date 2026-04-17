@@ -1,4 +1,4 @@
-{% extends 'main_app/erpnext_base.html' %} {% load static %}
+{% extends 'main_app/erpnext_base.html' %} {% load static %} {% load custom_filters %}
 {% block page_title %}{{ page_title }}{% endblock page_title %}
 
 {% block custom_css %}
@@ -252,8 +252,7 @@
         </table>
 
         <!-- Loop Semesters -->
-        {% for sem_key, subjects in sem_subjects.items %}
-        {% if subjects %}
+        {% for sem_key in "12345678" %}
         <!-- Table -->
         <table class="results-table" id="sem-table-{{ sem_key }}">
             <thead>
@@ -275,29 +274,30 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in subjects %}
-                <tr class="{% if item.status == 'Fail' %}row-fail{% endif %}" id="row-{{ sem_key }}-{{ item.subject_id }}">
-                    <td class="text-center">{{ forloop.counter }}</td>
-                    <td class="text-center">{{ item.code|default:"-" }}</td>
-                    <td>
-                        <div>{{ item.name|upper }}</div>
-                    </td>
-                    {% if is_admin %}
-                    <td class="text-center editable-cell"
-                        data-student="{{ student.id }}"
-                        data-subject="{{ item.subject_id }}"
-                        data-field="internal_marks"
-                        data-sem="{{ sem_key }}"
-                        id="im-{{ sem_key }}-{{ item.subject_id }}">
-                        <span class="cell-value">{{ item.im|floatformat:"0" }}</span>
-                        <i class="fas fa-pencil-alt edit-icon"></i>
-                    </td>
-                    <td class="text-center editable-cell"
-                        data-student="{{ student.id }}"
-                        data-subject="{{ item.subject_id }}"
-                        data-field="external_marks"
-                        data-sem="{{ sem_key }}"
-                        id="em-{{ sem_key }}-{{ item.subject_id }}">
+                {% if sem_subjects|get_item:sem_key %}
+                    {% for item in sem_subjects|get_item:sem_key %}
+                    <tr class="{% if item.status == 'Fail' %}row-fail{% endif %}" id="row-{{ sem_key }}-{{ item.subject_id }}">
+                        <td class="text-center">{{ forloop.counter }}</td>
+                        <td class="text-center">{{ item.code|default:"-" }}</td>
+                        <td>
+                            <div>{{ item.name|upper }}</div>
+                        </td>
+                        {% if is_admin %}
+                        <td class="text-center editable-cell"
+                            data-student="{{ student.id }}"
+                            data-subject="{{ item.subject_id }}"
+                            data-field="internal_marks"
+                            data-sem="{{ sem_key }}"
+                            id="im-{{ sem_key }}-{{ item.subject_id }}">
+                            <span class="cell-value">{{ item.im|floatformat:"0" }}</span>
+                            <i class="fas fa-pencil-alt edit-icon"></i>
+                        </td>
+                        <td class="text-center editable-cell"
+                            data-student="{{ student.id }}"
+                            data-subject="{{ item.subject_id }}"
+                            data-field="external_marks"
+                            data-sem="{{ sem_key }}"
+                            id="em-{{ sem_key }}-{{ item.subject_id }}">
                         <span class="cell-value">{% if item.em != "" %}{{ item.em|floatformat:"0" }}{% else %}-{% endif %}</span>
                         <i class="fas fa-pencil-alt edit-icon"></i>
                     </td>
@@ -382,8 +382,16 @@
                     </td>
                 </tr>
             </tfoot>
+                {% else %}
+                <tbody>
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 20px; color: #999;">
+                        No subjects for this semester
+                    </td>
+                </tr>
+                </tbody>
+                {% endif %}
         </table>
-        {% endif %}
         {% endfor %}
     </div>
 </div>

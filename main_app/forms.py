@@ -117,7 +117,7 @@ class StudentForm(CustomUserForm):
     class Meta(CustomUserForm.Meta):
         model = Student
         fields = CustomUserForm.Meta.fields + \
-            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id', 'date_of_birth', 'annual_income', 'father_occupation', 'mother_occupation', 'mother_mobile_number', 'nationality', 'religion', 'mother_tongue', 'admission_date', 'admission_type']
+            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id', 'date_of_birth', 'annual_income', 'father_occupation', 'mother_occupation', 'mother_mobile_number', 'nationality', 'religion', 'mother_tongue', 'admission_date', 'admission_type', 'landline', 'parent_email', 'door_no', 'street', 'area_village', 'mandal', 'state', 'district', 'pincode']
 
 
 class AdminForm(CustomUserForm):
@@ -311,7 +311,7 @@ class StudentEditForm(CustomUserForm):
     class Meta(CustomUserForm.Meta):
         model = Student
         fields = CustomUserForm.Meta.fields + \
-            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id', 'date_of_birth', 'annual_income', 'father_occupation', 'mother_occupation', 'mother_mobile_number', 'nationality', 'religion', 'mother_tongue', 'admission_date', 'admission_type']
+            ['course', 'session', 'regulation', 'roll_number', 'section', 'father_name', 'mother_name', 'mobile_number', 'parent_mobile_number', 'aadhar_number', 'caste', 'admission_number', 'academic_year', 'semester', 'blood_group', 'apaar_id', 'date_of_birth', 'annual_income', 'father_occupation', 'mother_occupation', 'mother_mobile_number', 'nationality', 'religion', 'mother_tongue', 'admission_date', 'admission_type', 'landline', 'parent_email', 'door_no', 'street', 'area_village', 'mandal', 'state', 'district', 'pincode']
 
 
 class StaffEditForm(CustomUserForm):

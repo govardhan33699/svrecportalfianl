@@ -5,87 +5,392 @@
 {% block content %}
 </style>
 <style>
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
+/* ===== Student Hero (Admin-style) ===== */
+.sd-admin-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    padding: 18px 24px;
+    border-radius: 26px;
+    margin-bottom: 26px;
+    background: linear-gradient(130deg, #10213f 0%, #243e69 100%);
+    box-shadow: 0 14px 34px rgba(16, 33, 63, 0.28);
+    overflow: hidden;
+}
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+.sd-admin-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.12), transparent 42%);
+    pointer-events: none;
+}
 
-    .sd-page {
-        animation: fadeIn 0.6s ease-out forwards;
+.sd-admin-banner-left {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+.sd-admin-avatar-wrap {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    padding: 5px;
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    animation: spinRing 18s linear infinite;
+}
+
+.sd-admin-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: #0f172a;
+    animation: counterSpinRing 18s linear infinite;
+}
+
+.sd-admin-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.9rem;
+    font-weight: 800;
+    animation: counterSpinRing 18s linear infinite;
+}
+
+.sd-admin-name {
+    color: #f8fafc;
+    font-size: 1.9rem;
+    font-weight: 900;
+    line-height: 1.08;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+}
+
+.sd-admin-meta {
+    margin-top: 6px;
+    color: rgba(241, 245, 249, 0.82);
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.sd-admin-dot {
+    opacity: 0.5;
+}
+
+.sd-admin-chips {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sd-admin-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 16px;
+    color: #f8fafc;
+    background: rgba(148, 163, 184, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.sd-admin-banner-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.sd-admin-ring {
+    position: relative;
+    width: 124px;
+    height: 124px;
+}
+
+.sd-admin-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.sd-admin-ring-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.12);
+    stroke-width: 8;
+}
+
+.sd-admin-ring-fill {
+    fill: none;
+    stroke: #f59e0b;
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-dasharray: 339.29;
+    stroke-dashoffset: 339.29;
+    filter: drop-shadow(0 0 8px rgba(245,158,11,0.45));
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+}
+
+.sd-admin-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.sd-admin-ring-value {
+    color: #f8fafc;
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.sd-admin-ring-label {
+    margin-top: 4px;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(241,245,249,0.65);
+    font-weight: 700;
+}
+
+@keyframes spinRing {
+    to {
+        transform: rotate(360deg);
     }
+}
+
+@keyframes counterSpinRing {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@media (max-width: 1200px) {
+    .sd-admin-name { font-size: 1.65rem; }
+    .sd-admin-meta { font-size: 0.96rem; }
+}
+
+@media (max-width: 900px) {
+    .sd-admin-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .sd-admin-banner-right {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 640px) {
+    .sd-admin-avatar-wrap {
+        width: 88px;
+        height: 88px;
+    }
+    .sd-admin-name { font-size: 1.28rem; }
+    .sd-admin-meta { font-size: 0.86rem; }
+    .sd-admin-chip { font-size: 0.74rem; }
+    .sd-admin-ring {
+        width: 108px;
+        height: 108px;
+    }
+}
+
+/* ===== Animated View Full Button ===== */
+.animated-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 24px;
+  border: 3px solid;
+  border-color: transparent;
+  font-size: 12px;
+  background-color: inherit;
+  border-radius: 100px;
+  font-weight: 600;
+  color: #3b82f6;
+  box-shadow: 0 0 0 2px #3b82f6;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 18px;
+  fill: #3b82f6;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 16px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  text-transform: capitalize;
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 0 12px transparent;
+  color: #fff;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 16px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(12px);
+}
+
+.animated-button:hover svg {
+  fill: #fff;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px #3b82f6;
+}
+
+.animated-button:hover .circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
 </style>
 <div class="sd-page" style="width: 100%; padding: 0;">
     <!-- Dashboard Core Layout Grid (Stability Reset) -->
     <div class="grid grid-cols-1 gap-0">
         <!-- MAIN CONTENT (Now Single Column Full Width) -->
         <div class="min-w-0 px-4 py-8">
-            <!-- Hero Welcome Banner -->
-            <div class="relative overflow-hidden rounded-[40px] mb-10"
-                style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);">
-                <!-- Subtle Background Pattern -->
-                <div class="absolute inset-0 opacity-10"
-                    style="background-image: radial-gradient(#64748b 0.5px, transparent 0.5px); background-size: 20px 20px;">
-                </div>
-
-                <div class="relative flex flex-col md:flex-row items-center justify-between p-7 md:p-10 gap-8">
-                    <!-- Left: Welcome text + badges -->
-                    <div class="flex-1 text-left">
-                        <p class="text-xs font-bold uppercase tracking-[4px] mb-4 text-slate-400">
-                            — {{ greeting }} —
-                        </p>
-                        {% with full_name=user.get_full_name|default:user.username %}
-                        <h1 class="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight">Welcome back,</h1>
-                        <h2 class="text-xl md:text-3xl font-extrabold text-[#f59e0b] mb-6">{{ full_name|title }}</h2>
-                        {% endwith %}
-                        <!-- Student Info Badges -->
-                        <div class="flex flex-wrap justify-start gap-3 mt-4">
-                            {% if student.roll_number %}<span class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-slate-300 tracking-wide">{{ student.roll_number }}</span>{% endif %}
-                            {% if student.course %}<span class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-slate-300 tracking-wide">{{ student.course }} - {{ student.semester }}</span>{% endif %}
-                            {% if student.regulation %}<span class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-slate-300 tracking-wide">{{ student.regulation }}</span>{% endif %}
-                        </div>
-                    </div>
-                    <!-- Right: Attendance Ring -->
-                    <div class="flex flex-col items-center gap-4 flex-shrink-0">
-                        <div class="relative w-32 h-32 md:w-40 md:h-40">
-                            <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
-                                <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.05)"
-                                    stroke-width="8" />
-                                <circle cx="60" cy="60" r="54" fill="none" stroke="#f97316" stroke-width="10"
-                                    stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"
-                                    id="heroAttendanceRing" data-percent="{{ percent_present }}"
-                                    style="transition: stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1); filter: drop-shadow(0 0 12px rgba(249,115,22,0.4));" />
-                            </svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-white font-black text-2xl md:text-3xl leading-none">{{ percent_present|floatformat:"2" }}%</span>
-                                <span class="text-[9px] font-bold uppercase tracking-[2px] mt-2 text-slate-500">Attendance</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            {% if percent_present < 75 %} <div
-                                class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-[#f59e0b] text-[11px] font-bold tracking-wider">
-                                <i class="fas fa-exclamation-triangle"></i> At risk
-                        </div>
+            <!-- Hero Welcome Banner (Admin-style redesign) -->
+            <div class="sd-admin-banner">
+                <div class="sd-admin-banner-left">
+                    <div class="sd-admin-avatar-wrap">
+                        {% if user.profile_pic %}
+                        <img src="{{ user.profile_pic.url }}" alt="{{ user.get_full_name }}" class="sd-admin-avatar">
                         {% else %}
-                        <div
-                            class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold tracking-wider">
-                            <i class="fas fa-check-circle"></i> On track
-                        </div>
+                        <div class="sd-admin-avatar-fallback">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</div>
                         {% endif %}
                     </div>
+
+                    <div class="min-w-0">
+                        {% with full_name=user.get_full_name|default:user.username %}
+                        <h1 class="sd-admin-name">{{ full_name|upper }}</h1>
+                        {% endwith %}
+                        <div class="sd-admin-meta">
+                            <span>{{ student.course|default:"—" }}</span>
+                            <span class="sd-admin-dot">•</span>
+                            <span>Year {{ student.academic_year.name|default:"—" }}</span>
+                            <span class="sd-admin-dot">•</span>
+                            <span>{{ user.email|default:"—" }}</span>
+                        </div>
+
+                        <div class="sd-admin-chips">
+                            {% if student.roll_number %}
+                            <span class="sd-admin-chip"><i class="fas fa-id-card"></i> {{ student.roll_number }}</span>
+                            {% endif %}
+                            {% if student.regulation %}
+                            <span class="sd-admin-chip"><i class="fas fa-gavel"></i> {{ student.regulation }}</span>
+                            {% endif %}
+                            {% if student.semester %}
+                            <span class="sd-admin-chip"><i class="fas fa-book"></i> {{ student.semester }}</span>
+                            {% endif %}
+                            <span class="sd-admin-chip"><i class="fas fa-layer-group"></i> {{ student.get_section_display|default:student.section }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sd-admin-banner-right">
+                    <div class="sd-admin-ring">
+                        <svg viewBox="0 0 120 120" class="sd-admin-ring-svg">
+                            <circle cx="60" cy="60" r="54" class="sd-admin-ring-bg"></circle>
+                            <circle
+                                cx="60"
+                                cy="60"
+                                r="54"
+                                class="sd-admin-ring-fill"
+                                id="heroAttendanceRing"
+                                data-percent="{{ percent_present }}"
+                            ></circle>
+                        </svg>
+                        <div class="sd-admin-ring-center">
+                            <span class="sd-admin-ring-value">{{ percent_present|floatformat:"2" }}%</span>
+                            <span class="sd-admin-ring-label">Attendance</span>
+                        </div>
+                    </div>
+                    {% if percent_present < 75 %}
+                    <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-[#f59e0b] text-[11px] font-bold tracking-wider">
+                        <i class="fas fa-exclamation-triangle"></i> At risk
+                    </div>
+                    {% else %}
+                    <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-bold tracking-wider">
+                        <i class="fas fa-check-circle"></i> On track
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-        </div>
 
         <!-- Today's Timetable Section -->
         <div class="flex items-center justify-between mb-6 px-2">
-            <div class="flex items-center gap-3">
+            <div></div>
+            <div class="flex items-center gap-3 justify-center flex-1">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
                     <i class="fas fa-calendar-day text-lg"></i>
                 </div>
@@ -94,9 +399,17 @@
                     <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">— {{ today_name }} —</p>
                 </div>
             </div>
-            <a href="{% url 'student_view_timetable' %}"
-                class="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors uppercase tracking-widest">
-                View full <i class="fas fa-arrow-right ml-1"></i>
+            <a href="{% url 'student_view_timetable' %}">
+                <button class="animated-button">
+                    <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+                    </svg>
+                    <span class="text">view full</span>
+                    <span class="circle"></span>
+                    <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+                    </svg>
+                </button>
             </a>
         </div>
         <div class="sd-timetable-container">
@@ -146,7 +459,7 @@
         </div>
 
         <!-- CGPA Overview Section -->
-        <div class="flex items-center gap-3 mb-6 px-2 mt-4">
+        <div class="flex items-center gap-3 mb-6 px-2 mt-4 justify-center">
             <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">
                 <i class="fas fa-graduation-cap text-lg"></i>
             </div>
@@ -190,7 +503,7 @@
                     <div class="sd-cgpa-backlogs">
                         <div class="sd-info-card-header">CREDITS</div>
                         <div class="sd-info-card-value sd-val-credits">
-                            {{ total_earned_credits|floatformat:"-1" }}/{{ total_credits|floatformat:"-1" }}
+                            {{ passed_credits|floatformat:"-1" }}/{{ total_credits|floatformat:"-1" }}
                         </div>
 
                         <div class="sd-info-card-header" style="margin-top: 16px;">BACKLOGS</div>
@@ -205,7 +518,7 @@
 
         <!-- Academic Calendar Section -->
         {% if current_calendar %}
-        <div class="flex items-center gap-3 mb-6 px-2 mt-8">
+        <div class="flex items-center gap-3 mb-6 px-2 mt-8 justify-center text-center">
             <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                 <i class="fas fa-calendar-alt text-lg"></i>
             </div>
@@ -216,9 +529,9 @@
                 <table class="sd-tt-table mb-0" style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: rgba(16, 185, 129, 0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-                            <th class="text-left px-6 py-2.5" style="color: #065f46; font-size: 0.75rem; width: 45%; border: none;">EVENT</th>
-                            <th class="text-left px-6 py-2.5" style="color: #065f46; font-size: 0.75rem; width: 35%; border: none;">DATE</th>
-                            <th class="text-left px-6 py-2.5" style="color: #065f46; font-size: 0.75rem; width: 20%; border: none;">DURATION</th>
+                            <th class="px-6 py-2.5" style="color: #065f46; font-size: 0.75rem; width: 45%; border: none;">EVENT</th>
+                            <th class="px-6 py-2.5" style="color: #065f46; font-size: 0.75rem; width: 35%; border: none;">DATE</th>
+                            <th class="px-6 py-2.5" style="color: #065f46; font-size: 0.75rem; width: 20%; border: none;">DURATION</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-emerald-50/50">
@@ -259,10 +572,11 @@
                 </table>
             </div>
         </div>
+
         {% endif %}
 
         <!-- Bento Grid: Quick Actions -->
-        <div class="flex items-center gap-3 mb-6 px-2 mt-4">
+        <div class="flex items-center gap-3 mb-6 px-2 mt-4 justify-center">
             <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
                 <i class="fas fa-th-large text-lg"></i>
             </div>
@@ -438,6 +752,28 @@
     }
 
     /* Academic Calendar Table Styles */
+    .sd-calendar-table-container .sd-tt-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .sd-calendar-table-container .sd-tt-table th,
+    .sd-calendar-table-container .sd-tt-table td {
+        vertical-align: middle;
+    }
+
+    .sd-calendar-table-container .sd-tt-table th:nth-child(1),
+    .sd-calendar-table-container .sd-tt-table td:nth-child(1) {
+        text-align: left;
+    }
+
+    .sd-calendar-table-container .sd-tt-table th:nth-child(2),
+    .sd-calendar-table-container .sd-tt-table td:nth-child(2),
+    .sd-calendar-table-container .sd-tt-table th:nth-child(3),
+    .sd-calendar-table-container .sd-tt-table td:nth-child(3) {
+        text-align: center;
+    }
+
     .dark-mode .sd-calendar-table-container .sd-glass-card {
         background: rgba(15, 23, 42, 0.4) !important;
         backdrop-filter: blur(25px) !important;
@@ -467,6 +803,7 @@
     .dark-mode .sd-calendar-table-container tr[style*="background: rgba(16, 185, 129, 0.05)"] {
         background: rgba(16, 185, 129, 0.1) !important;
     }
+
 
     .ug-icon-wrapper {
         background: var(--glass-bg);
@@ -794,7 +1131,6 @@
     /* --- Timetable Table Layout --- */
     .sd-timetable-container {
         margin-bottom: 30px;
-        animation: sd-fade-up 0.6s ease both;
     }
 
     .sd-table-wrapper-no-scroll {
@@ -1052,7 +1388,6 @@
         gap: 16px;
         padding: 16px 24px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-        animation: sd-fade-up 0.5s ease both;
         transition: background 0.2s;
     }
 
@@ -1062,18 +1397,6 @@
 
     .sd-activity-row:hover {
         background: rgba(99, 102, 241, 0.04);
-    }
-
-    @keyframes sd-fade-up {
-        from {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
     }
 
     .sd-activity-dot {
@@ -1228,7 +1551,6 @@
     /* ===== CGPA Overview Section ===== */
     .sd-cgpa-container {
         margin-bottom: 36px;
-        animation: sd-fade-up 0.6s ease both;
     }
 
     .sd-cgpa-split {

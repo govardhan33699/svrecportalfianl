@@ -696,6 +696,87 @@ def manage_student(request):
     return render(request, "hod_template/manage_student.html", context)
 
 
+def bulk_update_students_semester(request):
+    """Display all students with checkboxes for bulk semester update"""
+    from django.db.models import Q
+    
+    # Get filter parameters
+    enrollment_number = request.GET.get('enrollment_number')
+    name = request.GET.get('name')
+    semester = request.GET.get('semester')
+    course_id = request.GET.get('course')
+    regulation_id = request.GET.get('regulation')
+    
+    # Base queryset
+    students = Student.objects.all().select_related('admin', 'course', 'semester', 'regulation').order_by('admin__last_name', 'admin__first_name')
+    
+    # Apply filters
+    if enrollment_number:
+        students = students.filter(roll_number__icontains=enrollment_number)
+    if name:
+        students = students.filter(Q(admin__first_name__icontains=name) | Q(admin__last_name__icontains=name))
+    if semester:
+        students = students.filter(semester_id=semester)
+    if course_id:
+        students = students.filter(course_id=course_id)
+    if regulation_id:
+        students = students.filter(regulation_id=regulation_id)
+    
+    # Get all semesters, courses, and regulations for filter dropdowns
+    semesters = AcademicSemester.objects.all().order_by('name')
+    courses = Course.objects.all().order_by('name')
+    regulations = Regulation.objects.all().order_by('name')
+    
+    context = {
+        'students': students,
+        'semesters': semesters,
+        'courses': courses,
+        'regulations': regulations,
+        'page_title': 'Bulk Update Semester'
+    }
+    return render(request, "hod_template/bulk_update_semester.html", context)
+
+
+@csrf_exempt
+def ajax_bulk_update_semester(request):
+    """AJAX endpoint to update semester for selected students"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            student_ids = data.get('student_ids', [])
+            semester_id = data.get('semester_id')
+            
+            if not student_ids or not semester_id:
+                return JsonResponse({'success': False, 'error': 'Missing student IDs or semester ID'})
+            
+            # Fetch semester with its related academic_level
+            semester = AcademicSemester.objects.select_related('academic_level').get(id=semester_id)
+            academic_level = semester.academic_level
+            
+            if not academic_level:
+                return JsonResponse({'success': False, 'error': 'Semester does not have an associated academic level'})
+            
+            # Update students - update both semester and academic_year
+            updated_count = 0
+            for student_id in student_ids:
+                Student.objects.filter(id=student_id).update(
+                    semester_id=semester.id,
+                    academic_year_id=academic_level.id
+                )
+                updated_count += 1
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Successfully updated {updated_count} student(s) to {semester.name} (Year {academic_level.name})'
+            })
+        except AcademicSemester.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Semester not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Error: {str(e)}'})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
 def view_student_detail(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     certificates = StudentCertificate.objects.filter(student=student).order_by('-issue_date')
@@ -746,35 +827,47 @@ def view_student_detail(request, student_id):
                 im = round((0.8 * m_max) + (0.2 * m_min))
 
             em = res.external_marks if res else ''
-            tot = im + (float(em) if em else 0)
+            
+            # Convert to float safely
+            try:
+                em_val = float(em) if em and em != '' and em != '0' else 0
+            except (ValueError, TypeError):
+                em_val = 0
 
-            if em == '' and im == 0:
-                continue
+            tot = im + em_val
 
+            # Show subject even if no marks entered - don't skip
             sem_has_data = True
-            status = 'P' if tot >= 40 else 'F'
-            if tot >= 90: grade = 'S'
-            elif tot >= 80: grade = 'A'
-            elif tot >= 70: grade = 'B'
-            elif tot >= 60: grade = 'C'
-            elif tot >= 50: grade = 'D'
-            elif tot >= 40: grade = 'E'
-            else: grade = 'F'
+            # Only show status if external marks ARE entered
+            if em_val == 0:
+                status = ''
+                grade = ''
+            else:
+                status = 'P' if tot >= 40 else 'F'
+                if tot >= 90: grade = 'S'
+                elif tot >= 80: grade = 'A'
+                elif tot >= 70: grade = 'B'
+                elif tot >= 60: grade = 'C'
+                elif tot >= 50: grade = 'D'
+                elif tot >= 40: grade = 'E'
+                else: grade = 'F'
 
             cr_val = float(sub.credits or 0)
             gp_weight = grade_points_map.get(grade, 0)
             sem_cr += cr_val
             sem_gp += gp_weight * cr_val
-            total_marks_sum += tot
-            total_sub_count += 1
-            if status == 'F':
+            if tot > 0:
+                total_marks_sum += tot
+                total_sub_count += 1
+            total_credits += cr_val
+            # Only count as backlog if external marks entered AND fails
+            if status == 'F' and em_val > 0:
                 total_backlogs += 1
-            else:
+            elif grade != '':  # Only earned if actual pass with grade
                 total_earned_credits += cr_val
 
         if sem_has_data:
             semesters_with_data += 1
-            total_credits += sem_cr
             total_grade_points += sem_gp
 
     cgpa = round(total_grade_points / total_credits, 2) if total_credits > 0 else 0.0
@@ -2494,10 +2587,21 @@ def admin_view_marks_memo(request, student_id):
                 im = round((0.8 * m_max) + (0.2 * m_min))
             
             em = sub_marks.get('EXTERNAL', '')
-            tot = im + (float(em) if em else 0)
+            
+            # Convert em to float safely - Handle None, '', 0, '0'
+            try:
+                if em and em != '0' and em != '':
+                    em_val = float(em)
+                else:
+                    em_val = 0
+            except (ValueError, TypeError):
+                em_val = 0
+            
+            tot = im + em_val
 
             # Result Status (RS) and Grade based on TOTAL
-            if em == '' and im == 0:
+            # Only show status if external marks were actually entered
+            if em_val == 0:
                 status = ''
                 grade = ''
             else:
@@ -2708,9 +2812,20 @@ def admin_view_results_traditional(request, student_id):
                 im = round((0.8 * m_max) + (0.2 * m_min))
 
             em = res.external_marks if res else ''
-            tot = im + (float(em) if em else 0)
+            
+            # Convert em to float safely - Handle None, '', 0, '0'
+            try:
+                if em and em != '0' and em != '':
+                    em_val = float(em)
+                else:
+                    em_val = 0
+            except (ValueError, TypeError):
+                em_val = 0
+            
+            tot = im + em_val
 
-            if em == '' and im == 0:
+            # Only show Fail if external marks were actually entered (em_val > 0)
+            if em_val == 0:
                 status = ''
                 grade = ''
             else:
@@ -2731,7 +2846,8 @@ def admin_view_results_traditional(request, student_id):
                 sem_stats[sem]['gp'] += gp_weight * cr_val
                 sem_stats[sem]['tot'] += tot
                 sem_stats[sem]['sub_count'] += 1
-                if status == 'Fail':
+                # Only count as backlog if external marks entered AND fails
+                if status == 'Fail' and em_val > 0:
                     sem_stats[sem]['backlogs'] += 1
 
             sem_subjects[sem].append({
@@ -2939,7 +3055,8 @@ def ajax_update_student_mark(request):
         tot = im + em
 
         # Grade calculation
-        if em == 0 and im == 0:
+        # Only show status if external marks were entered
+        if em == 0:
             status = ''
             grade = ''
         else:
@@ -2993,20 +3110,34 @@ def ajax_update_student_mark(request):
                 m_min = min(int1, int2)
                 s_im = round((0.8 * m_max) + (0.2 * m_min))
 
-            s_em = float(sub_res.external_marks) if sub_res and sub_res.external_marks else 0
+            # External marks - Handle None, 0, '', '0'
+            if sub_res and sub_res.external_marks:
+                try:
+                    em_str = str(sub_res.external_marks).strip()
+                    s_em = float(em_str) if em_str and em_str != '0' else 0
+                except (ValueError, TypeError):
+                    s_em = 0
+            else:
+                s_em = 0
+            
             s_tot = s_im + s_em
 
             if s_em == 0 and s_im == 0:
                 continue
 
-            s_status = 'Pass' if s_tot >= 40 else 'Fail'
-            if s_tot >= 90: s_grade = 'S'
-            elif s_tot >= 80: s_grade = 'A'
-            elif s_tot >= 70: s_grade = 'B'
-            elif s_tot >= 60: s_grade = 'C'
-            elif s_tot >= 50: s_grade = 'D'
-            elif s_tot >= 40: s_grade = 'E'
-            else: s_grade = 'F'
+            # Only show status if external marks entered
+            if s_em == 0:
+                s_status = ''
+                s_grade = ''
+            else:
+                s_status = 'Pass' if s_tot >= 40 else 'Fail'
+                if s_tot >= 90: s_grade = 'S'
+                elif s_tot >= 80: s_grade = 'A'
+                elif s_tot >= 70: s_grade = 'B'
+                elif s_tot >= 60: s_grade = 'C'
+                elif s_tot >= 50: s_grade = 'D'
+                elif s_tot >= 40: s_grade = 'E'
+                else: s_grade = 'F'
 
             cr_val = float(sub.credits or 0)
             gp_weight = grade_points_map.get(s_grade, 0)
@@ -3014,7 +3145,8 @@ def ajax_update_student_mark(request):
             sem_gp += gp_weight * cr_val
             sem_tot += s_tot
             sem_sub_count += 1
-            if s_status == 'Fail':
+            # Only count as backlog if external marks ARE entered AND student fails
+            if s_status == 'Fail' and s_em > 0:
                 sem_backlogs += 1
 
         sgpa = round(sem_gp / sem_cr, 2) if sem_cr > 0 else 0.00

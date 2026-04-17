@@ -317,53 +317,95 @@
                                 <!-- 3. Address -->
                                 <div class="tab-pane fade" id="address-pane" role="tabpanel">
                                     <div class="row g-3">
-                                        <div class="col-12">
-                                            <label class="form-label">{{ form.address.label }}</label>
-                                            {{ form.address }}
-                                            {{ form.address.errors }}
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.door_no.label }}</label>
+                                            {{ form.door_no }}
+                                            {{ form.door_no.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.street.label }}</label>
+                                            {{ form.street }}
+                                            {{ form.street.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.area_village.label }}</label>
+                                            {{ form.area_village }}
+                                            {{ form.area_village.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.mandal.label }}</label>
+                                            {{ form.mandal }}
+                                            {{ form.mandal.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.district.label }}</label>
+                                            {{ form.district }}
+                                            {{ form.district.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.state.label }}</label>
+                                            {{ form.state }}
+                                            {{ form.state.errors }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.pincode.label }}</label>
+                                            {{ form.pincode }}
+                                            {{ form.pincode.errors }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- 4. Parents -->
-                                <div class="tab-pane fade" id="parents" role="tabpanel">
+                                <div class="tab-pane fade p-0" id="parents" role="tabpanel">
+                                    <h4 class="mb-4 fw-bold">Family & Contact Details</h4>
                                     <div class="row g-3">
-                                        <div class="col-md-4">
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.landline.label }}</label>
+                                            {{ form.landline }}
+                                            {{ form.landline.errors }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.mobile_number.label|default:"Student Mobile Number" }}</label>
+                                            {{ form.mobile_number }}
+                                            {{ form.mobile_number.errors }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.parent_mobile_number.label }}</label>
+                                            {{ form.parent_mobile_number }}
+                                            {{ form.parent_mobile_number.errors }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.parent_email.label }}</label>
+                                            {{ form.parent_email }}
+                                            {{ form.parent_email.errors }}
+                                        </div>
+
+                                        <div class="col-md-6">
                                             <label class="form-label">{{ form.father_name.label }}</label>
                                             {{ form.father_name }}
                                             {{ form.father_name.errors }}
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">{{ form.father_occupation.label }}</label>
                                             {{ form.father_occupation }}
                                             {{ form.father_occupation.errors }}
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Parent Mobile Number (Father)</label>
-                                            {{ form.parent_mobile_number }}
-                                            {{ form.parent_mobile_number.errors }}
-                                        </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">{{ form.mother_name.label }}</label>
                                             {{ form.mother_name }}
                                             {{ form.mother_name.errors }}
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">{{ form.mother_occupation.label }}</label>
                                             {{ form.mother_occupation }}
                                             {{ form.mother_occupation.errors }}
                                         </div>
-                                        <div class="col-md-4">
+
+                                        <div class="col-md-12">
                                             <label class="form-label">{{ form.mother_mobile_number.label }}</label>
                                             {{ form.mother_mobile_number }}
                                             {{ form.mother_mobile_number.errors }}
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label">Student Mobile Number</label>
-                                            {{ form.mobile_number }}
-                                            {{ form.mobile_number.errors }}
                                         </div>
                                     </div>
                                 </div>

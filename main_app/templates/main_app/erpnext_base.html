@@ -74,11 +74,17 @@
             background: rgba(239, 246, 255, 0.4) !important;
             backdrop-filter: blur(25px);
             border-right: 1px solid rgba(37, 99, 235, 0.1);
+            transition: all 0.3s ease !important;
         }
 
         .dark-mode .erpnext-sidebar {
             background: rgba(15, 23, 42, 0.95) !important;
             border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .no-sidebar .erpnext-sidebar {
+            display: none !important;
         }
 
         .card, .erpnext-card, .update-grid-card, .sd-table-wrapper-no-scroll,
@@ -287,14 +293,17 @@
             overflow-x: auto;
         }
 
-        .no-sidebar .erpnext-sidebar {
-            display: none !important;
+        .sidebar-collapsed .erpnext-sidebar {
+            transform: translateX(-100%);
+            width: 0 !important;
+            overflow: hidden !important;
         }
     </style>
 </head>
 
 <body
-    class="{% if hide_sidebar %}no-sidebar{% endif %} {% if user.user_type|slugify == '1' %}role-admin{% elif user.user_type|slugify == '2' %}role-staff{% elif user.user_type|slugify == '3' %}role-student{% endif %}">
+    class="{% if user.user_type|slugify == '1' %}role-admin{% elif user.user_type|slugify == '2' %}role-staff{% elif user.user_type|slugify == '3' %}role-student{% endif %}"
+    id="app-body">
     <!-- Mesh Background -->
     <div class="mesh-background"></div>
 
@@ -402,30 +411,35 @@
     <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
 
     <script>
+        // Simple toggle - can be removed if not needed
         function toggleSidebar() {
-            document.body.classList.toggle('sidebar-collapsed');
-            localStorage.setItem('sidebarOpen', !document.body.classList.contains('sidebar-collapsed'));
+            const body = document.getElementById('app-body');
+            body.classList.toggle('sidebar-collapsed');
         }
 
-        $(document).ready(function () {
-            // Restore sidebar state
-            if (localStorage.getItem('sidebarOpen') === 'false') {
-                document.body.classList.add('sidebar-collapsed');
-            }
-
-            // Theme toggle
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const body = document.getElementById('app-body');
             const themeToggle = document.getElementById('theme-switch');
+            
+            // Theme toggle on init
             if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
+                body.classList.add('dark-mode');
                 if (themeToggle) themeToggle.checked = true;
             }
+        });
 
+        // jQuery document ready
+        $(document).ready(function() {
+            const body = document.getElementById('app-body');
+            
+            // Theme toggle change handler
             $(document).on('change', '#theme-switch', function () {
                 if (this.checked) {
-                    document.body.classList.add('dark-mode');
+                    body.classList.add('dark-mode');
                     localStorage.setItem('theme', 'dark');
                 } else {
-                    document.body.classList.remove('dark-mode');
+                    body.classList.remove('dark-mode');
                     localStorage.setItem('theme', 'light');
                 }
             });

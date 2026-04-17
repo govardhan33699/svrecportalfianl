@@ -357,9 +357,33 @@
                                 <div class="tab-pane fade p-0" id="address-pane" role="tabpanel">
                                     <h4 class="mb-4 fw-bold">Permanent Address</h4>
                                     <div class="row g-4">
-                                        <div class="col-12">
-                                            <label class="form-label">{{ form.address.label }}</label>
-                                            {{ form.address }}
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.door_no.label }}</label>
+                                            {{ form.door_no }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.street.label }}</label>
+                                            {{ form.street }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.area_village.label }}</label>
+                                            {{ form.area_village }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.mandal.label }}</label>
+                                            {{ form.mandal }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.district.label }}</label>
+                                            {{ form.district }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.state.label }}</label>
+                                            {{ form.state }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ form.pincode.label }}</label>
+                                            {{ form.pincode }}
                                         </div>
                                     </div>
                                 </div>
@@ -368,6 +392,22 @@
                                 <div class="tab-pane fade p-0" id="parents" role="tabpanel">
                                     <h4 class="mb-4 fw-bold">Family & Contact Details</h4>
                                     <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.landline.label }}</label>
+                                            {{ form.landline }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.student_mobile_number.label|default:"Student Mobile No" }}</label>
+                                            {{ form.mobile_number }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.parent_mobile_number.label }}</label>
+                                            {{ form.parent_mobile_number }}
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">{{ form.parent_email.label }}</label>
+                                            {{ form.parent_email }}
+                                        </div>
                                         <div class="col-md-6">
                                             <label class="form-label">{{ form.father_name.label }}</label>
                                             {{ form.father_name }}
@@ -375,10 +415,6 @@
                                         <div class="col-md-6">
                                             <label class="form-label">{{ form.father_occupation.label }}</label>
                                             {{ form.father_occupation }}
-                                        </div>
-                                        <div class="col-md-12">
-                                            <label class="form-label">Parent Mobile Number (Father)</label>
-                                            {{ form.parent_mobile_number }}
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">{{ form.mother_name.label }}</label>
@@ -391,10 +427,6 @@
                                         <div class="col-md-12">
                                             <label class="form-label">{{ form.mother_mobile_number.label }}</label>
                                             {{ form.mother_mobile_number }}
-                                        </div>
-                                        <div class="col-md-12">
-                                            <label class="form-label">Student Mobile Number</label>
-                                            {{ form.mobile_number }}
                                         </div>
                                     </div>
                                 </div>

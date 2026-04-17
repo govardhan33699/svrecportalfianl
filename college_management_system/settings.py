@@ -167,7 +167,7 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 # SECURE_SSL_REDIRECT = True
 
 # ── Email Configuration ──
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'main_app.EmailBackend.SMTPCompatBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'shivagovardhanreddy1234@gmail.com')

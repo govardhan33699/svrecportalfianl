@@ -1,0 +1,81 @@
+<!-- REUSABLE PAGINATION COMPONENT FOR STUDENT PAGES -->
+<!-- Include this file in all student template files that use pagination -->
+
+{% if total_pages > 1 %}
+<div class="pagination-container" style="margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+    <!-- Previous Page -->
+    {% if page > 1 %}
+        <a href="?page=1" class="btn btn-sm btn-outline-primary" title="First Page">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+        <a href="?page={{ page|add:'-1' }}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-angle-left"></i> Previous
+        </a>
+    {% else %}
+        <button class="btn btn-sm btn-outline-primary" disabled>
+            <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-primary" disabled>
+            <i class="fas fa-angle-left"></i> Previous
+        </button>
+    {% endif %}
+
+    <!-- Page Info -->
+    <div class="page-info">
+        Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong>
+        {% if total_items %}
+        | <strong>{{ total_items }}</strong> items
+        {% endif %}
+    </div>
+
+    <!-- Next Page -->
+    {% if has_next %}
+        <a href="?page={{ page|add:'1' }}" class="btn btn-sm btn-outline-primary">
+            Next <i class="fas fa-angle-right"></i>
+        </a>
+        <a href="?page={{ total_pages }}" class="btn btn-sm btn-outline-primary" title="Last Page">
+            <i class="fas fa-angle-double-right"></i>
+        </a>
+    {% else %}
+        <button class="btn btn-sm btn-outline-primary" disabled>
+            Next <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-primary" disabled>
+            <i class="fas fa-angle-double-right"></i>
+        </button>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+.pagination-container {
+    padding: 20px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.page-info {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    padding: 0 15px;
+}
+
+.btn-outline-primary {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    transition: all 0.2s;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+</style>
