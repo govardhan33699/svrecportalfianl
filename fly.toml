@@ -1,7 +1,5 @@
-# fly.toml app configuration file generated for svrecportalfianl
-
-app = "svrecportalfianl"
-primary_region = "maa" # Chennai, India - closest to user's time zone +5:30
+# fly.toml app configuration file
+# App name and region will be set during launch
 
 [http_service]
   internal_port = 8000
