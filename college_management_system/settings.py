@@ -29,8 +29,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'f2zx8*lb*em*-*b+!&1lpp&$_9q9km
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost,svrecai.up.railway.app,.up.railway.app').split(',')
-CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost,svrecai.up.railway.app,.up.railway.app,govardhan-c2q0.onrender.com').split(',')
+CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.onrender.com', 'https://govardhan-c2q0.onrender.com', 'https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
 
 
 # Application definition
