@@ -29,8 +29,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'f2zx8*lb*em*-*b+!&1lpp&$_9q9km
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost,svrecai.up.railway.app,.up.railway.app,govardhan-c2q0.onrender.com').split(',')
-CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.onrender.com', 'https://govardhan-c2q0.onrender.com', 'https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost,svrecai.up.railway.app,.up.railway.app,govardhan-c2q0.onrender.com,.fly.dev,svrecportalfianl.fly.dev').split(',')
+CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app', 'https://*.onrender.com', 'https://govardhan-c2q0.onrender.com', 'https://*.fly.dev', 'https://*.loca.lt', 'https://*.serveo.net', 'https://*.localhost.run', 'http://127.0.0.1:8000', 'http://localhost:8000']
 
 
 # Application definition
@@ -88,19 +88,17 @@ WSGI_APPLICATION = 'college_management_system.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+# Use persistent storage on Fly.io if available
+if os.environ.get('FLY_APP_NAME'):
+    DATABASE_PATH = '/data/db.sqlite3'
+else:
+    DATABASE_PATH = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATABASE_PATH,
     }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'django',
-    #     'USER': os.environ.get('DB_USER'),
-    #     'PASSWORD': os.environ.get('DB_PASS'),
-    #     'HOST': '127.0.0.1',
-    #     'PORT': '3307'
-    # }
 }
 
 

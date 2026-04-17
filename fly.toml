@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for svrecportalfianl
+
+app = "svrecportalfianl"
+primary_region = "maa" # Chennai, India - closest to user's time zone +5:30
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[mounts]
+  source = "svrec_data"
+  destination = "/data"
+
+[env]
+  DJANGO_DEBUG = "False"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
