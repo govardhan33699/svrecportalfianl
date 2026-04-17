@@ -32,8 +32,8 @@ RUN mkdir -p /data && chmod 777 /data
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Expose port 8000
-EXPOSE 8000
+# Expose port 8080
+EXPOSE 8080
 
 # Start gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "college_management_system.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "college_management_system.wsgi:application"]
